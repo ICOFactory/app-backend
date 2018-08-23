@@ -26,9 +26,8 @@ def upload_form():
     if request.method == 'POST':
         db = Database()
         result = db.device_info(request.form['uuid'])
-        if result:
-            device_id = result[0]
-            user_id = result[1]
+        if Device.UUID_REGEX.match(result):
+            device_id = result
             new_filename = str(uuid.uuid4())+".jpg"
             if 'frame_image' in request.files:
                 frame_file = request.files['frame_image']
