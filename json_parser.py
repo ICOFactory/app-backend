@@ -146,7 +146,7 @@ class JSONProcessor():
             self.error = errorCodeObj(105,"Could not post command to queue for device id: {0}".format(device_id))
 
     def get_frame(self,device_id,offset):
-        frame = (1,2,3)
+        frame = self.db.get_frame(device_id,offset)
         if frame:
             self.response = {"success":True,"frame_id":frame[0],"created":frame[1],"json_string":frame[2]}
         else:
