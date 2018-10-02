@@ -1,0 +1,41 @@
+<html>
+<head>
+    <title>User Administration</title>
+</head>
+    <body>
+    <h1>User Administration</h1>
+    <p>[ <a href="/admin/{{ session_token }}">back to admin</a> ]</p>
+    <table cellspacing="3" cellpadding="3" border="1">
+        <tr>
+            <td>
+                <strong>E-mail</strong>
+            </td>
+            <td>
+                <strong>Last Logged In</strong>
+            </td>
+            <td>
+                <strong>IP Address (last logged in)</strong>
+            </td>
+            <td>
+                <strong>Created</strong>
+            </td>
+            <td>
+                <strong>IP Address (created by)</strong>
+            </td>
+            <td>
+                <strong>Options</strong>
+            </td>
+        </tr>
+        {% for each in users %}
+        <tr>
+            <td>{{ each.email }}</td>
+            <td>{{ each.last_logged_in }}</td>
+            <td>{{ each.last_logged_in_ip}}</td>
+            <td>{{ each.created }}</td>
+            <td>{{ each.created_ip }}</td>
+            <td>[ <a href="/admin/reset-password/{{ each.user_id }}/{{ session_token }}">reset password</a> ]</td>
+        </tr>
+        {% endfor %}
+    </table>
+    </body>
+</html>

@@ -1,9 +1,11 @@
 import random
 import datetime
 
+
 def random_token():
     new_session_token = "%08x%08x" % (random.randint(0,0xffffffff),random.randint(0,0xffffffff))
     return new_session_token
+
 
 class Database():
     def verify_session(self,user_id,session_id):

@@ -2,14 +2,14 @@ from database import Database
 import unittest
 
 
-def errorCodeObj(errorCode,errorMessage):
+def errorCodeObj(errorCode, errorMessage):
             if errorCode:
-                return {"success":False,"errorCode":errorCode,"error":errorMessage}
-            return {"success":False,"error":errorMessage}
+                return {"success": False, "errorCode": errorCode, "error": errorMessage}
+            return {"success": False, "error": errorMessage}
 
 
 class JSONProcessor():
-    def __init__(self,jsonData):
+    def __init__(self, jsonData):
         self.error = None
         self.response = None
         self.db = Database()

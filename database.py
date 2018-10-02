@@ -11,6 +11,7 @@ def random_token():
     new_session_token = "%08x%08x" % (random.randint(0, 0xffffffff), random.randint(0, 0xffffffff))
     return new_session_token
 
+
 MYSQL_HOST = "localhost"
 MYSQL_USERNAME = "root"
 MYSQL_PASSWORD = ""
@@ -20,6 +21,7 @@ MYSQL_DATABASE_NAME = "service"
 class Database:
     def __init__(self, host=MYSQL_HOST, username=MYSQL_USERNAME, password=MYSQL_PASSWORD, database=MYSQL_DATABASE_NAME):
         self.db = MySQLdb.connect(host, username, password, database)
+        self.logger = None
         
     def fetch_commands(self, device_id):
         c = self.db.cursor()
@@ -35,7 +37,22 @@ class Database:
         c.close()
         self.db.commit()
         return commands
-        
+
+    def get_user_info(self, user_id):
+        c = self.db.cursor()
+        sql = "SELECT email_address,last_logged_in,last_logged_in_ip,created,created_ip,json_metadata FROM users WHERE user_id=%s"
+        c.execute(sql, (user_id,))
+        row = c.fetchone()
+        if row:
+            user_info = {"email_address": row[0],
+                    "last_logged_in": row[1],
+                     "last_logged_in_ip": row[2],
+                     "created": row[3],
+                     "created_ip": row[4],
+                     "json_metadata": row[5]}
+            return user_info
+        return None
+
     def post_command(self, device_id, command_data):
         c = self.db.cursor()
         device_id_param = int(device_id)
@@ -47,6 +64,10 @@ class Database:
             self.db.commit()
             return last_row_id
         except MySQLdb.Error as e:
+            try:
+                self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                self.logger.error("MySQL Error: %s" % (str(e),))
             return -1
     
     def get_frame(self, device_id, offset):
@@ -87,6 +108,21 @@ class Database:
             return last_row_id
         except MySQLdb.Error as e:
             return -1
+
+    def count_glosspoints(self, user_id):
+        sql = "SELECT COUNT(*) FROM glosspoints WHERE owner_id=%s"
+        c = self.db.cursor()
+        try:
+            c.execute(sql,(user_id,))
+            row = c.fetchone()
+            c.close()
+            return row[0]
+        except MySQLdb.Error as e:
+            try:
+                self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                self.logger.error("MySQL Error: %s" % (str(e),))
+            return 0
     
     def device_info(self, uuid):
         if UUID_REGEX.match(uuid):
@@ -112,6 +148,28 @@ class Database:
         except MySQLdb.Error as e:
             pass
         return None
+
+    def list_users(self):
+        c = self.db.cursor()
+        try:
+            output = []
+            c.execute("SELECT user_id,email_address,last_logged_in,last_logged_in_ip,created,created_ip FROM users")
+            for row in c:
+                output.append({"user_id":row[0],
+                               "email":row[1],
+                               "last_logged_in":row[2],
+                               "last_logged_in_ip":row[3],
+                               "created":row[4],
+                               "created_ip":row[5]})
+            c.close()
+            return output
+        except MySQLdb.Error as e:
+            try:
+                self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                self.logger.error("MySQL Error: %s" % (str(e),))
+            c.close()
+            return None
 
     def add_device(self, user_id, uuid):
         c = self.db.cursor()
@@ -181,9 +239,15 @@ class Database:
                         return row[0], new_session_token
         except MySQLdb.Error as e:
             try:
-                print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                if self.logger:
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
             except IndexError:
-                print("MySQL Error: %s" % (str(e),))
+                if self.logger:
+                    self.logger.error("MySQL Error: %s" % (str(e),))
+                else:
+                    print("MySQL Error: %s" % (str(e),))
             return None
         return None
 
@@ -204,17 +268,23 @@ class Database:
             try:
                 if e.args[0] == 1062:
                     return -1, "E-mail address already exists in database!"
-                print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                if self.logger:
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
             except IndexError:
-                print("MySQL Error: %s" % (str(e),))
+                if self.logger:
+                    self.logger.error("MySQL Error: %s" % (str(e),))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
             return None
         return last_row_id, new_session_token
 
 
 if __name__ == "__main__":
-    db = Database(MYSQL_HOST,MYSQL_USERNAME,MYSQL_PASSWORD,MYSQL_DATABASE_NAME)
+    db = Database(MYSQL_HOST, MYSQL_USERNAME, MYSQL_PASSWORD, MYSQL_DATABASE_NAME)
     print("Creating admin user...")
-    raw_password = input("Admin password: " )
-    result = db.create_user("admin",raw_password)
+    raw_password = input("Admin password: ")
+    result = db.create_user("admin", raw_password)
     if result:
         print("Admin user created successfully.")
