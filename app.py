@@ -33,7 +33,7 @@ def login_page():
     if request.method == "POST":
         db = Database()
         db.logger = app.logger
-        login_info = db.login(request.form["username"], request.form["password"])
+        login_info = db.login(request.form["username"], request.form["password"],request.remote_addr)
         if login_info:
             return render_template("admin.html", session_token=login_info[1])
     return render_template("login.html")
@@ -83,12 +83,14 @@ def admin_reset_password(user_id, session_token):
 @app.route('/json', methods=['POST'])
 def json_endpoint():
     json_data = request.get_json(force=True)
-    jp = JSONProcessor(json_data)
+    request_data = {"ip_address": request.remote_addr}
+    jp = JSONProcessor(json_data, request_data)
+    jp.logger = app.logger
     if jp.response:
         return json.dumps(jp.response)
     elif jp.error:
-        if jp.error.errorCode:
-            app.logger.error("Error Code: {0} ({1})".format(jp.errorCode,jp.error))
+        if "errorCode" in jp.error:
+            app.logger.error("Error Code: {0} ({1})".format(jp.error["errorCode"],jp.error["error"]))
         else:
             app.logger.error(jp.error.error)
         return json.dumps(jp.error)

@@ -3,6 +3,7 @@ import MySQLdb
 from hashlib import sha256
 import random
 import re
+import json
 
 UUID_REGEX = re.compile("[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}")
 
@@ -178,7 +179,7 @@ class Database:
             try:
                 if user_id:
                     user_id_param = int(user_id)
-                    c.execute("INSERT INTO devices (owner,uuid) VALUES (%s,%s);", (user_id_param,uuid_param))
+                    c.execute("INSERT INTO devices (owner_id,uuid) VALUES (%s,%s);", (user_id_param,uuid_param))
                 else:
                     c.execute("INSERT INTO devices (uuid) VALUES (%s);", (uuid_param,))
                 last_row_id = c.lastrowid
@@ -186,8 +187,14 @@ class Database:
                 self.db.commit()
                 return last_row_id
             except MySQLdb.Error as e:
+                try:
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                except IndexError:
+                    self.logger.error("MySQL Error: %s" % (str(e),))
+                c.close()
                 return -3
         else:
+            self.logger.error("UUID regex check did not match.")
             return -2
 
     def verify_session(self, user_id, session_id):
@@ -221,7 +228,7 @@ class Database:
                 return True
         return False
 
-    def login(self, email_address, password):
+    def login(self, email_address, password, ip_addr):
         c = self.db.cursor()
         email_param = self.db.escape_string(email_address)
         try:
@@ -232,8 +239,8 @@ class Database:
                 pw_hash = sha256(data.encode("utf-8"))
                 if pw_hash.hexdigest() == row[2]:
                     new_session_token = random_token()
-                    sql = "UPDATE users SET session_token=%s WHERE user_id=%s"
-                    if c.execute(sql, (new_session_token, row[0])) == 1:
+                    sql = "UPDATE users SET session_token=%s,last_logged_in=NOW(),last_logged_in_ip=%s WHERE user_id=%s"
+                    if c.execute(sql, (new_session_token,ip_addr,row[0])) == 1:
                         c.close()
                         self.db.commit()
                         return row[0], new_session_token
@@ -251,16 +258,16 @@ class Database:
             return None
         return None
 
-    def create_user(self, email_address, password):
+    def create_user(self, email_address, password, ip_addr):
         c = self.db.cursor()
         data = email_address + password
         pw_hash = sha256(data.encode("utf-8"))
         digest = pw_hash.hexdigest()
         new_session_token = random_token()
         email_param = self.db.escape_string(email_address).decode('utf-8')
-        sql = "INSERT INTO users (email_address,password,session_token) VALUES (%s,%s,%s);"
+        sql = "INSERT INTO users (email_address,password,session_token,created_ip,created) VALUES (%s,%s,%s,%s,NOW());"
         try:
-            c.execute(sql, (email_param, digest, new_session_token))
+            c.execute(sql, (email_param, digest, new_session_token,ip_addr))
             last_row_id = c.lastrowid
             c.close()
             self.db.commit()
@@ -285,6 +292,6 @@ if __name__ == "__main__":
     db = Database(MYSQL_HOST, MYSQL_USERNAME, MYSQL_PASSWORD, MYSQL_DATABASE_NAME)
     print("Creating admin user...")
     raw_password = input("Admin password: ")
-    result = db.create_user("admin", raw_password)
+    result = db.create_user("admin", raw_password,None)
     if result:
         print("Admin user created successfully.")

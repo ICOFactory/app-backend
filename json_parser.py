@@ -1,5 +1,6 @@
 from database import Database
 import unittest
+import uuid
 
 
 def errorCodeObj(errorCode, errorMessage):
@@ -9,21 +10,32 @@ def errorCodeObj(errorCode, errorMessage):
 
 
 class JSONProcessor():
-    def __init__(self, jsonData):
+    def __init__(self, jsonData,request_data=None):
         self.error = None
         self.response = None
         self.db = Database()
+        self.logger = None
         if type(jsonData) is dict:
             if 'action' in jsonData:
                 action = jsonData['action']
                 if action == "login":
-                    if 'username' in jsonData and 'password' in jsonData:
-                        self.login(jsonData['username'],jsonData['password'])
+                    if 'email_address' in jsonData and 'password' in jsonData:
+                        self.login(jsonData['email_address'],jsonData['password'], request_data['ip_address'])
                     else:
                         self.error = errorCodeObj(5,"Required arguments not found.")
                 elif action == "create_user":
-                    if 'username' in jsonData and 'password' in jsonData:
-                        self.create_user(jsonData['username'],jsonData['password'])
+                    required_args = ["email_address",
+                                     "password",
+                                     "name",
+                                     "action"]
+                    not_found = False
+                    for each in jsonData.keys():
+                        if each not in required_args:
+                            not_found = True
+                            break
+
+                    if not not_found:
+                        self.create_user(jsonData['email_address'],jsonData['password'], request_data['ip_address'])
                     else:
                         self.error = errorCodeObj(5,"Required arguments not found.")
                 elif action == "add_device":
@@ -79,30 +91,34 @@ class JSONProcessor():
                     else:
                         self.error = errorCodeObj(5,"Required arguments not found.")
                 else:
-                    self.error = errorCodeObj("Unknown action.")
+                    self.error = errorCodeObj(300,"Unknown action.")
             else:
                 self.error = errorCodeObj(2,"Action not found")
         else:
             self.error = {"success":False,"errorCode":1,"error":"Invalid JSON request object."}
 
-    def create_user(self,username,password):
-        response = self.db.create_user(username,password)
+    def create_user(self,username,password,ip_address):
+        self.db.logger = self.logger
+        response = self.db.create_user(username,password,ip_address)
         if response:
             if response[0] > 0:
+                result = self.db.add_device(response[0],str(uuid.uuid4()))
                 self.response = {"success":True,"user_id":response[0],"session_id":response[1]}
             else:
                 self.error = errorCodeObj(response[0],response[1]) # bubble up error from db layer
         else:
             self.error = (-200,"DB: Could not create user")
 
-    def login(self,username,password):
-        response = self.db.login(username,password)
+    def login(self,username,password,ip_address):
+        self.db.logger = self.logger
+        response = self.db.login(username,password,ip_address)
         if response:
             self.response = {"success":True,"session_id":response[1],"user_id":response[0]}
         else:
             self.error = errorCodeObj(-155,"Invalid username/password")
 
     def add_device(self,user_id,uuid):
+        self.db.logger = self.logger
         result = self.db.add_device(user_id,uuid)
         if result < 0:
             if result == -3:
@@ -113,6 +129,7 @@ class JSONProcessor():
             self.response = {"success":True,"device_id":result}
 
     def list_devices(self,user_id):
+        self.db.logger = self.logger
         result = self.db.list_devices(user_id)
         if result:
             self.response = {"success":True,"devices":result}
@@ -120,6 +137,7 @@ class JSONProcessor():
             self.error = errorCodeObj(-4,"Error table devices list_devices")
 
     def add_frame(self,device_id,json_string):
+        self.db.logger = self.logger
         result = 1
         if result > 0:
             self.response = {"success":True,"device_id":device_id,"frame_id":result}
@@ -127,11 +145,13 @@ class JSONProcessor():
             self.error = errorCodeObj(-5,"Error adding frame to database")
 
     def frame_count(self,device_id):
+        self.db.logger = self.logger
         count = 0
         response = self.db.frame_count(device_id)
         self.response = {"success":True,"frame_count":count}
 
     def last_frame(self,device_id):
+        self.db.logger = self.logger
         frame = self.db.last_frame(device_id)
         if frame:
             self.response = {"success":True,"frame_id":frame[0],"created":frame[1].isoformat(),"json_string":frame[2]}
