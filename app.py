@@ -13,8 +13,8 @@ def verify_admin(user_info):
     return False
 
 
-@app.route('/admin/glosspoints/<session_token>')
-def glosspoints_admin(session_token):
+@app.route('/admin/tokens/<session_token>')
+def tokens_admin(session_token):
     if session_token:
         db = Database()
         db.logger = app.logger
@@ -22,10 +22,10 @@ def glosspoints_admin(session_token):
         if session_id:
             if verify_admin(db.get_user_info(session_id)):
                 config_data = json.load(open("config.json","r"))
-                contract_address = config_data['contract_address']
-                return render_template("glosspoints.html",
+                wallet_address = config_data['wallet_address']
+                return render_template("tokens.html",
                                        session_token=session_token,
-                                       contract_address=contract_address)
+                                       wallet_addreess=wallet_address)
 
 
 @app.route('/admin/', methods=["GET", "POST"])

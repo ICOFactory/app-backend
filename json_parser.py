@@ -97,13 +97,25 @@ class JSONProcessor():
         else:
             self.error = {"success":False,"errorCode":1,"error":"Invalid JSON request object."}
 
-    def create_user(self,username,password,ip_address):
+    def create_user(self,full_name,username,password,ip_address):
         self.db.logger = self.logger
-        response = self.db.create_user(username,password,ip_address)
+        response = self.db.create_user(full_name,username,password,ip_address)
         if response:
-            if response[0] > 0:
-                result = self.db.add_device(response[0],str(uuid.uuid4()))
-                self.response = {"success":True,"user_id":response[0],"session_id":response[1]}
+            user_id = response[0]
+            if user_id > 0:
+                self.db.add_device(user_id, str(uuid.uuid4()))
+                devices = self.db.list_devices(user_id)
+                user_info = self.db.get_user_info(user_id)
+                user_info["last_logged_in"] = user_info["last_logged_in"].isoformat()
+                user_info["created"] = user_info["created"].isoformat()
+                default_device = None
+                if len(devices) > 0:
+                    default_device = devices[0]
+                self.response = {"success": True,
+                                 "user_id": user_id,
+                                 "session_id": response[1],
+                                 "user_info": user_info,
+                                 "default_device": default_device}
             else:
                 self.error = errorCodeObj(response[0],response[1]) # bubble up error from db layer
         else:
@@ -113,7 +125,11 @@ class JSONProcessor():
         self.db.logger = self.logger
         response = self.db.login(username,password,ip_address)
         if response:
-            self.response = {"success":True,"session_id":response[1],"user_id":response[0]}
+            user_id = response[0]
+
+            self.response = {"success":True,
+                             "session_id":response[1],
+                             "user_id":user_id}
         else:
             self.error = errorCodeObj(-155,"Invalid username/password")
 

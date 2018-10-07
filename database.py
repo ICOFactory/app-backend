@@ -21,7 +21,24 @@ MYSQL_DATABASE_NAME = "service"
 
 class Database:
     def __init__(self, host=MYSQL_HOST, username=MYSQL_USERNAME, password=MYSQL_PASSWORD, database=MYSQL_DATABASE_NAME):
-        self.db = MySQLdb.connect(host, username, password, database)
+        config_data = json.load(open("config.json","r"))
+        if host:
+            db_host = host
+        else:
+            db_host = config_data['mysql_host']
+        if username:
+            db_username = username
+        else:
+            db_username = config_data['mysql_username']
+        if password:
+            db_password = password
+        else:
+            db_password = config_data['mysql_password']
+        if database:
+            db_name = database
+        else:
+            db_name = config_data['mysql_database']
+        self.db = MySQLdb.connect(db_host, db_username, db_password, db_name)
         self.logger = None
         
     def fetch_commands(self, device_id):
@@ -41,16 +58,17 @@ class Database:
 
     def get_user_info(self, user_id):
         c = self.db.cursor()
-        sql = "SELECT email_address,last_logged_in,last_logged_in_ip,created,created_ip,json_metadata FROM users WHERE user_id=%s"
+        sql = "SELECT email_address,last_logged_in,last_logged_in_ip,created,created_ip,json_metadata,full_name FROM users WHERE user_id=%s"
         c.execute(sql, (user_id,))
         row = c.fetchone()
         if row:
             user_info = {"email_address": row[0],
-                    "last_logged_in": row[1],
-                     "last_logged_in_ip": row[2],
-                     "created": row[3],
-                     "created_ip": row[4],
-                     "json_metadata": row[5]}
+                       "last_logged_in": row[1],
+                        "last_logged_in_ip": row[2],
+                        "created": row[3],
+                        "created_ip": row[4],
+                        "json_metadata": row[5],
+                        "full_name":row[6]}
             return user_info
         return None
 
@@ -111,7 +129,7 @@ class Database:
             return -1
 
     def count_glosspoints(self, user_id):
-        sql = "SELECT COUNT(*) FROM glosspoints WHERE owner_id=%s"
+        sql = "SELECT COUNT(*) FROM tokens WHERE owner_id=%s"
         c = self.db.cursor()
         try:
             c.execute(sql,(user_id,))
@@ -258,14 +276,14 @@ class Database:
             return None
         return None
 
-    def create_user(self, email_address, password, ip_addr):
+    def create_user(self, full_name, email_address, password, ip_addr):
         c = self.db.cursor()
         data = email_address + password
         pw_hash = sha256(data.encode("utf-8"))
         digest = pw_hash.hexdigest()
         new_session_token = random_token()
         email_param = self.db.escape_string(email_address).decode('utf-8')
-        sql = "INSERT INTO users (email_address,password,session_token,created_ip,created) VALUES (%s,%s,%s,%s,NOW());"
+        sql = "INSERT INTO users (email_address,password,session_token,created_ip,created) VALUES (%s,%s,%s,%s,NOW(),full_name);"
         try:
             c.execute(sql, (email_param, digest, new_session_token,ip_addr))
             last_row_id = c.lastrowid
@@ -292,6 +310,6 @@ if __name__ == "__main__":
     db = Database(MYSQL_HOST, MYSQL_USERNAME, MYSQL_PASSWORD, MYSQL_DATABASE_NAME)
     print("Creating admin user...")
     raw_password = input("Admin password: ")
-    result = db.create_user("admin", raw_password,None)
+    result = db.create_user("Administrator", "admin", raw_password, None)
     if result:
         print("Admin user created successfully.")

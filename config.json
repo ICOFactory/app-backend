@@ -1,1 +1,7 @@
-{"contract_address":"0xc0ffee254729296a45a3885639AC7E10F9d54979"}
+{"wallet_address":"0xc0ffee254729296a45a3885639AC7E10F9d54979",
+"mysql_host":"localhost",
+"mysql_user":"root",
+"mysql_password":"",
+"mysql_database":"service",
+"eth_address_pool_min":10,
+"eth_address_pool_max":50}

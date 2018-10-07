@@ -86,7 +86,7 @@ CREATE TABLE `frames` (
 -- Table structure for table `glosspoints`
 --
 
-DROP TABLE IF EXISTS `glosspoints`;
+DROP TABLE IF EXISTS tokens;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `glosspoints` (
