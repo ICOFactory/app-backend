@@ -45,7 +45,23 @@ CREATE TABLE `devices` (
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`device_id`),
   UNIQUE KEY `uuid` (`uuid`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `ethereum_address_pool`
+--
+
+DROP TABLE IF EXISTS `ethereum_address_pool`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `ethereum_address_pool` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `ethereum_address` char(42) DEFAULT NULL,
+  `assigned` datetime DEFAULT NULL,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=338 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -79,22 +95,6 @@ CREATE TABLE `frames` (
   `viewed` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
   `metadata` text,
   PRIMARY KEY (`frame_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `glosspoints`
---
-
-DROP TABLE IF EXISTS tokens;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `glosspoints` (
-  `serial` int(11) NOT NULL AUTO_INCREMENT,
-  `eth_address` char(42) DEFAULT NULL,
-  `owner_id` int(11) DEFAULT NULL,
-  `issued` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`serial`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -177,6 +177,42 @@ CREATE TABLE `shopping_cart_items` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `smart_contracts`
+--
+
+DROP TABLE IF EXISTS `smart_contracts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `smart_contracts` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `token_name` varchar(55) DEFAULT NULL,
+  `tokens` int(11) DEFAULT NULL,
+  `eth_address` int(11) DEFAULT NULL,
+  `solidity_source` text,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `max_priority` float DEFAULT '10',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `tokens`
+--
+
+DROP TABLE IF EXISTS `tokens`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `tokens` (
+  `serial` int(11) NOT NULL AUTO_INCREMENT,
+  `eth_address` int(11) DEFAULT NULL,
+  `owner_id` int(11) DEFAULT NULL,
+  `smart_contract_id` int(11) DEFAULT NULL,
+  `issued` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`serial`)
+) ENGINE=InnoDB AUTO_INCREMENT=301 DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `transaction_ledger`
 --
 
@@ -185,13 +221,13 @@ DROP TABLE IF EXISTS `transaction_ledger`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `transaction_ledger` (
   `txid` int(11) NOT NULL AUTO_INCREMENT,
-  `glosspoint_id` int(11) DEFAULT NULL,
+  `token_id` int(11) DEFAULT NULL,
   `sender_id` int(11) DEFAULT NULL,
   `receiver_id` int(11) DEFAULT NULL,
   `initiated_by` int(11) DEFAULT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`txid`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -211,9 +247,10 @@ CREATE TABLE `users` (
   `created_ip` varchar(15) DEFAULT NULL,
   `session_token` char(16) DEFAULT NULL,
   `json_metadata` text,
+  `full_name` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `email_address` (`email_address`)
-) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -225,4 +262,4 @@ CREATE TABLE `users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2018-10-02  3:29:19
+-- Dump completed on 2018-10-07 21:35:03

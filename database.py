@@ -310,9 +310,9 @@ class Database:
         digest = pw_hash.hexdigest()
         new_session_token = random_token()
         email_param = self.db.escape_string(email_address).decode('utf-8')
-        sql = "INSERT INTO users (email_address,password,session_token,created_ip,created) VALUES (%s,%s,%s,%s,NOW(),full_name);"
+        sql = "INSERT INTO users (email_address,password,session_token,created_ip,created,full_name) VALUES (%s,%s,%s,%s,NOW(),%s);"
         try:
-            c.execute(sql, (email_param, digest, new_session_token,ip_addr))
+            c.execute(sql, (email_param, digest, new_session_token,ip_addr,full_name))
             last_row_id = c.lastrowid
             c.close()
             self.db.commit()
