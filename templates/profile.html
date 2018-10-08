@@ -1,0 +1,100 @@
+<html>
+<head>
+    <title>administration > users > {{ user_info.full_name }}</title>
+</head>
+<body>
+    <h1>{{ user_info.full_name }}</h1>
+    <p>[ <a href="/admin/users/{{ session_token }}">back to users</a> ]</p>
+    <div id="profile">
+        <table cellspacing="3" cellpadding="3" border="1">
+            <tr>
+                <td><strong>E-Mail Address</strong></td>
+                <td>{{ user_info.email_address }}</td>
+            </tr>
+            <tr>
+                <td>
+                    <strong>Password</strong>
+                </td>
+                <td>
+                    [ <a href="/admin/reset-password/{{ user_info.user_id }}/{{ session_token }}">reset password</a> ]
+                </td>
+            </tr>
+            <tr>
+                <td><strong>Last logged in</strong></td>
+                <td>{{ user_info.last_logged_in }}</td>
+            </tr>
+            <tr>
+                <td><strong>Last logged in IP</strong></td>
+                <td>{{ user_info.last_logged_in_ip }}</td>
+            </tr>
+            <tr>
+                <td><strong>Created</strong></td>
+                <td>{{ user_info.created }}</td>
+            </tr>
+            <tr>
+                <td><strong>Created IP</strong></td>
+                <td>{{ user_info.created_ip }}</td>
+            </tr>
+        </table>
+    </div>
+    <h2>ERC20 Tokens</h2>
+    {% for ico in ico_data %}
+    <table cellpadding="5" border="1">
+        <tr class="row1">
+            <td><strong>Contract Identifier</strong></td>
+            <td>{{ ico.token_name }}</td>
+        </tr>
+        <tr class="row2">
+            <td><strong>ICO Tokens</strong></td>
+            <td>{{ ico.tokens }}</td>
+        </tr>
+        <tr class="row1">
+            <td><strong>Contract Address</strong></td>
+            <td>{{ ico.eth_address }}</td>
+        </tr>
+        <tr class="row2">
+            <td><strong>Owned Tokens</strong></td>
+            <td>{{ ico.user_owned_tokens_count }}</td>
+        </tr>
+        <tr class="row1">
+            <td><strong>Available Issued Tokens</strong></td>
+            <td>{{ ico.available_tokens }}</td>
+        </tr>
+        <tr class="row2">
+            <td><strong>Assign Tokens to User</strong></td>
+            <td>
+                <form action="/admin/issue-tokens/" method="post">
+                    <input type="hidden" name="session_token" value="{{ session_token }}" />
+                    <input type="hidden" name="smart_contract_id" value="{{ ico.token_id }}" />
+                    <input type="number" size="8" />&nbsp;<input type="submit" value="Assign" />
+                </form>
+            </td>
+        </tr>
+    </table>
+    {% if ico.user_owned_tokens %}
+    <h2>{{ ico.token_name }}</h2>
+    <table cellpadding="5" border="1">
+        <tr>
+            <td><strong>ETH Address</strong></td>
+            <td><strong>Issued</strong></td>
+        </tr>
+        {% for token in ico.user_owned_tokens %}
+        <tr>
+            <td>{{ token.eth_address }}</td>
+            <td>{{ token.issued }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+            <td colspan="2">
+                <form action="/admin/deassign_tokens" method="post">
+                    <strong>Transfer</strong>&nbsp;
+                    <input name="tokens" type="number" size="8" />&nbsp;tokens back to master wallet.&nbsp;
+                    <input type="submit" value="Deassign Tokens"
+                </form>
+            </td>
+        </tr>
+    </table>
+    {% endif %}
+    {% endfor %}
+</body>
+</html>

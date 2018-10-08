@@ -48,14 +48,14 @@ class SmartContract:
                 row = c.fetchone()
                 if row:
                     sql = "SELECT id, token_name, tokens, max_priority, created FROM smart_contracts WHERE eth_address=%s"
-                    c.execute(sql, row[0])
+                    c.execute(sql, (row[0],))
                     inner_row = c.fetchone()
                     if inner_row:
-                        self.smart_contract_id = row[0]
-                        self.token_name = row[1]
-                        self.tokens = row[2]
-                        self.max_priority = row[3]
-                        self.created = row[4]
+                        self.smart_contract_id = inner_row[0]
+                        self.token_name = inner_row[1]
+                        self.tokens = inner_row[2]
+                        self.max_priority = inner_row[3]
+                        self.created = inner_row[4]
                 c.close()
             except MySQLdb.Error as e:
                 try:
@@ -68,6 +68,51 @@ class SmartContract:
                         self.logger.error("MySQL Error: %s" % (str(e),))
                     else:
                         print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+
+    def list_owned_tokens_for_user_id(self, user_id):
+        output = []
+        sql = "SELECT serial, ethereum_address_pool.ethereum_address, issued "
+        sql += "FROM tokens LEFT JOIN ethereum_address_pool ON tokens.eth_address = ethereum_address_pool.id "
+        sql += "WHERE smart_contract_id=%s AND owner_id=%s"
+        try:
+            c = self.db.cursor()
+            c.execute(sql, (self.smart_contract_id,user_id))
+            for row in c:
+                output.append({"serial": row[0], "eth_address": row[1], "issued": row[2]})
+            c.close()
+        except MySQLdb.Error as e:
+            try:
+                if self.logger:
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                if self.logger:
+                    self.logger.error("MySQL Error: %s" % (str(e),))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+        return output
+
+    def get_issued_token_count(self):
+        try:
+            c = self.db.cursor()
+            c.execute("SELECT COUNT(*) FROM tokens WHERE smart_contract_id=%s AND issued IS NOT NULL;",
+                      (self.smart_contract_id,))
+            row = c.fetchone()
+            if row:
+                return row[0]
+        except MySQLdb.Error as e:
+            try:
+                if self.logger:
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                if self.logger:
+                    self.logger.error("MySQL Error: %s" % (str(e),))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+        return 0
 
     def issue_tokens(self, tokens):
         if self.smart_contract_id > 0:
@@ -100,11 +145,11 @@ class SmartContract:
             c = self.db.cursor()
             counter = 0
             c.execute("SELECT serial FROM tokens WHERE owner_id=%s AND smart_contract_id=%s LIMIT %s",
-                      (user_id,self.smart_contract_id,tokens))
+                      (user_id, self.smart_contract_id, tokens))
             for row in c:
-                c.execute("UPDATE tokens SET owner_id=%s WHERE serial=%s",(row[0],row[1]))
+                c.execute("UPDATE tokens SET owner_id=NULL WHERE serial=%s", (row[0],))
                 c.execute("INSERT INTO transaction_ledger (token_id,sender_id,initiated_by)",
-                          (row[0],user_id,user_id))
+                          (row[0], user_id, user_id))
                 counter += 1
             self.db.commit()
             c.close()
@@ -126,7 +171,7 @@ class SmartContract:
         try:
             c = self.db.cursor()
             c.execute("SELECT COUNT(*) FROM tokens WHERE smart_contract_id=%s AND owner_id=%s",
-                      (self.smart_contract_id,user_id))
+                      (self.smart_contract_id, user_id))
             row = c.fetchone()
             c.close()
             if row:

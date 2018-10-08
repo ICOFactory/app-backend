@@ -23,7 +23,7 @@
                 <strong>IP Address (created by)</strong>
             </td>
             <td>
-                <strong>Options</strong>
+                <strong>More Info</strong>
             </td>
         </tr>
         {% for each in users %}
@@ -33,7 +33,7 @@
             <td>{{ each.last_logged_in_ip}}</td>
             <td>{{ each.created }}</td>
             <td>{{ each.created_ip }}</td>
-            <td>[ <a href="/admin/reset-password/{{ each.user_id }}/{{ session_token }}">reset password</a> ]</td>
+            <td>[ <a href="/admin/profile/{{ each.user_id }}/{{ session_token }}">profile</a> ]</td>
         </tr>
         {% endfor %}
     </table>

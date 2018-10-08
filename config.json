@@ -1,4 +1,6 @@
 {"wallet_address":"0xc0ffee254729296a45a3885639AC7E10F9d54979",
+  "eth_node_hostname":"ethereum_node_1.dyndns.org",
+  "eth_node_ip_addr":"66.245.133.100",
 "mysql_host":"localhost",
 "mysql_user":"root",
 "mysql_password":"",

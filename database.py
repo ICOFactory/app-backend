@@ -56,9 +56,35 @@ class Database:
         self.db.commit()
         return commands
 
+    def get_smart_contracts(self, user_id):
+        # TODO: where user_id = owner
+        sql = "SELECT * FROM smart_contracts LEFT JOIN ethereum_address_pool ON eth_address=ethereum_address_pool.id;"
+        try:
+            c = self.db.cursor()
+            c.execute(sql)
+            output = []
+            for row in c:
+                output.append({
+                    "token_id": row[0],
+                    "token_name": row[1],
+                    "tokens": row[2],
+                    "created": row[5].isoformat(),
+                    "max_priority": row[6],
+                    "eth_address": row[8]
+                })
+            c.close()
+            return output
+        except MySQLdb.Error as e:
+            try:
+                self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                self.logger.error("MySQL Error: %s" % (str(e),))
+        return None
+
     def get_user_info(self, user_id):
         c = self.db.cursor()
-        sql = "SELECT email_address,last_logged_in,last_logged_in_ip,created,created_ip,json_metadata,full_name FROM users WHERE user_id=%s"
+        sql = "SELECT email_address,last_logged_in,last_logged_in_ip,created,created_ip,json_metadata,full_name,user_id"
+        sql += " FROM users WHERE user_id=%s"
         c.execute(sql, (user_id,))
         row = c.fetchone()
         if row:
@@ -68,7 +94,8 @@ class Database:
                         "created": row[3],
                         "created_ip": row[4],
                         "json_metadata": row[5],
-                        "full_name":row[6]}
+                        "full_name":row[6],
+                        "user_id":row[7]}
             return user_info
         return None
 

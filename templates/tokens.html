@@ -1,103 +1,128 @@
 <html>
     <head>
-        <title>Glosspoints Administration</title>
-        <style href="{{ url_for('static', filename='stylesheet.css') }}"></style>
+        <title>administration > tokens</title>
+        <style type="text/css">
+            #ethereum_administration { border: solid black 1px; }
+            tr.row1 { background-color: aliceblue; }
+            tr.row2 { background-color: antiquewhite; }
+            tr.table_header {background-color: darkslateblue;
+            vertical-align: bottom;}
+            h3 { color: antiquewhite; margin: 5px; }
+        </style>
     </head>
     <body>
-        <h1>Glosspoints Administration</h1>
+        <h1>ERC20 tokens</h1>
         <p>[ <a href="/admin/{{ session_token }}">back to admin</a> ]</p>
-            <div id="ethereum">
-                <h2>Ethereum</h2>
-                <table id="ethereum_administration" cellpadding="5" cellspacing="5">
-                    <tr class="row1">
-                        <td>ICO tokens</td>
-                        {% if ico_tokens %}
-                        <td>{{ ico_tokens }}</td>
-                        {% else %}
-                        <td style="text-align:right">
-                            <form action="/admin/ico" method="post">
-                                <input type="hidden" name="session_token" value="{{ session_token }}" />
-                                <input name="tokens" size="5"  />&nbsp;<input type="submit" value="Publish" />&nbsp;<em>(31000 gas required)</em>
-                            </form>
-                        </td>
-                        {% endif %}
-                    </tr>
-                     <tr class="row2">
-                        <td>ETH wallet balance</td>
-                        <td style="text-align:right">0.55 ETH (20 tokens)</td>
-                    </tr>
-                    <tr class="row1">
-                        <td>Deposit Address</td>
-                        <td>0xc0ffee254729296a45a3885639AC7E10F9d54979</td>
-                    </tr>
-                    {% if ico_tokens %}
-                    <tr class="row2">
-                        <td>Smart Contract Address</td>
-                        <td>{{ contract_address }}</td>
-                    </tr>
-                    <tr class="row1">
-                        <td>Glosspoints left to issue</td>
-                        <td>50000</td>
-                    </tr>
-                    <tr class="row2">
-                        <td>Issue Glosspoints</td>
-                        <td>
-                            <form action="/admin/issue-glosspoints" method="post">
-                                <input type="hidden" name="session_token" value="{{ session_token }}" />
-                                <input name="number_to_issue" size="5" value="0" />
-                                <input type="submit" value="Issue" />
-                            </form>
-                        </td>
-                    </tr>
-                    <tr class="row1">
-                        <td>Glosspoints pending issuance on ETH blockchain</td>
-                        <td>0</td>
-                    </tr>
-                    <tr class="row2">
-                        <td>Issued Glosspoints not assigned</td>
-                        <td>5</td>
-                    </tr>
-                    <tr class="row1">
-                        <td>Glosspoints assigned to users</td>
-                        <td>0</td>
-                    </tr>
-                    {% else %}{% endif %}
-                </table>
-            </div>
-        {% if ico_tokens %}
-            <div id="assign_glasspoints">
-                <h2>Assign Glosspoints</h2>
-                <form method="post" action="/admin/glosspoints/assign">
-                    <input type="hidden" name="session_token" value="{{ session_token }}" />
-                    <table>
-                        <tr>
-                            <td><strong>Filter</strong></td>
-                            <td><input type="text" id="filter_text" /></td>
-                        </tr>
-                        <tr>
-                            <td colspan="2"><select name="assign_users" size="12" style="width: 100%"></select></td>
-                        </tr>
-                        <tr>
-                            <td><input name=""</td><td><input type="submit" value="Assign Glosspoints"></td>
-                        </tr>
-                    </table>
-                </form>
-            </div>
-        {% endif %}
-        {% if ico_tokens %}
-            <div id="glasspoint_transactions">
-                <h2>Latest Glosspoint transactions</h2>
-                <table>
-                    <tr>
-                        <td><strong>Transaction ID</strong></td>
-                        <td><strong>Glosspoint ID</strong></td>
-                        <td><strong>Sent By</strong></td>
-                        <td><strong>Received By</strong></td>
-                        <td><strong>Initiated By</strong></td>
-                        <td><strong>Timestamp</strong></td>
-                    </tr>
-                </table>
-            </div>
-        {% endif %}
+        <div id="ethereum">
+            <table id="ethereum_administration" cellpadding="5" cellspacing="0" border="1">
+                <tr class="table_header">
+                    <td colspan="2"><h3>Ethereum Node</h3></td>
+                </tr>
+                <tr class="row2">
+                    <td><strong>Hostname</strong></td>
+                    <td>{{ eth_node.hostname }}&nbsp;({{ eth_node.ip_addr }})</td>
+                </tr>
+                <tr class="row1">
+                    <td><strong>Account Address</strong></td>
+                    <td>{{ wallet_address }}</td>
+                </tr>
+                 <tr class="row2">
+                    <td><strong>Account ETH Balance</strong></td>
+                    <td>{{ eth_balance }} ETH</td>
+                </tr>
+                <tr class="row1">
+                    <td><strong>Latest Block</strong></td>
+                    <td>{{ latest_block.hash }}</td>
+                </tr>
+                <tr class="row2">
+                    <td><strong>Latest Block Transactions</strong></td>
+                    <td>{{ latest_block.transaction_count }}</td>
+                </tr>
+                <tr class="row1">
+                    <td><strong>Latest Block Timestamp</strong></td>
+                    <td>{{ latest_block.timestamp }}</td>
+                </tr>
+                <tr class="row2">
+                    <td><strong>Latest Block Lowest Gas Price</strong></td>
+                    <td>{{ latest_block.lowest_gas_price }} Gwei</td>
+                </tr>
+                <tr class="row1">
+                    <td><strong>Smart Contracts</strong></td>
+                    <td>{{ smart_contract_count }}</td>
+                </tr>
+                <tr class="row2">
+                    <td><strong>Total ICO Tokens</strong></td>
+                    <td>{{ total_ico_tokens }}</td>
+                </tr>
+                <tr class="row1">
+                    <td><strong>Total Issued Tokens</strong></td>
+                    <td>{{ total_issued_tokens }}</td>
+                </tr>
+                <tr class="row2">
+                    <td><strong>Tokens Pending Issuance</strong></td>
+                    <td>{{ tokens_not_yet_issued }}</td>
+                </tr>
+                <tr class="row1">
+                    <form action="/admin/ico" method="post">
+                        <input type="hidden" name="session_token" value="{{ session_token }}" />
+                        <td><strong>Launch ICO!</strong></td>
+                        <td><input name="token_name" size="20" placeholder="Token Name" />&nbsp;
+                        <input name="ico_tokens" type="number" size="10" />&nbsp;tokens&nbsp;
+                            <input type="submit" value="Publish Contract" /></td>
+                    </form>
+                </tr>
+            </table>
+        </div>
+        <div id="smart_contracts">
+            <h2>Smart Contracts</h2>
+            {% for contract in smart_contracts %}
+            <table cellpadding="5" border="1">
+                <tr class="table_header">
+                    <td colspan="2"><h3>{{ contract.token_name }}</h3></td>
+                </tr>
+                <tr class="row1">
+                    <td><strong>ETH Address</strong></td>
+                    <td>{{ contract.eth_address }}</td>
+                </tr>
+                <tr class="row2">
+                    <td><strong>ICO Tokens</strong></td>
+                    <td>{{ contract.tokens }}</td>
+                </tr>
+                <tr class="row1">
+                    <td><strong>Created</strong></td>
+                    <td>{{ contract.created }}</td>
+                </tr>
+                <tr class="row2">
+                    <td><strong>Issued Tokens</strong></td>
+                    <td>{{ contract.issued_tokens }}</td>
+                </tr>
+                <tr class="row1">
+                    <td><strong>Issued, Unassigned Tokens</strong></td>
+                    <td>{{ contract.unassigned_tokens }}</td>
+                </tr>
+                <tr class="row2">
+                    <td><strong>Issue Tokens</strong></td>
+                    <td>
+                        <form action="/admin/issue-tokens/" method="post">
+                            <input type="hidden" name="token_id" value="{{ contract.token_id }}" />
+                            <input type="hidden" name="session_token" value="{{ session_token }}" />
+                            <input type="number" size="8" name="new_tokens" />&nbsp;<input type="submit" value="Issue New Tokens" />
+                        </form>
+                    </td>
+                </tr>
+                <tr class="row1">
+                    <td><strong>Max Priority</strong></td>
+                    <td>
+                        <form action="/admin/set-priority/" method="post">
+                            <input type="hidden" name="token_id" value="{{ contract.token_id }}" />
+                            <input type="hidden" name="session_token" value="{{ session_token }}" />
+                            <input type="number" size="4" name="new_priority" value="{{ contract.max_priority }}" />&nbsp;<input type="submit" value="Set Priority" />
+                        </form>
+                    </td>
+                </tr>
+            </table>
+            <br />
+            {% endfor %}
+        </div>
     </body>
 </html>

@@ -1,6 +1,8 @@
 from flask import Flask, request, render_template, Response, abort
 from json_parser import JSONProcessor
 from database import Database
+import smart_contract
+import datetime
 import json
 import uuid
 
@@ -13,6 +15,33 @@ def verify_admin(user_info):
     return False
 
 
+@app.route('/admin/profile/<user_id>/<session_token>')
+def user_profile_admin(user_id, session_token):
+    if session_token:
+        db = Database()
+        db.logger = app.logger
+        session_id = db.validate_session(session_token)
+        if session_id:
+            if verify_admin(db.get_user_info(session_id)):
+                user_data = db.get_user_info(user_id)
+                smart_contracts = db.get_smart_contracts(user_id)
+                sc_data = []
+                for each in smart_contracts:
+                    sc = smart_contract.SmartContract(eth_address=each['eth_address'])
+                    if sc.smart_contract_id > 0:
+                        token_count = sc.get_token_count_for_user_id(user_id)
+                        new_obj = dict(each)
+                        new_obj["user_owned_tokens_count"] = token_count
+                        new_obj["user_owned_tokens"] = sc.list_owned_tokens_for_user_id(user_id)
+                        new_obj["available_tokens"] = sc.get_unassigned_token_count()
+                        sc_data.append(new_obj)
+                return render_template("profile.html",
+                                       session_token=session_token,
+                                       user_info=user_data,
+                                       ico_data=sc_data)
+    return render_template("login.html")
+
+
 @app.route('/admin/tokens/<session_token>')
 def tokens_admin(session_token):
     if session_token:
@@ -23,9 +52,36 @@ def tokens_admin(session_token):
             if verify_admin(db.get_user_info(session_id)):
                 config_data = json.load(open("config.json","r"))
                 wallet_address = config_data['wallet_address']
+                eth_node = {"hostname":"ethereum_node_1.dyndns.org",
+                            "ip_addr":"69.53.42.122"}
+                latest_block = {"hash": "0xb83f73fbe6220c111136aefd27b160bf4a34085c65ba89f24246b3162257c36a",
+                                "transaction_count": 5,
+                                "lowest_gas_price": 8,
+                                "timestamp": datetime.datetime.now().isoformat()}
+                smart_contracts = db.get_smart_contracts(0)
+                total_tokens = 0
+                issued_tokens = 0
+                contract_data = []
+                for every_contract in smart_contracts:
+                    new_obj = dict(every_contract)
+                    sc = smart_contract.SmartContract(eth_address=every_contract["eth_address"])
+                    total_tokens += every_contract['tokens']
+                    new_obj["issued_tokens"] = sc.get_issued_token_count()
+                    new_obj["unassigned_tokens"] = sc.get_unassigned_token_count()
+                    issued_tokens += new_obj["issued_tokens"]
+                    contract_data.append(new_obj)
                 return render_template("tokens.html",
+                                       latest_block=latest_block,
                                        session_token=session_token,
-                                       wallet_addreess=wallet_address)
+                                       wallet_address=wallet_address,
+                                       eth_node=eth_node,
+                                       smart_contracts=contract_data,
+                                       smart_contract_count=len(smart_contracts),
+                                       total_ico_tokens=total_tokens,
+                                       total_issued_tokens=issued_tokens,
+                                       tokens_not_yet_issued=0,
+                                       eth_balance=0.15)
+    return render_template("login.html")
 
 
 @app.route('/admin/', methods=["GET", "POST"])
