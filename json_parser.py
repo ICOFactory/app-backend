@@ -26,7 +26,7 @@ class JSONProcessor():
                 elif action == "create_user":
                     required_args = ["email_address",
                                      "password",
-                                     "name",
+                                     "full_name",
                                      "action"]
                     not_found = False
                     for each in jsonData.keys():
@@ -35,7 +35,7 @@ class JSONProcessor():
                             break
 
                     if not not_found:
-                        self.create_user(jsonData['email_address'],jsonData['password'], request_data['ip_address'])
+                        self.create_user(jsonData['full_name'],jsonData['email_address'],jsonData['password'], request_data['ip_address'])
                     else:
                         self.error = errorCodeObj(5,"Required arguments not found.")
                 elif action == "add_device":

@@ -74,7 +74,9 @@
             </table>
         </div>
         <div id="smart_contracts">
+            {% if smart_contracts %}
             <h2>Smart Contracts</h2>
+            {% endif %}
             {% for contract in smart_contracts %}
             <table cellpadding="5" border="1">
                 <tr class="table_header">
