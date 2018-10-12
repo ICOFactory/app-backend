@@ -126,10 +126,14 @@ class JSONProcessor():
         response = self.db.login(username,password,ip_address)
         if response:
             user_id = response[0]
-
-            self.response = {"success":True,
-                             "session_id":response[1],
-                             "user_id":user_id}
+            devices = self.db.list_devices(user_id)
+            default_device = None
+            if len(devices)
+                default_device = devices[0]
+            self.response = dict(success=True,
+                                 session_id=response[1],
+                                 user_id=user_id,
+                                 default_device=default_device)
         else:
             self.error = errorCodeObj(-155,"Invalid username/password")
 
