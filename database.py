@@ -332,6 +332,44 @@ class Database:
             return None
         return last_row_id, new_session_token
 
+    def view_wallet(self,user_id):
+        try:
+            c = self.db.cursor()
+            sql = "SELECT serial,ethereum_address_pool.ethereum_address,issued,smart_contract_id FROM tokens "
+            sql += " LEFT JOIN ethereum_address_pool ON ethereum_address_pool.id=tokens.eth_address WHERE owner_id=%s"
+            c.execute(sql,(user_id,))
+            all_tokens = []
+            for row in c:
+                all_tokens.append({"token_serial": row[0],
+                                   "token_eth_address": row[1],
+                                   "token_issued": row[2].isoformat(),
+                                   "smart_contract_id": row[3]})
+            sql = "SELECT txid,sender_id,receiver_id,initiated_by,timestamp FROM transaction_ledger WHERE token_id=%s"
+            for every_token in all_tokens:
+                c.execute(sql, (every_token["token_serial"],))
+                every_token["transactions"] = []
+                for row in c:
+                    every_token["transactions"].append({"txid": row[0],
+                                                        "sender_id": row[1],
+                                                        "receiver_id": row[2],
+                                                        "initiated_by": row[3],
+                                                        "timestamp": row[4].isoformat()})
+            return all_tokens
+        except MySQLdb.Error as e:
+            try:
+                if e.args[0] == 1062:
+                    return -1, "E-mail address already exists in database!"
+                if self.logger:
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                if self.logger:
+                    self.logger.error("MySQL Error: %s" % (str(e),))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            return None
+
 
 if __name__ == "__main__":
     db = Database(MYSQL_HOST, MYSQL_USERNAME, MYSQL_PASSWORD, MYSQL_DATABASE_NAME)

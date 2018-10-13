@@ -8,8 +8,41 @@ def errorCodeObj(errorCode, errorMessage):
                 return {"success": False, "errorCode": errorCode, "error": errorMessage}
             return {"success": False, "error": errorMessage}
 
+class APIAction:
+    AUTH_LEVEL_ALL = 0
+    AUTH_LEVEL_MEMBER = 1
+    AUTH_LEVEL_ADMIN = 2
+    def __init__(self,name,required_arguments,auth_level):
+        self.name = name
+        self.required_arguments = required_arguments
+        self.auth_level = auth_level
 
-class JSONProcessor():
+    def all_required_arguments(self, args):
+        required_args = list(self.required_arguments)
+        # all actions require a name and session id
+        required_args.append("action")
+        required_args.append("session_id")
+        found = True
+        for each in args:
+            if each not in required_args:
+                found = False
+                break
+        return found
+
+    def requires_login(self):
+        if self.auth_level > 0:
+            return True
+        return False
+
+    def requires_admin(self):
+        if self.auth_level > 1:
+            return True
+        return False
+
+class JSONProcessor:
+    ERROR_VIEWING_WALLET =17
+    ERROR_INVALID_SESSION = 4,"Invalid session"
+    ERROR_REQUIRED_ARGUMENTS_NOT_FOUND = 5,"Required arguments not found."
     def __init__(self, jsonData,request_data=None):
         self.error = None
         self.response = None
@@ -90,12 +123,34 @@ class JSONProcessor():
                             self.error = errorCodeObj(4,"Invalid session")
                     else:
                         self.error = errorCodeObj(5,"Required arguments not found.")
+                elif action == "view_wallet":
+                    validator = APIAction("view_wallet",["user_id"],APIAction.AUTH_LEVEL_MEMBER)
+                    if validator.all_required_arguments(jsonData.keys()):
+                        if validator.requires_login():
+                            if self.db.verify_session(jsonData['user_id'],jsonData['session_id']):
+                               self.view_wallet(jsonData['user_id'])
+                            else:
+                                self.fail(("Not logged in",self.ERROR_INVALID_SESSION))
+                    else:
+                        self.error = errorCodeObj(5,"Required arguments not found.")
                 else:
                     self.error = errorCodeObj(300,"Unknown action.")
             else:
-                self.error = errorCodeObj(2,"Action not found")
+                self.fail(("Required arguments not found",self.ERROR_REQUIRED_ARGUMENTS_NOT_FOUND))
         else:
             self.error = {"success":False,"errorCode":1,"error":"Invalid JSON request object."}
+
+    def fail(self,error_tuple):
+        self.error = {"success":False,"errorCode":error_tuple[0],"error":error_tuple[1]}
+
+    def view_wallet(self,user_id):
+        self.db.logger = self.logger
+        owned_tokens = self.db.view_wallet(user_id)
+        if owned_tokens:
+            self.response = {"success":True,
+                            "owned_tokens":owned_tokens}
+        else:
+            self.fail(self.ERROR_VIEWING_WALLET,"Error viewing wallet")
 
     def create_user(self,full_name,username,password,ip_address):
         self.db.logger = self.logger
@@ -128,7 +183,7 @@ class JSONProcessor():
             user_id = response[0]
             devices = self.db.list_devices(user_id)
             default_device = None
-            if len(devices)
+            if len(devices) > 0:
                 default_device = devices[0]
             self.response = dict(success=True,
                                  session_id=response[1],
