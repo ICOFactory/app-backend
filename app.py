@@ -15,6 +15,59 @@ def verify_admin(user_info):
     return False
 
 
+@app.route('/admin/ico/view_smart_contract/<smart_contract_id>/<session_token>')
+def view_smart_contract(smart_contract_id,session_token):
+    if session_token and smart_contract_id:
+        db = Database()
+        db.logger = app.logger
+        session_id = db.validate_session(session_token)
+        if session_id:
+            if verify_admin(db.get_user_info(session_id)):
+                smart_contracts = db.get_smart_contracts(session_id)
+                for every_contract in smart_contracts:
+                    if every_contract['token_id'] == smart_contract_id:
+                        sc = smart_contract.SmartContract(eth_address=every_contract['eth_address'])
+                        return render_template("view_smart_contract.html",
+                                               token_name=every_contract['token_name'],
+                                               token_symbol=every_contract['token_symbol'],
+                                               token_count=every_contract['token_count'],
+                                               new_solidity_contract=sc.solidity_code)
+            abort(403)
+        abort(403)
+    abort(500)
+
+
+@app.route('/admin/ico', methods=["POST", "GET"])
+def ico_admin():
+    session_token = request.form['session_token']
+    token_name = request.form['token_name']
+    token_symbol = request.form['token_symbol']
+    tokens = int(request.form['ico_tokens'])
+    if tokens < 1:
+        abort(Response("Invalid initial tokens value"))
+    if session_token:
+        db = Database()
+        db.logger = app.logger
+        session_id = db.validate_session(session_token)
+        if session_id:
+            if verify_admin(db.get_user_info(session_id)):
+                smart_contracts = db.get_smart_contracts(session_id)
+                for every_contract in smart_contracts:
+                    if token_name == every_contract['token_name']:
+                        abort(Response("This token name already exists"))
+                    #if token_symbol == every_contract['token_symbol']:
+                    #    abort(Response("This token symbol already exists"))
+                new_smart_contract = smart_contract.SmartContract(token_name=token_name,
+                                                                  token_symbol=token_symbol,
+                                                                  token_count=tokens)
+                return render_template("view_smart_contract.html",
+                                       token_name=token_name,
+                                       token_symbol=token_symbol,
+                                       tokens=tokens,
+                                       new_solidity_contract=new_smart_contract.solidity_code)
+    abort(404)
+
+
 @app.route('/admin/profile/<user_id>/<session_token>')
 def user_profile_admin(user_id, session_token):
     if session_token:

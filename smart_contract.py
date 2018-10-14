@@ -1,16 +1,18 @@
 import MySQLdb
 import json
 from ethereum_node import EthereumNode
+from flask import render_template
 
 
 class SmartContract:
-    def __init__(self, eth_address=None, logger=None, token_name=None, token_count=-1, max_priority=10):
+    def __init__(self, eth_address=None, logger=None, token_name=None, token_count=-1, token_symbol=None, max_priority=10):
         self.tokens = token_count
         self.eth_node = EthereumNode()
         self.contract_address = eth_address
         self.smart_contract_id = -1
         self.max_priority = max_priority
         self.token_name = token_name
+        self.token_symbol = token_symbol
         self.created = None
         self.logger = logger
         self.config_data = json.load(open("config.json", "r"))
@@ -19,16 +21,21 @@ class SmartContract:
                                   self.config_data["mysql_password"],
                                   self.config_data["mysql_database"])
 
-        if token_name and token_count > 0:
+        if token_name and token_count > 0 and token_symbol:
             try:
                 c = self.db.cursor()
                 new_eth_address = self.eth_node.assign_new_ethereum_address()
-                c.execute(
-                    "INSERT INTO smart_contracts (token_name,tokens,max_priority,eth_address) VALUES (%s,%s,%s,%s)",
-                          (self.token_name, self.tokens, self.max_priority, new_eth_address[0]))
+                new_smart_contract = render_template("erc20_token.sol",
+                                                     ico_name=token_name,
+                                                     ico_symbol=token_symbol,
+                                                     token_count=token_count)
+                sql = "INSERT INTO smart_contracts (token_name,tokens,max_priority,eth_address,solidity_source)"
+                sql += " VALUES (%s,%s,%s,%s,%s)"
+                c.execute(sql,(self.token_name, self.tokens, self.max_priority, new_eth_address[0],new_smart_contract))
                 self.db.commit()
                 new_row_id = c.lastrowid
                 self.smart_contract_id = new_row_id
+                self.solidity_code = new_smart_contract
                 c.close()
             except MySQLdb.Error as e:
                 try:
@@ -47,7 +54,8 @@ class SmartContract:
                 c.execute("SELECT id FROM ethereum_address_pool WHERE ethereum_address=%s", (eth_address,))
                 row = c.fetchone()
                 if row:
-                    sql = "SELECT id, token_name, tokens, max_priority, created FROM smart_contracts WHERE eth_address=%s"
+                    sql = "SELECT id, token_name, tokens, max_priority, created, token_symbol FROM smart_contracts"
+                    sql += " WHERE eth_address=%s"
                     c.execute(sql, (row[0],))
                     inner_row = c.fetchone()
                     if inner_row:
@@ -56,6 +64,7 @@ class SmartContract:
                         self.tokens = inner_row[2]
                         self.max_priority = inner_row[3]
                         self.created = inner_row[4]
+                        self.token_symbol=inner_row[5]
                 c.close()
             except MySQLdb.Error as e:
                 try:

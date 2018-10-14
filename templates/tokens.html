@@ -65,10 +65,11 @@
                 <tr class="row1">
                     <form action="/admin/ico" method="post">
                         <input type="hidden" name="session_token" value="{{ session_token }}" />
-                        <td><strong>Launch ICO!</strong></td>
+                        <td><strong>Generate a new ERC20 (ICO) Smart Contract</strong></td>
                         <td><input name="token_name" size="20" placeholder="Token Name" />&nbsp;
+                            <input name="token_symbol" size="8" placeholder="Symbol" />&nbsp;
                         <input name="ico_tokens" type="number" size="10" />&nbsp;tokens&nbsp;
-                            <input type="submit" value="Publish Contract" /></td>
+                            <input type="submit" value="Generate Contract" /></td>
                     </form>
                 </tr>
             </table>
@@ -84,7 +85,7 @@
                 </tr>
                 <tr class="row1">
                     <td><strong>ETH Address</strong></td>
-                    <td>{{ contract.eth_address }}</td>
+                    <td>{{ contract.eth_address }}&nbsp;[ <a href="/admin/">view Solidity source code</a> ]</td>
                 </tr>
                 <tr class="row2">
                     <td><strong>ICO Tokens</strong></td>

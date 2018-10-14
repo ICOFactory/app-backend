@@ -1,0 +1,12 @@
+<html>
+<head>
+    <title>ERC20 Smart Contract for {{ token_name }}</title>
+</head>
+<body>
+    <h1>ERC20 Smart Contract for {{ token_name }} (symbol: {{ token_symbol }}, ICO tokens: {{ token_count }})</h1>
+    <p>[ <a href="/admin/tokens/{{ session_token }}">back to tokens administration</a> ]</p>
+    <pre>
+        {{ new_solidity_contract }}
+    </pre>
+</body>
+</html>
