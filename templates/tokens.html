@@ -83,9 +83,13 @@
                 <tr class="table_header">
                     <td colspan="2"><h3>{{ contract.token_name }}</h3></td>
                 </tr>
+                <tr class="row2">
+                    <td><strong>ICO Symbol</strong></td>
+                    <td>{{ contract.token_symbol }}</td>
+                </tr>
                 <tr class="row1">
                     <td><strong>ETH Address</strong></td>
-                    <td>{{ contract.eth_address }}&nbsp;[ <a href="/admin/">view Solidity source code</a> ]</td>
+                    <td>{{ contract.eth_address }}&nbsp;[ <a href="/admin/ico/view_smart_contract/{{ contract.token_id }}/{{ session_token }}">view Solidity source code</a> ]</td>
                 </tr>
                 <tr class="row2">
                     <td><strong>ICO Tokens</strong></td>
@@ -106,7 +110,7 @@
                 <tr class="row2">
                     <td><strong>Issue Tokens</strong></td>
                     <td>
-                        <form action="/admin/issue-tokens/" method="post">
+                        <form action="/admin/issue-tokens" method="post">
                             <input type="hidden" name="token_id" value="{{ contract.token_id }}" />
                             <input type="hidden" name="session_token" value="{{ session_token }}" />
                             <input type="number" size="8" name="new_tokens" />&nbsp;<input type="submit" value="Issue New Tokens" />
@@ -122,6 +126,27 @@
                             <input type="number" size="4" name="new_priority" value="{{ contract.max_priority }}" />&nbsp;<input type="submit" value="Set Priority" />
                         </form>
                     </td>
+                </tr>
+                <tr class="row2">
+                    <td><strong>Unissued ICO Coins Remaining</strong></td>
+                    <td>{{ contract.unissued_tokens }}</td>
+                </tr>
+                <tr class="row1">
+                    <td><strong>Withdraw to External ETH Address</strong></td>
+                    <td><form action="/admin/ico/withdrawal" method="post">
+                        <input type="hidden" name="session_token" value="{{ session_token }}" />
+                        <input name="withdrawal" size="55" placeholder="ETH Address" />
+                        <input name="amount" placeholder="Amount" type="number" />
+                        <input type="submit" value="Withdraw" />
+                    </form></td>
+                </tr>
+                <tr class="row2">
+                    <td><strong>Burn Tokens</strong></td>
+                    <td><form action="/admin/ico/burn" method="post">
+                        <input type="hidden" name="session_token" value="{{ session_token }}" />
+                        <input name="amount" placeholder="Amount" type="number" />
+                        <input type="submit" value="Burn" />
+                    </form></td>
                 </tr>
             </table>
             <br />

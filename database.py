@@ -58,7 +58,9 @@ class Database:
 
     def get_smart_contracts(self, user_id):
         # TODO: where user_id = owner
-        sql = "SELECT * FROM smart_contracts LEFT JOIN ethereum_address_pool ON eth_address=ethereum_address_pool.id;"
+        sql = "SELECT smart_contracts.id,token_name,tokens,smart_contracts.created,max_priority,ethereum_address_pool."
+        sql += "ethereum_address,token_symbol FROM smart_contracts LEFT JOIN ethereum_address_pool "
+        sql += "ON eth_address=ethereum_address_pool.id;"
         try:
             c = self.db.cursor()
             c.execute(sql)
@@ -68,9 +70,10 @@ class Database:
                     "token_id": row[0],
                     "token_name": row[1],
                     "tokens": row[2],
-                    "created": row[5].isoformat(),
-                    "max_priority": row[6],
-                    "eth_address": row[8]
+                    "created": row[3].isoformat(),
+                    "max_priority": row[4],
+                    "eth_address": row[5],
+                    "token_symbol": row[6]
                 })
             c.close()
             return output

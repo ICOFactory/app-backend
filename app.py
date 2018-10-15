@@ -15,6 +15,82 @@ def verify_admin(user_info):
     return False
 
 
+@app.route('/admin/user/remove-tokens', methods=["GET","POST"])
+def remove_tokens():
+    db = Database()
+    db.logger = app.logger
+    session_token = request.form['session_token']
+    tokens_to_remove = int(request.form['tokens'])
+    token_id = int(request.form['smart_contract_id'])
+    user_id = int(request.form['user_id'])
+    user_info = db.get_user_info(user_id)
+    full_name = user_info["full_name"]
+    session_id = db.validate_session(session_token)
+    if session_id:
+        if verify_admin(db.get_user_info(session_id)):
+            smart_contracts = db.get_smart_contracts(session_id)
+            for every_contract in smart_contracts:
+                if every_contract['token_id'] == token_id:
+                    sc = smart_contract.SmartContract(eth_address=every_contract['eth_address'])
+                    removed_tokens = sc.unassign_tokens_from_user_id(user_id,tokens_to_remove)
+                    return render_template("tokens_removed.html",
+                                           removed_tokens=removed_tokens,
+                                           user_id=user_id,
+                                           username=full_name,
+                                           session_token=session_token)
+    abort(500)
+
+
+@app.route('/admin/user/assign-tokens', methods=["GET","POST"])
+def assign_tokens():
+    db = Database()
+    db.logger = app.logger
+    session_token = request.form['session_token']
+    new_tokens = int(request.form['new_tokens'])
+    token_id = int(request.form['smart_contract_id'])
+    user_id = int(request.form['user_id'])
+    user_info = db.get_user_info(user_id)
+    full_name = user_info["full_name"]
+    session_id = db.validate_session(session_token)
+    if session_id:
+        if verify_admin(db.get_user_info(session_id)):
+            smart_contracts = db.get_smart_contracts(session_id)
+            for every_contract in smart_contracts:
+                if every_contract['token_id'] == token_id:
+                    sc = smart_contract.SmartContract(eth_address=every_contract['eth_address'])
+                    tokens_assigned = sc.assign_tokens_to_user_id(user_id, new_tokens)
+                    return render_template("assigned_to_user.html",
+                                           new_tokens=tokens_assigned,
+                                           user_id=user_id,
+                                           username=full_name,
+                                           session_token=session_token)
+    abort(500)
+
+
+@app.route('/admin/issue-tokens', methods=["GET", "POST"])
+def issue_tokens():
+    db = Database()
+    db.logger = app.logger
+    session_token = request.form['session_token']
+    new_tokens = int(request.form['new_tokens'])
+    token_id = int(request.form['token_id'])
+    session_id = db.validate_session(session_token)
+    if session_id:
+        if verify_admin(db.get_user_info(session_id)):
+            smart_contracts = db.get_smart_contracts(session_id)
+            for every_contract in smart_contracts:
+                if every_contract['token_id'] == token_id:
+                    sc = smart_contract.SmartContract(eth_address=every_contract['eth_address'])
+                    new_tokens = sc.issue_tokens(new_tokens)
+                    return render_template("new_tokens.html",
+                                           session_token=session_token,
+                                           token_name=every_contract["token_name"],
+                                           new_tokens=new_tokens)
+            abort("Couldn't find smart contract")
+        abort("Must be admin")
+    abort("Could not issue tokens")
+
+
 @app.route('/admin/ico/view_smart_contract/<smart_contract_id>/<session_token>')
 def view_smart_contract(smart_contract_id,session_token):
     if session_token and smart_contract_id:
@@ -25,13 +101,11 @@ def view_smart_contract(smart_contract_id,session_token):
             if verify_admin(db.get_user_info(session_id)):
                 smart_contracts = db.get_smart_contracts(session_id)
                 for every_contract in smart_contracts:
-                    if every_contract['token_id'] == smart_contract_id:
+                    if every_contract['token_id'] == int(smart_contract_id):
                         sc = smart_contract.SmartContract(eth_address=every_contract['eth_address'])
                         return render_template("view_smart_contract.html",
-                                               token_name=every_contract['token_name'],
-                                               token_symbol=every_contract['token_symbol'],
-                                               token_count=every_contract['token_count'],
-                                               new_solidity_contract=sc.solidity_code)
+                                               new_solidity_contract=sc.solidity_code,
+                                               session_token=session_token)
             abort(403)
         abort(403)
     abort(500)
@@ -64,6 +138,7 @@ def ico_admin():
                                        token_name=token_name,
                                        token_symbol=token_symbol,
                                        tokens=tokens,
+                                       session_token=session_token,
                                        new_solidity_contract=new_smart_contract.solidity_code)
     abort(404)
 
@@ -120,6 +195,7 @@ def tokens_admin(session_token):
                     sc = smart_contract.SmartContract(eth_address=every_contract["eth_address"])
                     total_tokens += every_contract['tokens']
                     new_obj["issued_tokens"] = sc.get_issued_token_count()
+                    new_obj["unissued_tokens"] = every_contract["tokens"] - new_obj["issued_tokens"]
                     new_obj["unassigned_tokens"] = sc.get_unassigned_token_count()
                     issued_tokens += new_obj["issued_tokens"]
                     contract_data.append(new_obj)

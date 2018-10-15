@@ -63,10 +63,11 @@
         <tr class="row2">
             <td><strong>Assign Tokens to User</strong></td>
             <td>
-                <form action="/admin/issue-tokens/" method="post">
+                <form action="/admin/user/assign-tokens" method="post">
                     <input type="hidden" name="session_token" value="{{ session_token }}" />
                     <input type="hidden" name="smart_contract_id" value="{{ ico.token_id }}" />
-                    <input type="number" size="8" />&nbsp;<input type="submit" value="Assign" />
+                    <input type="hidden" name="user_id" value="{{ user_info.user_id }}" />
+                    <input name="new_tokens" type="number" size="8" />&nbsp;<input type="submit" value="Assign" />
                 </form>
             </td>
         </tr>
@@ -82,14 +83,23 @@
         <tr>
             <td>{{ token.eth_address }}</td>
             <td>{{ token.issued }}</td>
+            <td><form action="/admin/user/withdraw" method="post">
+                <input type="hidden" name="session_token" value="{{ session_token }}" />
+                <input type="hidden" name="token_serial" value="" >
+                <input type="withdraw_address" placeholder="Withdraw to External ETH Address" size="55" />
+                <input type="submit" value="Withdraw" />
+            </form> </td>
         </tr>
         {% endfor %}
         <tr>
-            <td colspan="2">
-                <form action="/admin/deassign_tokens" method="post">
+            <td colspan="3">
+                <form action="/admin/user/remove-tokens" method="post">
+                    <input type="hidden" name="session_token" value="{{ session_token }}" />
+                    <input type="hidden" name="smart_contract_id" value="{{ ico.token_id }}" />
+                    <input type="hidden" name="user_id" value="{{ user_info.user_id }}" />
                     <strong>Transfer</strong>&nbsp;
                     <input name="tokens" type="number" size="8" />&nbsp;tokens back to master wallet.&nbsp;
-                    <input type="submit" value="Deassign Tokens"
+                    <input type="submit" value="Transfer Tokens" />
                 </form>
             </td>
         </tr>

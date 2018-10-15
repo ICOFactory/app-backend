@@ -5,7 +5,13 @@ from flask import render_template
 
 
 class SmartContract:
-    def __init__(self, eth_address=None, logger=None, token_name=None, token_count=-1, token_symbol=None, max_priority=10):
+    def __init__(self,
+                 eth_address=None,
+                 logger=None,
+                 token_name=None,
+                 token_count=-1,
+                 token_symbol=None,
+                 max_priority=10):
         self.tokens = token_count
         self.eth_node = EthereumNode()
         self.contract_address = eth_address
@@ -25,13 +31,19 @@ class SmartContract:
             try:
                 c = self.db.cursor()
                 new_eth_address = self.eth_node.assign_new_ethereum_address()
+                token_count_string = "{0}".format(token_count)
                 new_smart_contract = render_template("erc20_token.sol",
                                                      ico_name=token_name,
                                                      ico_symbol=token_symbol,
-                                                     token_count=token_count)
-                sql = "INSERT INTO smart_contracts (token_name,tokens,max_priority,eth_address,solidity_source)"
-                sql += " VALUES (%s,%s,%s,%s,%s)"
-                c.execute(sql,(self.token_name, self.tokens, self.max_priority, new_eth_address[0],new_smart_contract))
+                                                     total_supply=token_count_string)
+                sql = "INSERT INTO smart_contracts (token_name,tokens,max_priority,eth_address,solidity_source,token_symbol)"
+                sql += " VALUES (%s,%s,%s,%s,%s,%s)"
+                c.execute(sql,(self.token_name,
+                               self.tokens,
+                               self.max_priority,
+                               new_eth_address[0],
+                               new_smart_contract,
+                               token_symbol))
                 self.db.commit()
                 new_row_id = c.lastrowid
                 self.smart_contract_id = new_row_id
@@ -54,7 +66,7 @@ class SmartContract:
                 c.execute("SELECT id FROM ethereum_address_pool WHERE ethereum_address=%s", (eth_address,))
                 row = c.fetchone()
                 if row:
-                    sql = "SELECT id, token_name, tokens, max_priority, created, token_symbol FROM smart_contracts"
+                    sql = "SELECT id, token_name, tokens, max_priority, created, token_symbol, solidity_source FROM smart_contracts"
                     sql += " WHERE eth_address=%s"
                     c.execute(sql, (row[0],))
                     inner_row = c.fetchone()
@@ -65,6 +77,7 @@ class SmartContract:
                         self.max_priority = inner_row[3]
                         self.created = inner_row[4]
                         self.token_symbol=inner_row[5]
+                        self.solidity_code = inner_row[6]
                 c.close()
             except MySQLdb.Error as e:
                 try:
@@ -157,7 +170,7 @@ class SmartContract:
                       (user_id, self.smart_contract_id, tokens))
             for row in c:
                 c.execute("UPDATE tokens SET owner_id=NULL WHERE serial=%s", (row[0],))
-                c.execute("INSERT INTO transaction_ledger (token_id,sender_id,initiated_by)",
+                c.execute("INSERT INTO transaction_ledger (token_id,sender_id,initiated_by) VALUES (%s,%s,%s)",
                           (row[0], user_id, user_id))
                 counter += 1
             self.db.commit()
