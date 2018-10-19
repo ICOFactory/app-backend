@@ -1,0 +1,38 @@
+<html>
+<head>
+    <title>administration > ethereum network</title>
+</head>
+<body>
+<h1>administration > ethereum network</h1>
+<p>[ <a href="/admin/{{ session_token }}">back to administration</a> ]</p>
+<table cellpadding="5" border="1">
+    <tr>
+        <td><strong>Identifier</strong></td>
+        <td><strong>Remote Address</strong></td>
+        <td><strong>Last Update</strong></td>
+        <td><strong>Status</strong></td>
+        <td><strong>Node API Key</strong></td>
+        <td><strong>Action</strong></td>
+    </tr>
+    {% for node in ethereum_nodes %}
+    <tr>
+        <td>{{ node.node_identifier }}</td>
+        <td>{{ node.last_update_ip }}</td>
+        <td>{{ node.last_update }}</td>
+        <td>{{ node.status }}</td>
+        <td>{{ node.api_key }}</td>
+        <td>[ <a href="/admin/ethereum-network/{{ node.id }}/restart">restart geth</a> ]&nbsp;[ <a href="/admin/ethereum-network/{{ node.id }}/remove">remove node from network</a> ]</td>
+    </tr>
+    {% endfor %}
+    <tr>
+        <td colspan="3"><strong>Generate new API key</strong></td>
+        <td colspan="3" align="right">
+            <form action="/admin/ethereum-network/add-node" method="post">
+                <input type="hidden" name="session_token" value="{{ session_token }}" />
+                <input name="node_identifier" type="input" placeholder="New Node Identifier" />&nbsp;<input type="submit" value="Generate" />
+            </form>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

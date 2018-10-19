@@ -15,6 +15,23 @@ def verify_admin(user_info):
     return False
 
 
+
+
+@app.route('/admin/ethereum-network/<session_token>')
+def admin_eth_network(session_token):
+    db = Database()
+    db.logger = app.logger
+    session_id = db.validate_session(session_token)
+    if session_id:
+        if verify_admin(db.get_user_info(session_id)):
+            ethereum_nodes = db.list_ethereum_nodes()
+            return render_template("ethereum_network.html",
+                            session_token=session_token,
+                            ethereum_nodes=ethereum_nodes)
+
+    return render_template("login.html", error="Invalid session.")
+
+
 @app.route('/admin/user/remove-tokens', methods=["GET","POST"])
 def remove_tokens():
     db = Database()
@@ -39,6 +56,29 @@ def remove_tokens():
                                            username=full_name,
                                            session_token=session_token)
     abort(500)
+
+
+@app.route('/admin/ethereum-network/add-node', methods=["GET","POST"])
+def add_eth_node():
+    session_token = request.form['session_token']
+    new_node_identifier = request.form['node_identifier']
+    db = Database()
+    db.logger = app.logger
+    session_id = db.validate_session(session_token)
+    if session_id:
+        if verify_admin(db.get_user_info(session_id)):
+            new_api_key = db.add_ethereum_node(new_node_identifier)
+            if new_api_key:
+                node_action_message = "Generated the new new API key  " + new_api_key
+                return render_template("node_action.html",node_action="New Node Created",
+                                       node_action_message=node_action_message,
+                                       session_token=session_token)
+            else:
+                node_action_message = "Couldn't create new API key"
+                return render_template("node_action.html", node_action="Error",
+                                       node_action_message=node_action_message,
+                                       session_token=session_token)
+    return render_template("login.html", error="Invalid session.")
 
 
 @app.route('/admin/user/assign-tokens', methods=["GET","POST"])

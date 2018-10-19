@@ -13,6 +13,11 @@ def random_token():
     return new_session_token
 
 
+def generate_api_key():
+    new_api_key = random_token() + random_token()
+    return new_api_key
+
+
 MYSQL_HOST = "localhost"
 MYSQL_USERNAME = "root"
 MYSQL_PASSWORD = ""
@@ -40,11 +45,46 @@ class Database:
             db_name = config_data['mysql_database']
         self.db = MySQLdb.connect(db_host, db_username, db_password, db_name)
         self.logger = None
-        
+
+    def list_ethereum_nodes(self):
+        c = self.db.cursor()
+        sql = "SELECT id,node_identifier,last_event_id,last_update,last_update_ip,api_key,status"
+        sql += " FROM ethereum_network;"
+        c.execute(sql)
+        nodes = []
+        for row in c:
+            last_update = row[3]
+            if last_update:
+                last_update = last_update.isoformat()
+            nodes.append(dict(id=row[0],
+                              node_identifier=row[1],
+                              last_event_id=row[2],
+                              last_update=last_update,
+                              last_update_ip=row[4],
+                              api_key=row[5],
+                              status=row[6]))
+        return nodes
+
+    def add_ethereum_node(self, node_identifier):
+        c = self.db.cursor()
+        sql = "INSERT INTO ethereum_network (node_identifier,api_key) VALUES (%s,%s)"
+        try:
+            new_api_key = generate_api_key()
+            result = c.execute(sql,(node_identifier,new_api_key))
+            self.db.commit()
+            if result == 1:
+                return new_api_key
+        except MySQLdb.Error as e:
+            try:
+                self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                self.logger.error("MySQL Error: %s" % (str(e),))
+        return None
+
     def fetch_commands(self, device_id):
         c = self.db.cursor()
         device_id_param = int(device_id)
-        sql = "SELECT command_id, device_id, command, created FROM commands WHERE device_id=%s"
+        sql = "SELECT command_id, node_id, command, created FROM commands WHERE node_id=%s"
         commands = []
         c.execute(sql, (device_id_param,))
         for row in c:
@@ -106,7 +146,7 @@ class Database:
         c = self.db.cursor()
         device_id_param = int(device_id)
         command_param = self.db.escape_string(command_data).decode('utf-8')
-        sql = "INSERT INTO commands (device_id,command) VALUES ({0},'{1}');".format(device_id_param,command_param)
+        sql = "INSERT INTO commands (node_id,command) VALUES ({0},'{1}');".format(device_id_param, command_param)
         try:
             c.execute(sql)
             last_row_id = c.lastrowid
