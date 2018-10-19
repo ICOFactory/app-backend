@@ -54,6 +54,30 @@ class Event:
             else:
                 print(error_message)
 
+    def get_latest_event(self,user_id=None):
+        if self.event_type_id < 1:
+            return None
+        try:
+            if user_id:
+                sql = "SELECT json_metadata,created FROM event_log WHERE event_type_id=%s AND user_id=%s;"
+                c.execute(sql,(self.event_type_id,user_id))
+            else:
+                sql = "SELECT json_metadata,created FROM event_log WHERE event_type_id=%s"
+                c.execute(sql,(self.event_type_id,))
+            row = c.fetchone()
+            return row
+        except MySQLdb.Error as e:
+            try:
+                error_message = "MySQL Error [%d]: %s" % (e.args[0], e.args[1])
+            except IndexError:
+                error_message = "MySQL Error: %s" % (str(e),)
+
+            if self.logger:
+                self.logger.error(error_message)
+            else:
+                print(error_message)
+        return None
+
     def log_event(self, user_id, metadata):
         if self.event_type_id > 0:
             if type(metadata) is not str:

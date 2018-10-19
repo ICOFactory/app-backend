@@ -145,6 +145,80 @@ def dispatch_next_directed_command(api_key):
     abort(403)
 
 
+@app.route('/admin/ethereum-network/confirm-action',methods=["GET","POST"])
+def eth_network_confirm_action():
+    session_token = request.form["session_token"]
+    node_id = int(request.form["node_id"])
+    action = request.form["action"]
+    db = Database()
+    db.logger = app.logger
+    session_id = db.validate_session(session_token)
+    if session_id:
+        if verify_admin(db.get_user_info(session_id)):
+            if action == "restart":
+                db.post_command(node_id, json.dumps({"command":"restart"}))
+            elif action == "remove":
+                db.remove_ethereum_node(node_id)
+            ethereum_nodes = db.list_ethereum_nodes()
+            return render_template("ethereum_network.html",
+                                   session_token=session_token,
+                                   ethereum_nodes=ethereum_nodes)
+    return render_template("login.html", error="Invalid session.")
+
+
+@app.route('/admin/ethereum-network/<node_id>/remove/<session_token>')
+def admin_remove_node(node_id,session_token):
+    db = Database()
+    db.logger = app.logger
+    session_id = db.validate_session(session_token)
+    if session_id:
+        if verify_admin(db.get_user_info(session_id)):
+            ethereum_nodes = db.list_ethereum_nodes()
+            for each in ethereum_nodes:
+                if each['id'] == int(node_id):
+                    message = "Are you sure you want to remove node: " + each["node_identifier"]
+                    message += " (delete the API key)"
+                    confirm_data = {"action": "remove",
+                                    "node_id": node_id,
+                                    "submit": "Remove Node"}
+                    return render_template("node_action.html",
+                                           session_token=session_token,
+                                           node_action="Delete API Key",
+                                           node_action_message=message,
+                                           confirm_form=confirm_data)
+                return render_template("node_action.html",
+                                       session_token=session_token,
+                                       node_action="Node not found",
+                                       node_action_message="Could not find a node with id {0}".format(node_id))
+    return render_template("login.html", error="Invalid session.")
+
+
+@app.route('/admin/ethereum-network/<node_id>/restart/<session_token>')
+def admin_restart_geth(node_id,session_token):
+    db = Database()
+    db.logger = app.logger
+    session_id = db.validate_session(session_token)
+    if session_id:
+        if verify_admin(db.get_user_info(session_id)):
+            ethereum_nodes = db.list_ethereum_nodes()
+            for each in ethereum_nodes:
+                if each["id"] == int(node_id):
+                    message = "Are you sure you want to restart node: " + each["node_identifier"]
+                    confirm_data = {"action": "restart",
+                                    "node_id": node_id,
+                                    "submit": "Restart Node"}
+                    return render_template("node_action.html",
+                                           session_token=session_token,
+                                           node_action="Confirm Restart",
+                                           node_action_message=message,
+                                           confirm_form=confirm_data)
+                return render_template("node_action.html",
+                                       session_token=session_token,
+                                       node_action="Node not found",
+                                       node_action_message="Could not find a node with id {0}".format(node_id))
+    return render_template("login.html", error="Invalid session.")
+
+
 @app.route('/admin/ethereum-network/<session_token>')
 def admin_eth_network(session_token):
     db = Database()

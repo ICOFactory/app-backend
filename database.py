@@ -37,7 +37,6 @@ class Database:
                              ETH_NODE_STATUS_RESTART,
                              ETH_NODE_STATUS_ERROR]
 
-
     def __init__(self, host=MYSQL_HOST, username=MYSQL_USERNAME, password=MYSQL_PASSWORD, database=MYSQL_DATABASE_NAME):
         config_data = json.load(open("config.json","r"))
         if host:
@@ -97,6 +96,20 @@ class Database:
             except IndexError:
                 self.logger.error("MySQL Error: %s" % (str(e),))
         return None
+
+    def remove_ethereum_node(self,node_id):
+        try:
+            c = self.db.cursor()
+            c.execute("DELETE FROM ethereum_network WHERE id=%s",(node_id,))
+            self.db.commit()
+            if c.rowcount == 1:
+                return True
+        except MySQLdb.Error as e:
+            try:
+                self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                self.logger.error("MySQL Error: %s" % (str(e),))
+        return False
 
     def list_ethereum_nodes(self):
         c = self.db.cursor()
@@ -242,13 +255,17 @@ class Database:
                 self.logger.error("MySQL Error: %s" % (str(e),))
         return False
 
-    def post_command(self, device_id, command_data):
+    def post_command(self, node_id, command_data):
         c = self.db.cursor()
-        device_id_param = int(device_id)
         command_param = self.db.escape_string(command_data).decode('utf-8')
-        sql = "INSERT INTO commands (node_id,command) VALUES ({0},'{1}');".format(device_id_param, command_param)
+
         try:
-            c.execute(sql)
+            if node_id:
+                sql = "INSERT INTO commands (node_id,command) VALUES (%s,%s);"
+                c.execute(sql, (node_id, command_param,))
+            else:
+                sql = "INSERT INTO commands (command) VALUES (%s);"
+                c.execute(sql, (command_param,))
             last_row_id = c.lastrowid
             self.db.commit()
             return last_row_id

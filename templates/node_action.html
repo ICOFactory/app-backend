@@ -5,6 +5,14 @@
 <body>
 <h1>{{ node_action }}</h1>
 <p>{{ node_action_message }}</p>
+{% if confirm_form %}
+<form action="/admin/ethereum-network/confirm-action" method="post">
+    <input type="hidden" name="session_token" value="{{ session_token }}" />
+    <input type="hidden" name="action" value="{{ confirm_form.action }}" />
+    <input type="hidden" name="node_id" value="{{ confirm_form.node_id }}" />
+    <input type="submit" value="{{ confirm_form.submit }}" />
+</form>
+{% endif %}
 <p>[ <a href="/admin/ethereum-network/{{ session_token }}">back to ethereum network administartion</a> ]</p>
 </body>
 </html>

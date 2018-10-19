@@ -16,7 +16,7 @@
         <div id="ethereum">
             <table id="ethereum_administration" cellpadding="5" cellspacing="0" border="1">
                 <tr class="table_header">
-                    <td colspan="2"><h3>Ethereum Node</h3></td>
+                    <td colspan="2"><h3>Ethereum Network</h3></td>
                 </tr>
                 <tr class="row1">
                     <td><strong>Account Address</strong></td>
@@ -28,7 +28,7 @@
                 </tr>
                 <tr class="row1">
                     <td><strong>Latest Block</strong></td>
-                    <td>{{ latest_block.hash }}</td>
+                    <td>{{ latest_block.number }}</td>
                 </tr>
                 <tr class="row2">
                     <td><strong>Latest Block Transactions</strong></td>
@@ -71,10 +71,10 @@
             </table>
         </div>
         <div id="smart_contracts">
-            {% if smart_contracts %}
-            <h2>Smart Contracts</h2>
-            {% endif %}
             {% for contract in smart_contracts %}
+            {% if loop.first %}
+             <h2>Smart Contracts</h2>
+            {% endif %}
             <table cellpadding="5" border="1">
                 <tr class="table_header">
                     <td colspan="2"><h3>{{ contract.token_name }}</h3></td>

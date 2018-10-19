@@ -28,7 +28,7 @@
         <td>{{ node.last_update }}</td>
         <td>{{ node.status }}</td>
         <td>{{ node.api_key }}</td>
-        <td>[ <a href="/admin/ethereum-network/{{ node.id }}/restart">restart geth</a> ]&nbsp;[ <a href="/admin/ethereum-network/{{ node.id }}/remove">remove node from network</a> ]</td>
+        <td>[ <a href="/admin/ethereum-network/{{ node.id }}/restart/{{ session_token }}">restart geth</a> ]&nbsp;[ <a href="/admin/ethereum-network/{{ node.id }}/remove/{{ session_token }}">remove node from network</a> ]</td>
     </tr>
     {% endfor %}
 </table>
