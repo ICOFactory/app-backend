@@ -25,6 +25,19 @@ MYSQL_DATABASE_NAME = "service"
 
 
 class Database:
+    # I really hate using ENUMs
+    ETH_NODE_STATUS_UNKNOWN = 'Unknown'
+    ETH_NODE_STATUS_SYNCING = 'Syncing'
+    ETH_NODE_STATUS_SYNCHED = "Synchronized"
+    ETH_NODE_STATUS_RESTART = "Restarting"
+    ETH_NODE_STATUS_ERROR = "Error"
+    ETH_NODE_VALID_STATES = [ETH_NODE_STATUS_UNKNOWN,
+                             ETH_NODE_STATUS_SYNCING,
+                             ETH_NODE_STATUS_SYNCHED,
+                             ETH_NODE_STATUS_RESTART,
+                             ETH_NODE_STATUS_ERROR]
+
+
     def __init__(self, host=MYSQL_HOST, username=MYSQL_USERNAME, password=MYSQL_PASSWORD, database=MYSQL_DATABASE_NAME):
         config_data = json.load(open("config.json","r"))
         if host:
@@ -46,6 +59,45 @@ class Database:
         self.db = MySQLdb.connect(db_host, db_username, db_password, db_name)
         self.logger = None
 
+    def validate_api_key(self, api_key):
+        try:
+            c = self.db.cursor()
+            c.execute("SELECT id FROM ethereum_network WHERE api_key=%s", (api_key,))
+            row = c.fetchone()
+            if row:
+                return row[0]
+        except MySQLdb.Error as e:
+            try:
+                error_message = "MySQL Error [%d]: %s" % (e.args[0], e.args[1])
+            except IndexError:
+                error_message = "MySQL Error: %s" % (str(e),)
+
+            if self.logger:
+                self.logger.error(error_message)
+            else:
+                print(error_message)
+        return None
+
+    def get_pending_commands(self,node_id):
+        try:
+            c = self.db.cursor()
+            c.execute("SELECT COUNT(*) FROM commands WHERE dispatch_event_id IS NULL AND node_id is NULL")
+            row = c.fetchone()
+            undirected_commands = -1
+            if row:
+                undirected_commands = row[0]
+            c.execute("SELECT COUNT(*) FROM commands WHERE dispatch_event_id IS NULL AND node_id=%s",node_id)
+            directed_commands = -1
+            if row:
+                directed_commands = row[0]
+            return undirected_commands,directed_commands
+        except MySQLdb.Error as e:
+            try:
+                self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                self.logger.error("MySQL Error: %s" % (str(e),))
+        return None
+
     def list_ethereum_nodes(self):
         c = self.db.cursor()
         sql = "SELECT id,node_identifier,last_event_id,last_update,last_update_ip,api_key,status"
@@ -64,6 +116,23 @@ class Database:
                               api_key=row[5],
                               status=row[6]))
         return nodes
+
+    def update_ethereum_node_status(self, node_id, ip_addr, event_id, status):
+        if status not in self.ETH_NODE_VALID_STATES:
+            return False
+        try:
+            c = self.db.cursor()
+            sql = "UPDATE ethereum_network SET status=%s,last_event_id=%s,last_update_ip=%s,last_update=NOW() WHERE id=%s"
+            c.execute(sql,(status,event_id,ip_addr,node_id))
+            if c.rowcount == 1:
+                self.db.commit()
+                return True
+        except MySQLdb.Error as e:
+            try:
+                self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                self.logger.error("MySQL Error: %s" % (str(e),))
+        return False
 
     def add_ethereum_node(self, node_identifier):
         c = self.db.cursor()
@@ -142,6 +211,37 @@ class Database:
             return user_info
         return None
 
+    def get_next_directed_command(self, node_id):
+        sql = "SELECT command_id, command FROM commands WHERE dispatch_event_id IS NULL AND node_id=%s "
+        sql += "ORDER BY created DESC LIMIT 1;"
+        # no table lock since we're only looking for one node's command
+        try:
+            c = self.db.cursor()
+            c.execute(sql, (node_id,))
+            row = c.fetchone()
+            return row
+        except MySQLdb.Error as e:
+            try:
+                self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                self.logger.error("MySQL Error: %s" % (str(e),))
+        return None
+
+    def dispatch_directed_command(self, command_id, new_event_id):
+        sql = "UPDATE commands SET dispatch_event_id=%s WHERE command_id=%s"
+        try:
+            c = self.db.cursor()
+            c.execute(sql, (new_event_id,command_id))
+            self.db.commit()
+            if c.rowcount == 1:
+                return True
+        except MySQLdb.Error as e:
+            try:
+                self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                self.logger.error("MySQL Error: %s" % (str(e),))
+        return False
+
     def post_command(self, device_id, command_data):
         c = self.db.cursor()
         device_id_param = int(device_id)
@@ -198,21 +298,6 @@ class Database:
         except MySQLdb.Error as e:
             return -1
 
-    def count_glosspoints(self, user_id):
-        sql = "SELECT COUNT(*) FROM tokens WHERE owner_id=%s"
-        c = self.db.cursor()
-        try:
-            c.execute(sql,(user_id,))
-            row = c.fetchone()
-            c.close()
-            return row[0]
-        except MySQLdb.Error as e:
-            try:
-                self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
-            except IndexError:
-                self.logger.error("MySQL Error: %s" % (str(e),))
-            return 0
-    
     def device_info(self, uuid):
         if UUID_REGEX.match(uuid):
             uuid_param = uuid.upper()

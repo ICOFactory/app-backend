@@ -1,10 +1,12 @@
 from flask import Flask, request, render_template, Response, abort
 from json_parser import JSONProcessor
 from database import Database
+import events
 import smart_contract
 import datetime
 import json
 import uuid
+import MySQLdb
 
 app = Flask(__name__)
 
@@ -15,6 +17,132 @@ def verify_admin(user_info):
     return False
 
 
+@app.route('/ethereum-node/command-output/<api_key>',methods=["GET","POST"])
+def eth_node_command_output(api_key):
+    db = Database()
+    db.logger = app.logger
+    eth_node_id = db.validate_api_key(api_key)
+    if eth_node_id:
+        json_data = request.get_json(force=True)
+        new_event = events.Event("Ethereum Node Command Output",db)
+        if new_event.log_event(eth_node_id,json.dumps(json_data)):
+            return Response(json.dumps(result="OK"))
+        else:
+            # node will not request another command until it receives a result from
+            # posting output
+            return Response(json.dumps(result="Error"))
+    abort(403)
+
+
+@app.route('/ethereum-node/update/<api_key>',methods=["GET","POST"])
+def eth_node_update(api_key):
+    db = Database()
+    db.logger = app.logger
+    eth_node_id = db.validate_api_key(api_key)
+    if eth_node_id:
+        new_event = events.Event("Ethereum Node Update")
+        event_data = dict(ipAddress=request.remote_addr)
+        json_data = request.get_json(force=True)
+        if type(json_data) is dict:
+            if "peerCount" in json_data:
+                event_data["peerCount"] = json_data["peerCount"]
+            if "synchronized" in json_data:
+                event_data["synchronized"] = json_data["synchronized"]
+                if not event_data["synchronized"]:
+                    sync_info = ["currentBlock",
+                                 "highestBlock",
+                                 "knownStates",
+                                 "startingBlock"]
+                    if "syncProgress" in json_data:
+                        event_data["syncProgress"] = dict()
+                        for each in sync_info:
+                            event_data["syncProgress"][each] = json_data["syncProgress"][each]
+                    new_event_log_id = new_event.log_event(eth_node_id,json.dumps(event_data))
+                    db.update_ethereum_node_status(eth_node_id,request.remote_addr,new_event_log_id,db.ETH_NODE_STATUS_SYNCING)
+                    return Response("{\"result\":\"OK\"}")
+                else:
+                    block_data = ["blockNumber", "mainAccountBalance", "gasPrice"]
+                    for each in block_data:
+                        event_data[each] = json[each]
+                    if "error" in json_data:
+                        if json_data["error"] == "output_blocked":
+                            event_data["error"] = "output_blocked"
+                            # No more commands if the output to a prior command is blocked
+                            new_event_log_id = new_event.log_event(eth_node_id, json.dumps(event_data))
+                            db.update_ethereum_node_status(eth_node_id, request.remote_addr, new_event_log_id,
+                                                           db.ETH_NODE_STATUS_ERROR)
+                            return Response(json.dumps({"result":"OK"}))
+
+                    new_event_log_id = new_event.log_event(eth_node_id, json.dumps(event_data))
+                    db.update_ethereum_node_status(eth_node_id, request.remote_addr, new_event_log_id,
+                                                           db.ETH_NODE_STATUS_SYNCED)
+                    # since the node is synchornized and not output blocked, we check for outstanding commands
+                    pending_commands = db.get_pending_commands(eth_node_id)
+                    response_obj = dict(result="OK",
+                                        directed_commands=pending_commands[1],
+                                        undirected_commands=pending_commands[0])
+                    return Response(json.dumps(response_obj))
+    abort(403)
+
+
+@app.route('/ethereum-node/dispatch-next-command/undirected/<api_key>')
+def dispatch_next_undirected_command(api_key):
+    db = Database()
+    db.logger = app.logger
+    eth_node_id = db.validate_api_key(api_key)
+    if eth_node_id:
+        sql = "SELECT command_id, command FROM commands WHERE dispatch_event_id IS NULL AND node_id IS NULL "
+        sql += "ORDER BY created DESC LIMIT 1;"
+        # We call the DB here directly because we are locking a table,
+        # want to keep everything clear so we don't deadlock it
+        try:
+            c = self.db.cursor()
+            c.execute("LOCK TABLES commands WRITE")
+            c.execute(sql)
+            row = c.fetchone()
+            if row:
+                command_id = row[0]
+                command = row[1]
+                new_event = events.Event("Ethereum Node Command Dispatch")
+                new_log_item_id = new_event.log_event(eth_node_id,command)
+                if new_log_item_id:
+                    sql = "UPDATE commands SET dispatch_event_id=%s WHERE command_id=%s;"
+                    c.execute(sql,(new_log_item_id,command_id))
+                    self.db.commit()
+                    c.execute("UNLOCK TABLES")
+                    c.close()
+                    return_obj = dict(result="OK",command=command,command_id=command_id)
+                    return Response(json.dumps(return_obj))
+                else:
+                    return Response(json.dumps({"result":"Error"}))
+            c.execute("UNLOCK TABLES")
+            return Response(json.dumps({"result":"OK","command":None}))
+        except MySQLdb.Error as e:
+            try:
+                self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                self.logger.error("MySQL Error: %s" % (str(e),))
+    abort(403)
+
+
+@app.route('/ethereum-node/dispatch-next-command/directed/<api_key>')
+def dispatch_next_directed_command(api_key):
+    db = Database()
+    db.logger = app.logger
+    eth_node_id = db.validate_api_key(api_key)
+    if eth_node_id:
+        new_event = events.Event("Ethereum Node Command Dispatch",db)
+        next_command = db.get_next_directed_command(eth_node_id)
+        if next_command:
+            command_id = next_command[0]
+            new_log_id = new_event.log_event(eth_node_id,command)
+            if new_log_id:
+                if db.dispatch_directed_command(command_id,new_log_id):
+                    return Response(json.dumps({"result":"OK","command":command}))
+                else:
+                    return Response(json.dumps({"result":"OK","command":None}))
+        return Response(json.dumps({"result":"OK","command":None}))
+    abort(403)
 
 
 @app.route('/admin/ethereum-network/<session_token>')
