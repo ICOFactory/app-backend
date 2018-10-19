@@ -193,6 +193,25 @@ def admin_remove_node(node_id,session_token):
     return render_template("login.html", error="Invalid session.")
 
 
+@app.route('/admin/users/create',methods=["GET","POST"])
+def admin_create_user_page2():
+    session_token = request.form['session_token']
+    full_name = request.form['full_name']
+    email_address = request.form['email']
+    passwd = request.form['passwd_1']
+    return render_template("access_control_list.html")
+
+
+@app.route('/admin/users/create/<session_token>')
+def admin_create_user(session_token):
+    db = Database()
+    db.logger = app.logger
+    session_id = db.validate_session(session_token)
+    if session_id:
+        if verify_admin(db.get_user_info(session_id)):
+            return render_template("create_user.html",
+                                   session_token=session_token)
+
 @app.route('/admin/ethereum-network/<node_id>/restart/<session_token>')
 def admin_restart_geth(node_id,session_token):
     db = Database()

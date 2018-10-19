@@ -2,3 +2,59 @@ div#ethereum { border: solid black }
 
 tr.row1 { background-color: aliceblue }
 tr.row2 { background-color: antiquewhite }
+
+#access_type {
+  width: fit-content;
+  float:left;
+}
+
+#view_acl {
+  width:700px;
+  display: none;
+}
+
+#acl_manager {
+  width:700px;
+  height: 220px;
+}
+
+.control_group {
+  list-style-type: none;
+  padding-inline-start: 0px;
+}
+
+#permission_list {
+  width: fit-content;
+  float:left;
+}
+
+#manager {
+  display: none;
+}
+
+#administrator {
+  display: none;
+}
+
+#select_permissions {
+  width: 200px;
+}
+
+li.acl_type {
+  padding: 3px;
+}
+
+#view_acl {
+  display: none;
+}
+
+div.permissions {
+  width: 280px;
+  float: left;
+  padding:20px;
+}
+
+#button_container {
+  width:fit-content;
+  padding:10px;
+}
