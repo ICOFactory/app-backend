@@ -16,6 +16,8 @@ def verify_admin(user_info):
         return True
     return False
 
+# These following functions are called only by the ETH NODE API
+
 
 @app.route('/ethereum-node/command-output/<api_key>',methods=["GET","POST"])
 def eth_node_command_output(api_key):
@@ -144,6 +146,8 @@ def dispatch_next_directed_command(api_key):
         return Response(json.dumps({"result":"OK","command":None}))
     abort(403)
 
+# The following functions are called by browser clients
+
 
 @app.route('/admin/ethereum-network/confirm-action',methods=["GET","POST"])
 def eth_network_confirm_action():
@@ -211,6 +215,7 @@ def admin_create_user(session_token):
         if verify_admin(db.get_user_info(session_id)):
             return render_template("create_user.html",
                                    session_token=session_token)
+
 
 @app.route('/admin/ethereum-network/<node_id>/restart/<session_token>')
 def admin_restart_geth(node_id,session_token):

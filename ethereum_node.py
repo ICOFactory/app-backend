@@ -1,12 +1,14 @@
 import MySQLdb
 import random
 import json
+import binascii
 
 
 def random_eth_address():
     output = "0x"
-    for x in range(0, 5):
-        output += "%08x" % random.randint(0, 0xffffffff)
+    rng = open("/dev/urandom", "r")
+    bytes = rng.read(20)
+    output += binascii.hexlify(bytes)
     return output
 
 
