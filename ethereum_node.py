@@ -1,18 +1,31 @@
 import MySQLdb
-import random
 import json
 import binascii
+import database
 
 
-def random_eth_address():
-    output = "0x"
-    rng = open("/dev/urandom", "r")
-    bytes = rng.read(20)
-    output += binascii.hexlify(bytes)
+def get_new_addresses(self, count):
+    output = []
+    for x in range(0, count):
+        new_address = "0x"
+        rng = open("/dev/urandom", "r")
+        rng_out = rng.read(20)
+        new_address += binascii.hexlify(rng_out)
+        output.append(new_address)
     return output
 
 
-class EthereumNode():
+def create_erc20_smart_contract(token_name, token_symbol, token_count):
+    smart_token = {"action": "create_erc2_token",
+                   "token_info": {"token_name": token_name,
+                                 "token_symbol": token_symbol,
+                                 "token_count": token_count}}
+    token_data = json.dumps(smart_token)
+    db = database.Database()
+    return db.post_command(None, token_data)
+
+
+class EthereumNode:
     def __init__(self, ip_addr=None, logger=None):
         self.ip_addr = ip_addr
         self.logger = logger
@@ -101,13 +114,6 @@ class EthereumNode():
                 else:
                     print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
         return None
-
-    def get_new_addresses(self, count):
-        # TODO: actually get addresses from ETH node
-        output = []
-        for x in range(0, count):
-            output.append(random_eth_address())
-        return output
 
 
 if __name__ == "__main__":

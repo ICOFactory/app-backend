@@ -8,10 +8,12 @@ def errorCodeObj(errorCode, errorMessage):
                 return {"success": False, "errorCode": errorCode, "error": errorMessage}
             return {"success": False, "error": errorMessage}
 
+
 class APIAction:
     AUTH_LEVEL_ALL = 0
     AUTH_LEVEL_MEMBER = 1
     AUTH_LEVEL_ADMIN = 2
+
     def __init__(self,name,required_arguments,auth_level):
         self.name = name
         self.required_arguments = required_arguments
@@ -39,10 +41,12 @@ class APIAction:
             return True
         return False
 
+
 class JSONProcessor:
     ERROR_VIEWING_WALLET =17
     ERROR_INVALID_SESSION = 4,"Invalid session"
     ERROR_REQUIRED_ARGUMENTS_NOT_FOUND = 5,"Required arguments not found."
+
     def __init__(self, jsonData,request_data=None):
         self.error = None
         self.response = None

@@ -1,4 +1,4 @@
-var tokens = []
+var tokens = ["Glosspoints"]
 var user_acl = {"member":{},"manager":{},"administrator":[]}
 
 function add_member_permission(ico,new_permission) {

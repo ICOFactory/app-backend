@@ -3,6 +3,100 @@ div#ethereum { border: solid black }
 tr.row1 { background-color: aliceblue }
 tr.row2 { background-color: antiquewhite }
 
+#admin_main_menu {
+    padding-top:5px;
+    width: 220px;
+}
+
+#admin_ul {
+    margin-top:0px;
+    width: 210px;
+    padding:5px;
+}
+
+.admin_li {
+    width: 200px;
+    padding:5px;
+    list-style: none;
+}
+
+.main_menu_anchor {
+    color: white;
+    text-decoration: none;
+}
+
+.main_menu_anchor:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+.main_menu_anchor:visited {
+    color:white;
+    text-decoration: none;
+}
+
+.admin_li:hover {
+    border: 2px solid green;
+}
+
+#login_form {
+    width:400px;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+.login_input {
+
+    width: 100%;
+    background-color: black;
+    color: green;
+    padding: 3px;
+    border: 1px solid rgb(80,80,80);
+
+}
+
+#form_login {
+    padding: 5px;
+}
+
+.login_label {
+    color:whitesmoke;
+}
+
+#login_table {
+    width: 100%;
+}
+
+.dark_grey_background {
+  background-color: rgb(40,40,40);
+}
+
+.ui_div_background {
+  background-color: rgb(60,63,65);
+}
+
+.ui_div_highlight {
+  background-color: rgb(81,86,88);
+}
+
+.ui_h3 {
+    padding-left:5px;
+    margin: 5px;
+    color:whitesmoke;
+}
+
+.ui_h1 {
+    padding-left: 5px;
+    color:whitesmoke;
+}
+
+.login_input{
+    width:100%;
+    background-color: black;
+    color:green;
+    padding:3px;
+}
+
 #access_type {
   width: fit-content;
   float:left;
