@@ -1,10 +1,9 @@
 from flask import (
-    Blueprint, render_template, request, url_for, redirect, Response
+    Blueprint, render_template, request, url_for, redirect
 )
 from werkzeug.exceptions import abort
 import database
 import json
-from operator import attrgetter
 
 admin_blueprint = Blueprint('admin', __name__, url_prefix="/admin")
 
@@ -74,7 +73,16 @@ def filter_event_log():
                 events = []
                 for each in event_filters:
                     event_type_id = int(each)
-                    events.extend(db.get_latest_events(event_type_id, event_limit))
+                    event_type_name = None
+                    for every_type in event_types:
+                        if every_type["event_type_id"] == event_type_id:
+                            event_type_name = every_type["event_type_name"]
+                            break
+                    events_of_type = db.get_latest_events(event_type_id, event_limit)
+                    for each_event in events_of_type:
+                        new_event_obj = dict(each_event)
+                        new_event_obj["event_type"] = event_type_name
+                        events.append(new_event_obj)
 
                 events = sorted(events,key=lambda event:event['event_id'])
                 events.reverse()
@@ -92,9 +100,11 @@ def filter_event_log():
                         csv_data += every_key + ","
                     csv_data = csv_data[:len(csv_data)-1] + "\n"
                     for every_event in events:
+                        event_row = ""
                         for every_key in event_keys:
-                            csv_data += str(every_event[every_key]) + ","
-                        csv_data += csv_data[:len(csv_data)-1] + "\n"
+                            event_row += str(every_event[every_key]) + ","
+                        event_row += event_row[:len(event_row)-1] + "\n"
+                        csv_data += event_row
                 html_data = None
                 if output_format == "html":
                     html_data = events
@@ -103,7 +113,8 @@ def filter_event_log():
                                        event_types=event_types,
                                        json_data=json_data,
                                        csv_data=csv_data,
-                                       html_data=html_data)
+                                       html_data=html_data,
+                                       event_filters=event_filters)
         else:
             abort(403)
     abort(500)
