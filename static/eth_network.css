@@ -1,0 +1,70 @@
+.network_map_view {
+    color:silver;
+}
+
+#network_map {
+    width:860px;
+    height:334px;
+    background-size: cover;
+    margin-left:auto;
+    margin-right:auto;
+    background-image: url("g21284.png");
+    margin-bottom:20px;
+    padding-top: 40px;
+}
+
+#network_admin_row_header {
+    background-color: rgb(40,40,40);
+    color:white;
+    font-weight: lighter;
+    padding:5px;
+}
+
+#create_new_node {
+    background-color: rgb(40,40,40);
+    color:white;
+    font-weight: lighter;
+    padding:5px;
+}
+
+#network_admin {
+    width: -moz-fit-content;
+    padding: 5px;
+    margin-left:auto;
+    margin-right:auto;
+    margin-bottom:20px;
+    margin-top:20px;
+}
+
+.network_admin_row1 {
+    background-color: rgb(81,86,88);
+}
+
+.network_admin_row2 {
+    background-color: black;
+}
+
+.eth_network_anchor {
+    color: orange;
+    text-decoration: none;
+}
+
+.eth_network_anchor:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+.eth_network_anchor:visited {
+    color:orangered;
+    text-decoration: none;
+}
+
+#network_table {
+    width:1024px;
+    color:white;
+}
+
+#node_table {
+    width:100%;
+    color:cornsilk;;
+}

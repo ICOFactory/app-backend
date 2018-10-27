@@ -1,0 +1,31 @@
+{% extends "admin/admin_base.jinja2" %}
+
+{% block header %}
+<h3>{% block title %}Restricted Access{% endblock %}</h3>
+{% endblock %}
+
+{% block content %}
+<form action="/admin/login" method="post" id="form_login">
+    <table id="login_table" cellpadding="5">
+        {% if error %}
+            <tr>
+                <td colspan="2"><p id="login_error">{{ error }}</p></td>
+            </tr>
+        {% endif %}
+      <tr>
+        <td><label class="login_label">E-Mail Address</label></td>
+        <td><input size="35" name="username" class="login_input" /></td>
+      </tr>
+      <tr>
+        <td><label class="login_label">Password</label></td>
+        <td><input size="35" name="password" type="password" class="login_input" /></td>
+      </tr>
+      <tr>
+          <td>[&nbsp;<a class="login_anchor" href="/admin/users/recover_account">recover password</a>&nbsp;]</td>
+            <td align="right">
+              <input type="Submit" value="Login"/>
+            </td>
+      </tr>
+    </table>
+</form>
+{% endblock %}

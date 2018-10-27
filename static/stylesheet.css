@@ -1,43 +1,15 @@
-div#ethereum { border: solid black }
 
-tr.row1 { background-color: aliceblue }
-tr.row2 { background-color: antiquewhite }
-
-#admin_main_menu {
-    padding-top:5px;
-    width: 220px;
+#header {
+    width: -moz-fit-content;
+    padding: 20px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 20px;
+    border: 1px solid antiquewhite;
 }
 
-#admin_ul {
-    margin-top:0px;
-    width: 210px;
-    padding:5px;
-}
 
-.admin_li {
-    width: 200px;
-    padding:5px;
-    list-style: none;
-}
 
-.main_menu_anchor {
-    color: white;
-    text-decoration: none;
-}
-
-.main_menu_anchor:hover {
-    color: white;
-    text-decoration: underline;
-}
-
-.main_menu_anchor:visited {
-    color:white;
-    text-decoration: none;
-}
-
-.admin_li:hover {
-    border: 2px solid green;
-}
 
 #login_form {
     width:400px;
@@ -49,11 +21,12 @@ tr.row2 { background-color: antiquewhite }
 
     width: 100%;
     background-color: black;
-    color: green;
+    color: white;
     padding: 3px;
     border: 1px solid rgb(80,80,80);
 
 }
+
 
 #form_login {
     padding: 5px;
@@ -93,7 +66,7 @@ tr.row2 { background-color: antiquewhite }
 .login_input{
     width:100%;
     background-color: black;
-    color:green;
+    color:white;
     padding:3px;
 }
 
@@ -142,6 +115,14 @@ li.acl_type {
   display: none;
 }
 
+#onboard_user {
+    width:-moz-fit-content;
+    margin-left:auto;
+    margin-right:auto;
+    padding:20px;
+    border: 1px solid whitesmoke;
+}
+
 div.permissions {
   width: 280px;
   float: left;
@@ -152,3 +133,97 @@ div.permissions {
   width:fit-content;
   padding:10px;
 }
+
+
+#admin_main_menu {
+    padding-top:5px;
+    width: 220px;
+    float:left;
+}
+
+#admin_content_view {
+    width:-moz-fit-content;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+#admin_header {
+    padding:15px;
+    color:white;
+}
+
+#admin_home {
+    width:1024px;
+    height:768px;
+}
+
+#admin_ul {
+    margin-top:0px;
+    width: 210px;
+    padding:5px;
+}
+
+.admin_li {
+    width: 200px;
+    padding:5px;
+    list-style: none;
+}
+
+.header_anchor {
+    color: orange;
+    text-decoration: none;
+}
+
+.header_anchor:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+.header_anchor:visited {
+    color:orangered;
+    text-decoration: underline;
+}
+
+.main_menu_anchor {
+    color: white;
+    text-decoration: none;
+}
+
+.main_menu_anchor:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+.main_menu_anchor:visited {
+    color:white;
+    text-decoration: none;
+}
+
+.admin_li:hover {
+    border: 2px solid orangered;
+}
+
+#login_error {
+    font-weight: bold;
+    color: red;
+}
+
+#login_table {
+    color:white;
+}
+
+.login_anchor {
+    color: orange;
+    text-decoration: none;
+}
+
+.login_anchor:hover {
+    color: orangered;
+    text-decoration: underline;
+}
+
+.login_anchor:visited {
+    color: orangered;
+    text-decoration: none;
+}
+

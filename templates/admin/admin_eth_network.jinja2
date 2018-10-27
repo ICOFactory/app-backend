@@ -1,0 +1,47 @@
+{% extends "admin/admin_base.jinja2" %}
+
+{% block header %}
+    <h1>{% block title %}Distributed Ethereum Transaction Network{% endblock %}</h1>
+    <p id="back_nav">[ <a class="header_anchor" href="/admin/{{ session_token }}">back to administration</a> ]</p>
+{% endblock %}
+
+{% block content %}
+    <div id="network_map"></div>
+    <div id="network_table">
+        <table cellspacing="0" cellpadding="5" id="node_table">
+            <tr id="network_admin_row_header">
+                <td>Identifier</td>
+                <td>Last Update</td>
+                <td>IP Address</td>
+                <td>Status</td>
+                <td>API Key</td>
+                <td>Peers</td>
+                <td>Commands</td>
+                <td>Actions</td>
+            </tr>
+            {% for node in eth_nodes %}
+                <tr>
+                    <td>{{ node.node_identifier }}</td>
+                    <td>{{ node.last_update }}</td>
+                    <td>{{ node.last_update_ip }}</td>
+                    <td>{{ node.status }}</td>
+                    <td>{{ node.api_key }}</td>
+                    <td>80&nbsp;[&nbsp;<a class="eth_network_anchor" href="/admin/eth_network/view_peers/{{ node.id }}/{{ session_token }}">view</a>&nbsp;]</td>
+                    <td>0</td>
+                    <td>{% if remove_node %}[&nbsp;<a class="eth_network_anchor" href="/admin/eth_network/remove/{{ node.id }}/{{ session_token }}">remove node</a>&nbsp;]&nbsp;{% endif %}[&nbsp;<a class="eth_network_anchor" href="/admin/eth_network/restart/{{ node.id }}/{{ session_token }}"">restart geth</a>&nbsp;]</td>
+                </tr>
+            {% endfor %}
+        {% if create_node %}
+            <tr id="create_new_node">
+                <td colspan="8" align="right">
+                    <form action="/admin/eth_network/create_node" method="post">
+                        <input type="hidden" name="session_token" value="{{ session_token }}" />
+                        <input size="35" name="identifier" placeholder="New node identifier" />
+                        <input type="submit" value="Generate new Node API Key" />
+                    </form>
+                </td>
+            </tr>
+        {% endif %}
+        </table>
+    </div>
+{% endblock %}

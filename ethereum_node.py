@@ -2,14 +2,14 @@ import MySQLdb
 import json
 import binascii
 import database
+import os
 
 
 def get_new_addresses(self, count):
     output = []
     for x in range(0, count):
         new_address = "0x"
-        rng = open("/dev/urandom", "r")
-        rng_out = rng.read(20)
+        rng_out = os.urandom(20)
         new_address += binascii.hexlify(rng_out)
         output.append(new_address)
     return output

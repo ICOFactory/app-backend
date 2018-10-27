@@ -53,6 +53,24 @@ CREATE TABLE `event_log` (
   KEY `event_log_event_type_id_index` (`event_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
+CREATE TABLE 'credits' (
+  'credit_id' bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  'user_id' int unsigned NOT NULL,
+  'amount' bigint(20) unsigned DEFAULT 0,
+  'event_id' bigint(20) unsigned NOT NULL,
+  'created' timestamp  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY('credit_id')
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE 'debits' (
+  'debit_id' bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  'user_id' int unsigned NOT NULL,
+  'amount' bigint(20) unsigned DEFAULT 0,
+  'event_id' bigint(20) unsigned NOT NULL,
+  'created' timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+  PRIMARY KEY('debit_id')
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE `event_type` (
   `event_type_id` smallint(5) unsigned NOT NULL AUTO_INCREMENT,
   `event_type` varchar(55) DEFAULT NULL,
@@ -75,10 +93,12 @@ CREATE TABLE `smart_contracts` (
   `eth_address` bigint(20) unsigned DEFAULT NULL,
   `solidity_source` text,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `max_priority` float DEFAULT '10',
+  `max_priority` int unsigned DEFAULT 10,
   `token_symbol` varchar(55) DEFAULT NULL,
   `published` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  'owner_id' int unsigned DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY 'token_name' ('token_name')
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `tokens` (

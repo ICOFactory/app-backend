@@ -1,0 +1,34 @@
+{% extends "admin/admin_base.jinja2" %}
+
+{% block header %}
+<h1 xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">{% block title %}View Event Log{% endblock %}</h1>
+<p id="back_nav">[ <a class="header_anchor" href="/admin/{{ session_token }}">back to administration</a> ]</p>
+{% endblock %}
+
+{% block content %}
+<div id="event_log_filter">
+    <form action="/admin/event_log/filter" method="post">
+        <input type="hidden" name="session_token" value="{{ session_token }}" />
+        <h3>Event Filter</h3>
+        <select name="event_filter" id="event_log_filter" multiple size="8">
+            {% for event_type in event_types %}
+            <option value="{{ event_type.event_type_id }}">{{ event_type.event_type_name }}</option>
+            {% endfor %}
+        </select>
+        <div id="event_filter_output_format" class="event_filter_row">
+            <label>Output Format</label>
+            <input type="radio" name="output_format" value="html" checked="checked">HTML</input>
+            <input type="radio" name="output_format" value="csv">CSV</input>
+            <input type="radio" name="output_format" value="json">JSON</input>
+        </div>
+        <div id="event_limit" class="event_filter_row">
+            <label>n = </label><input type="number" name="event_limit" value="100" />
+        </div>
+        <div id="event_limit_actions" class="event_filter_row">
+            <input type="button" name="select_all" id="event_filter_select_all" value="Select All" />&nbsp;<input type="button" name="select_none" id="event_filter_select_none" value="Select None"/>&nbsp;<input type="submit" value="Filter Events" />
+        </div>
+    </form>
+</div>
+<div id="event_log_output">
+</div>
+{% endblock %}

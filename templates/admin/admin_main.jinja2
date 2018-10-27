@@ -1,0 +1,23 @@
+{% extends "admin/admin_base.jinja2" %}
+
+{% block header %}
+<h1 xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">{% block title %}ICO Foundary{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<div id="admin_main_menu">
+    <h3 class="ui_h3">Main Menu</h3>
+        <ul id="admin_ul" class="ui_div_background">
+            <li class="admin_li"><a class="main_menu_anchor" href="/admin/users/{{ session_token }}">Users</a></li>
+            <li class="admin_li"><a class="main_menu_anchor" href="/admin/users/create/{{ session_token }}">Onboard User</a></li>
+            <li class="admin_li"><a class="main_menu_anchor" href="/admin/eth_network/{{ session_token }}">Ethereum Network</a></li>
+            <li class="admin_li"><a class="main_menu_anchor" href="/admin/tokens/{{ session_token }}">ERC20 Tokens</a></li>
+            <li class="admin_li"><a class="main_menu_anchor" href="/admin/event_log/{{ session_token }}">View Event Log</a></li>
+            <li class="admin_li"><a class="main_menu_anchor" href="/admin/logout">Logout</a></li>
+        </ul>
+</div>
+<div id="admin_home" class="dark_grey_background">
+    <div id="admin_home_graph"></div>
+    <div id="admin_home_latest_blocks"></div>
+</div>
+{% endblock %}

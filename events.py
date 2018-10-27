@@ -16,6 +16,8 @@ class Event:
                         "Users Changed Permissions",
                         "Users Assigned Tokens",
                         "Users Removed Tokens",
+                        "Users Issued Credits",
+                        "Users Purchased Credits",
                         "ERC20 Token Created",
                         "ERC20 Token Mined",
                         "ERC20 Token Premined",

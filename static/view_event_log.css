@@ -1,0 +1,21 @@
+select#event_log_filter {
+    width:100%;
+    padding: 10px;
+}
+div#event_log_filter {
+    color:white;
+    padding:10px;
+    width:300px;
+    float:left;
+    height: 768px;
+}
+
+.event_filter_row {
+    padding: 5px;
+    text-align:right;
+}
+
+#event_log_output {
+    width:1024px;
+    height:768px;
+}
