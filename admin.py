@@ -1,8 +1,10 @@
 from flask import (
-    Blueprint, render_template, request, url_for, redirect
+    Blueprint, render_template, request, url_for, redirect, Response
 )
 from werkzeug.exceptions import abort
 import database
+import json
+from operator import attrgetter
 
 admin_blueprint = Blueprint('admin', __name__, url_prefix="/admin")
 
@@ -58,24 +60,50 @@ def view_event_log(session_token):
 @admin_blueprint.route('/event_log/filter', methods=['GET', 'POST'])
 def filter_event_log():
     if request.method == "POST":
+
         session_token = request.form['session_token']
         output_format = request.form['output_format']
         event_limit = int(request.form['event_limit'])
+        event_filters = request.form.getlist('event_filter')
         db = database.Database()
         user_id = db.validate_session(session_token)
         if user_id:
             authorized = db.validate_permission(user_id, "view-event-log")
             if authorized:
                 event_types = db.list_event_types()
+                events = []
+                for each in event_filters:
+                    event_type_id = int(each)
+                    events.extend(db.get_latest_events(event_type_id, event_limit))
+
+                events = sorted(events,key=lambda event:event['event_id'])
+                events.reverse()
+                for every_event in events:
+                    every_event['event_created'] = every_event['event_created'].isoformat()
+                events = events[:event_limit]
                 json_data = None
+                if output_format == "json":
+                    json_data = json.dumps(events)
                 csv_data = None
+                if output_format == "csv" and len(events) > 0:
+                    event_keys = events[0].keys()
+                    csv_data = ""
+                    for every_key in event_keys:
+                        csv_data += every_key + ","
+                    csv_data = csv_data[:len(csv_data)-1] + "\n"
+                    for every_event in events:
+                        for every_key in event_keys:
+                            csv_data += str(every_event[every_key]) + ","
+                        csv_data += csv_data[:len(csv_data)-1] + "\n"
                 html_data = None
-                render_template("admin/admin_view_event_log.jinja2",
-                                session_token=session_token,
-                                event_types=event_types,
-                                json_data=json_data,
-                                csv_data=csv_data,
-                                html_data=html_data)
+                if output_format == "html":
+                    html_data = events
+                return render_template("admin/admin_view_event_log.jinja2",
+                                       session_token=session_token,
+                                       event_types=event_types,
+                                       json_data=json_data,
+                                       csv_data=csv_data,
+                                       html_data=html_data)
         else:
             abort(403)
     abort(500)

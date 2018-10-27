@@ -17,9 +17,8 @@
         </select>
         <div id="event_filter_output_format" class="event_filter_row">
             <label>Output Format</label>
-            <input type="radio" name="output_format" value="html" checked="checked">HTML</input>
             <input type="radio" name="output_format" value="csv">CSV</input>
-            <input type="radio" name="output_format" value="json">JSON</input>
+            <input type="radio" name="output_format" value="json" checked="checked">JSON</input>
         </div>
         <div id="event_limit" class="event_filter_row">
             <label>n = </label><input type="number" name="event_limit" value="100" />
@@ -30,5 +29,11 @@
     </form>
 </div>
 <div id="event_log_output">
+{% if json_data %}
+    <textarea rows="50" cols="80">{{ json_data }}</textarea>
+{%  endif %}
+{% if csv_data %}
+    <textarea rows="50" cols="80">{{ csv_data }}</textarea>
+{%  endif %}
 </div>
 {% endblock %}

@@ -139,10 +139,17 @@ class Database:
         try:
             c = self.db.cursor()
             output = []
-            sql = "SELECT event_id,user_id,json_metadata,created WHERE event_type_id=%s ORDER BY event_id DESC LIMIT %s"
+            sql = """SELECT event_id,full_name,email_address,event_log.user_id,event_log.json_metadata,event_log.created
+ FROM event_log LEFT JOIN users ON users.user_id=event_log.user_id WHERE event_type_id=%s 
+ ORDER BY event_id DESC LIMIT %s"""
             c.execute(sql, (event_type_id, limit))
             for row in c:
-                output.append({"event_id":row[0],"user_id":row[1],"event_data":row[2],"created":row[3]})
+                output.append({"event_id": row[0],
+                               "full_name": row[1],
+                               "email_address": row[2],
+                               "user_id": row[3],
+                               "event_data": row[4],
+                               "event_created": row[5]})
             return output
         except MySQLdb.Error as e:
             try:

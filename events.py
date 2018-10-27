@@ -26,21 +26,17 @@ class Event:
                         "ERC20 Token External Transfer"]
 
     def __init__(self, event_type, db, logger=None):
-        if event_type in AVAILABLE_EVENTS:
+        if event_type not in self.AVAILABLE_EVENTS:
             raise InvalidEventException(event_type)
-        self.db = db
+        self.db = db.db
         self.logger = logger
-        # if no logger specified, use the db's logger if available
-        # this is always the same flask app logger passed around from
-        # the request
-        if self.logger is None and self.db.logger:
-            self.logger = self.db.logger
+
         try:
             c = self.db.cursor()
-            c.execute("SELECT event_type_id FROM event_type WHERE event_type=%s;",(self.EVENT_TYPE_STRING,))
+            c.execute("SELECT event_type_id FROM event_type WHERE event_type=%s;",(event_type,))
             row = c.fetchone()
             if not row:
-                c.execute("INSERT INTO event_type (event_type) VALUES (%s)",(self.EVENT_TYPE_STRING,))
+                c.execute("INSERT INTO event_type (event_type) VALUES (%s)",(event_type,))
                 self.db.commit()
                 self.event_type_id = c.lastrowid
             else:
