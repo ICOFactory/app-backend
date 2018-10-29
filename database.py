@@ -27,7 +27,7 @@ class Database:
     # I really hate using ENUMs
     ETH_NODE_STATUS_UNKNOWN = 'Unknown'
     ETH_NODE_STATUS_SYNCING = 'Syncing'
-    ETH_NODE_STATUS_SYNCHED = "Synchronized"
+    ETH_NODE_STATUS_SYNCED = "Synchronized"
     ETH_NODE_STATUS_RESTART = "Restarting"
     ETH_NODE_STATUS_ERROR = "Error"
     ETH_NODE_VALID_STATES = [ETH_NODE_STATUS_UNKNOWN,
