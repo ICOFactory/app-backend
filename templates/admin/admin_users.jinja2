@@ -1,0 +1,72 @@
+{% extends "admin/admin_base.jinja2" %}
+
+{% block header %}<h1>{% block title %}Users{% endblock %}</h1>
+    <p id="back_nav">[ <a class="header_anchor" href="/admin/{{ session_token }}">back to administration</a> ]</p>
+{% endblock %}
+
+{% block content %}
+    <div id="users">
+    {% for user in users %}
+        <div class="user_record">
+            <table>
+                <tbody>
+                <tr>
+                    <td>Full name</td>
+                    <td>{{ user.full_name }}</td>
+                </tr>
+                <tr>
+                    <td>E-mail address</td>
+                    <td>{{ user.email }}</td>
+                </tr>
+                {% if can_reset_passwords %}
+                    <tr>
+                        <td>Password</td>
+                        <td>[&nbsp;<a class="header_anchor" href="/admin/users/reset-password/<user_id>/<session_token>">reset user's password</a>&nbsp;]</td>
+                    </tr>
+                {% endif %}
+                <tr>
+                    <td>Last logged in</td>
+                    <td>{{ user.last_logged_in }}</td>
+                </tr>
+                <tr>
+                    <td>Last IP address</td>
+                    <td>{{ user.last_logged_in_ip }}</td>
+                </tr>
+                <tr>
+                    <td>Created</td>
+                    <td>{{ user.created }}</td>
+                </tr>
+                <tr>
+                    <td>Created IP address</td>
+                    <td>{{ user.created_ip }}</td>
+                </tr>
+                <tr>
+                    <td>Credits balance</td>
+                    <td>{{ user.credits_balance }}&nbsp;[&nbsp;<a class="header_anchor" href="/admin/users/issue_credit/{{ user.user_id }}/{{ session_token }}">issue credits</a>&nbsp;]</td>
+                </tr>
+                <tr>
+                    <td>ERC20 memberships</td>
+                    <td>{{ user.member_tokens }}</td>
+                </tr>
+                <tr>
+                    <td>ERC20 managements</td>
+                    <td>{{ user.manager_tokens }}</td>
+                </tr>
+                <tr>
+                    <td>Issued ERC20 tokens</td>
+                    <td>{{ user.issued_tokens }}</td>
+                </tr>
+                <tr>
+                    <td>Owned ERC20 tokens</td>
+                    <td>{{ user.owned_tokens }}[&nbsp;<a class="header_anchor" href="/admin/tokens/view_wallet/{{ user.user_id }}/{{ session_token }}">view wallet</a>&nbsp;]</td>
+                </tr>
+                <tr>
+                    <td>Transactions</td>
+                    <td>{{ user.transactions }}[&nbsp;<a class="header_anchor" href="/admin/tokens/view_ledger/{{ user.user_id }}/{{ session_token }}">view ledger</a>&nbsp;]</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    {% endfor %}
+    </div>
+{% endblock %}

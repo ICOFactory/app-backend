@@ -530,14 +530,15 @@ WHERE smart_contracts.id=%s"""
         c = self.db.cursor()
         try:
             output = []
-            c.execute("SELECT user_id,email_address,last_logged_in,last_logged_in_ip,created,created_ip FROM users")
+            c.execute("SELECT user_id,email_address,last_logged_in,last_logged_in_ip,created,created_ip,full_name FROM users")
             for row in c:
                 output.append({"user_id": row[0],
                                "email": row[1],
                                "last_logged_in": row[2],
                                "last_logged_in_ip": row[3],
                                "created": row[4],
-                               "created_ip": row[5]})
+                               "created_ip": row[5],
+                               "full_name":row[6]})
             c.close()
             return output
         except MySQLdb.Error as e:

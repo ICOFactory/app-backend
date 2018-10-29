@@ -20,6 +20,12 @@
     background-color: rgb(242,106,78);
 }
 
+.user_record {
+    margin-bottom:20px;
+    padding: 15px;
+    color:white;
+}
+
 #owned_tokens {
     width: 550px;
     float: right;

@@ -251,7 +251,6 @@ def admin_view_source(token_id,session_token):
     abort(403)
 
 
-
 @admin_blueprint.route('/users/create', methods=["POST"])
 def admin_create_user_acl():
     session_token = request.form["session_token"]
@@ -277,3 +276,26 @@ def admin_create_user_acl():
                                    email_address=email_address,
                                    password_hash=pw_hash)
     abort(403)
+
+
+@admin_blueprint.route('/users/<session_token>')
+def view_users(session_token):
+    if session_token:
+        db = database.Database()
+        db.logger = current_app.logger
+        user_id = db.validate_session(session_token)
+        if user_id:
+            user_data = db.list_users()
+            augmented_user_data = []
+            for each_user in user_data:
+                new_obj = dict(each_user)
+                new_obj['transactions'] = 0
+                new_obj['credit_balance'] = 0
+                new_obj['member_tokens'] = 0
+                new_obj['manager_tokens'] = 0
+                new_obj['issued_tokens'] = 0
+                new_obj['owned_tokens'] = 0
+                augmented_user_data.append(new_obj)
+            return render_template("admin/admin_users.jinja2",
+                                   session_token=session_token,
+                                   users=augmented_user_data)
