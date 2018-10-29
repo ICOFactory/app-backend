@@ -1,8 +1,20 @@
+# for managing distributed ethereum nodes
+#
+# The main module can be used to add/remove node api
+# keys using the command line! to add an API key:
+#   python ethereum_node.py add <new_identifier>
+# to remove an API key
+#   python ethereum_node.py remove <node_id>
+# to list all registered nodes
+#   python ethereum_node.py list-nodes
+
 import MySQLdb
 import json
 import binascii
 import database
 import os
+import sys
+import pprint
 
 
 def get_new_addresses(self, count):
@@ -117,8 +129,34 @@ class EthereumNode:
 
 
 if __name__ == "__main__":
-    eth_node = EthereumNode()
-    unused_address_pool = eth_node.get_address_pool()
-    print("Unallocated ETH address pool")
-    for each in unused_address_pool:
-        print("{0}\t{1}".format(each[0], each[1]))
+    HELP = """python ethereum_node.py command argument
+        
+        add <node identifier(location name)>
+        remove <node_id>
+        list-nodes
+        
+        python ethereum_node.py add London
+        python ethereum_node.py remove 2
+        python ethereum_node.py list-nodes
+"""
+    if len(sys.argv) < 2:
+        print(HELP)
+    else:
+        db = database.Database()
+        command = sys.argv[1]
+        if command == "add":
+            api_key = db.add_ethereum_node(sys.argv[2])
+            if api_key:
+                print("API key of new node: ")
+        elif command == "remove":
+            success = db.remove_ethereum_node(int(sys.argv[2]))
+            if success:
+                print("Successfully removed API key.")
+            else:
+                print("db.remove_ethereum_node reported failure, check config.json")
+        elif command == "list-nodes":
+            nodes = db.list_ethereum_nodes()
+            pprint.pprint(nodes)
+        else:
+            print("Unknown command.\n\n")
+            print(HELP)
