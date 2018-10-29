@@ -1,31 +1,41 @@
-{% extends "admin/admin_base.jinja2" %}
-
-{% block header %}
-<h3>{% block title %}Restricted Access{% endblock %}</h3>
-{% endblock %}
-
-{% block content %}
-<form action="/admin/login" method="post" id="form_login">
-    <table id="login_table" cellpadding="5">
-        {% if error %}
-            <tr>
-                <td colspan="2"><p id="login_error">{{ error }}</p></td>
-            </tr>
-        {% endif %}
-      <tr>
-        <td><label class="login_label">E-Mail Address</label></td>
-        <td><input size="35" name="username" class="login_input" /></td>
-      </tr>
-      <tr>
-        <td><label class="login_label">Password</label></td>
-        <td><input size="35" name="password" type="password" class="login_input" /></td>
-      </tr>
-      <tr>
-          <td>[&nbsp;<a class="login_anchor" href="/admin/users/recover_account">recover password</a>&nbsp;]</td>
-            <td align="right">
-              <input type="Submit" value="Login"/>
-            </td>
-      </tr>
-    </table>
-</form>
-{% endblock %}
+<!doctype html>
+<head>
+    <title>Administrator Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='view_event_log.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='eth_network.css') }}">
+    <script language="JavaScript" src="https://code.jquery.com/jquery-3.3.1.js"></script>
+</head>
+<body class="dark_grey_background">
+<div id="all_content">
+<div id="admin_header" style="width:410px;" class="ui_div_highlight">
+    <h3>Administrator Login</h3>
+</div>
+    <div id="login_box" class="ui_div_background">
+        <form action="/admin/login" method="post" id="form_login">
+            <table id="login_table" cellpadding="5">
+                {% if error %}
+                    <tr>
+                        <td colspan="2"><p id="login_error">{{ error }}</p></td>
+                    </tr>
+                {% endif %}
+                <tr>
+                    <td><label class="login_label">E-Mail Address</label></td>
+                    <td><input size="35" name="username" class="login_input"/></td>
+                </tr>
+                <tr>
+                    <td><label class="login_label">Password</label></td>
+                    <td><input size="35" name="password" type="password" class="login_input"/></td>
+                </tr>
+                <tr>
+                    <td>[&nbsp;<a class="login_anchor" href="/admin/users/recover_account">recover password</a>&nbsp;]
+                    </td>
+                    <td align="right">
+                        <input type="Submit" value="Login"/>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+</body>

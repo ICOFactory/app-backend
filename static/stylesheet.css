@@ -90,6 +90,16 @@
   padding-inline-start: 0px;
 }
 
+#all_content {
+    width:440px;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+#login_box {
+    width:440px;
+}
+
 #permission_list {
   width: fit-content;
   float:left;

@@ -5,7 +5,7 @@ interface tokenRecipient { function receiveApproval(address _from, uint256 _valu
 contract TokenERC20 {
     // Public variables of the token
     string public name = "{{ ico_name }}";
-    string public symbol = "{{ ico_symbol }}";
+    string public symbol{{ ico_symbol }};
     uint8 public decimals = 18;
     // 18 decimals is the strongly suggested default, avoid changing it
     uint256 public totalSupply = {{ total_supply }};

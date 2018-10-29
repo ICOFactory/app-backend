@@ -1,0 +1,68 @@
+
+{% extends "admin/admin_base.jinja2" %}
+
+{% block header %}
+<h1>{% block title %}ERC20 Tokens{% endblock %}</h1>
+<p id="back_nav">[ <a class="header_anchor" href="/admin/{{ session_token }}">back to administration</a> ]</p>
+{% endblock %}
+
+{% block content %}
+    {% if owned_tokens %}
+        {% for each in owned_tokens %}
+            <div class="erc20_token">
+            <table>
+                <tbody>
+                    <tr>
+                        <td>Token name</td>
+                        <td>{{ each.token_name }}</td>
+                    </tr>
+                    <tr>
+                        <td>Token symbol</td>
+                        <td>{{ each.token_symbol }}</td>
+                    </tr>
+                    <tr>
+                        <td>Initial token count</td>
+                        <td>{{ each.ico_tokens }}</td>
+                    </tr>
+                    <tr>
+                        <td>Contract address</td>
+                        <td>{% if each.contract_address %}{{ each.contract_address }}
+                        {% else %}<form action="/admin/contract/publish" method="post">
+                                <input type="hidden" name="session_token" value="{{ session_token }}" />
+                                <input type="hidden" name="token_id" value="{{ each.token_id }}" />
+                                <input type="submit" value="Publish to Ethereum Blockchain" /> (requires 1,000 credits) {% endif %}</td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        {% endfor %}
+    {% endif %}
+    <div id="create_erc20_token">
+        <form action="/admin/tokens/create" method="post">
+            <table>
+                <tbody>
+                <tr>
+                    <td colspan="2"><h3>Create ERC20 token</h3></td>
+                </tr>
+                <tr>
+                    <td>Token Name</td>
+                    <td><input name="token_name" size="35"/></td>
+                </tr>
+                <tr>
+                    <td>Token Symbol</td>
+                    <td><input name="token_symbol" size="35"/></td>
+                </tr>
+                <tr>
+                    <td>Initial token count</td>
+                    <td><input name="token_count" type="number"/></td>
+                </tr>
+                <tr>
+                    <td colspan="2" align="right">
+                        <input type="submit" value="Generate ERC20 Smart Contract"/>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </form>
+    </div>
+{% endblock %}

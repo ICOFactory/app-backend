@@ -1,10 +1,17 @@
 from flask import (
-    Blueprint, render_template, request, url_for, redirect
+    Blueprint, render_template, request, url_for, redirect, current_app
 )
 from werkzeug.exceptions import abort
 import database
 import json
 from hashlib import sha256
+from users import UserContext
+from smart_contract import SmartContract
+import re
+
+TOKEN_NAME_REGEX = re.compile("^[A-Za-z0-9]{4,36}$")
+TOKEN_SYMBOL_REGEX = re.compile("^[A-Z0-9]{1,5}$")
+TOKEN_COUNT_REGEX = re.compile("^[0-9]{1,16}$")
 
 admin_blueprint = Blueprint('admin', __name__, url_prefix="/admin")
 
@@ -145,6 +152,45 @@ def admin_create_user(session_token):
             return render_template("admin/admin_create_user.jinja2",
                                    session_token=session_token)
     abort(403)
+
+
+@admin_blueprint.route('/tokens/create', methods=["POST"])
+def create_tokens_form():
+    session_token = request.form["session_token"]
+    if session_token:
+        db = database.Database()
+        logger = current_app.logger
+        user_id = db.validate_session(session_token)
+        ctx = UserContext(user_id, db, logger)
+        auth = ctx.check_acl("launch-ico")
+        token_name = request.form['token_name']
+        if not TOKEN_NAME_REGEX.match(token_name):
+            return render_template("admin/admin_tokens.jinja2",
+                                   session_token=session_token,
+                                   create_token_error="Invalid token name, must consist of 4-36 alphanumeric characters only.")
+        token_symbol = request.form['token_symbol']
+        if len(token_symbol) > 0 and not TOKEN_SYMBOL_REGEX.match(token_symbol):
+            return render_template("admin/admin_tokens.jinja2",
+                                   session_token=session_token,
+                                   create_token_error="Invalid token symbol, must consist of between 1-5 uppercase letters or numbers. This field is optional.")
+        elif len(token_symbol) > 0:
+            token_symbol = " = \"" + token_symbol.upper() + "\";"
+        else:
+            token_symbol = None
+        token_count = request.form['token_count']
+        if not TOKEN_COUNT_REGEX.match(token_count):
+            return render_template("admin/admin_tokens.jinja2",
+                                   session_token=session_token,
+                                   create_token_error="Invalid inital token count value, must be a positive integer.")
+        token_count = int(token_count)
+        if auth:
+            sc = SmartContract(token_name=token_name,
+                               token_symbol=token_symbol,
+                               token_count=token_count,
+                               logger=current_app.logger)
+
+    abort(403)
+
 
 
 @admin_blueprint.route('/users/create', methods=["POST"])

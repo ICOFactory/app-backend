@@ -11,7 +11,8 @@ class SmartContract:
                  token_name=None,
                  token_count=-1,
                  token_symbol=None,
-                 max_priority=10):
+                 max_priority=10,
+                 owner_id=None):
         self.tokens = token_count
         self.eth_node = EthereumNode()
         self.contract_address = eth_address
@@ -35,15 +36,17 @@ class SmartContract:
                 new_smart_contract = render_template("erc20_token.sol",
                                                      ico_name=token_name,
                                                      ico_symbol=token_symbol,
-                                                     total_supply=token_count_string)
-                sql = "INSERT INTO smart_contracts (token_name,tokens,max_priority,eth_address,solidity_source,token_symbol)"
-                sql += " VALUES (%s,%s,%s,%s,%s,%s)"
+                                                     total_supply=token_count_string,
+                                                     owner_id=None)
+                sql = "INSERT INTO smart_contracts (token_name,tokens,max_priority,eth_address,"
+                sql += "solidity_source,token_symbol,owner_id) VALUES (%s,%s,%s,%s,%s,%s,%s)"
                 c.execute(sql,(self.token_name,
                                self.tokens,
                                self.max_priority,
                                new_eth_address[0],
                                new_smart_contract,
-                               token_symbol))
+                               token_symbol,
+                               owner_id))
                 self.db.commit()
                 new_row_id = c.lastrowid
                 self.smart_contract_id = new_row_id
