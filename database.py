@@ -32,7 +32,7 @@ class Database:
     ETH_NODE_STATUS_ERROR = "Error"
     ETH_NODE_VALID_STATES = [ETH_NODE_STATUS_UNKNOWN,
                              ETH_NODE_STATUS_SYNCING,
-                             ETH_NODE_STATUS_SYNCHED,
+                             ETH_NODE_STATUS_SYNCED,
                              ETH_NODE_STATUS_RESTART,
                              ETH_NODE_STATUS_ERROR]
 

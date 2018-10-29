@@ -42,7 +42,7 @@ def node_api_update(api_key):
                     db.update_ethereum_node_status(node_id, request.remote_addr, new_event_log_id,
                                                    db.ETH_NODE_STATUS_SYNCED)
                     # since the node is synchornized and not output blocked, we check for outstanding commands
-                    pending_commands = db.get_pending_commands(eth_node_id)
+                    pending_commands = db.get_pending_commands(node_id)
                     response_obj = dict(result="OK",
                                         directed_commands=pending_commands[1],
                                         undirected_commands=pending_commands[0])
