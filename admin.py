@@ -290,7 +290,7 @@ def view_users(session_token):
             for each_user in user_data:
                 new_obj = dict(each_user)
                 new_obj['transactions'] = 0
-                new_obj['credit_balance'] = 0
+                new_obj['credits_balance'] = 0
                 new_obj['member_tokens'] = 0
                 new_obj['manager_tokens'] = 0
                 new_obj['issued_tokens'] = 0
