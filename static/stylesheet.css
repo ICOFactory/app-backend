@@ -8,13 +8,49 @@
     border: 1px solid antiquewhite;
 }
 
+#first_node_label {
+    background-color: rgb(166,33,107);
+}
 
+#second_node_label {
+    background-color: rgb(236,25,75);
+}
 
+#third_node_label {
+    background-color: rgb(242,106,78);
+}
+
+#owned_tokens {
+    width: 550px;
+    float: right;
+    margin-left: 50px;
+}
+
+#create_erc20_token {
+    padding: 15px;
+    width: -moz-fit-content;
+    margin-left: 20px;
+    background-color: rgb(40,40,40);
+}
 
 #login_form {
     width:400px;
     margin-left:auto;
     margin-right:auto;
+}
+
+.dark_input {
+
+    background-color: black;
+    color: white;
+    padding: 5px;
+    border: 1px solid rgb(80,80,80);
+
+}
+
+.erc20_token {
+    margin-bottom:20px;
+    padding:15px;
 }
 
 .login_input {

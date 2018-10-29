@@ -21,7 +21,7 @@
             </tr>
             {% for node in eth_nodes %}
                 <tr>
-                    <td>{{ node.node_identifier }}</td>
+                    <td id="{% if loop.index == 1 %}first{% elif loop.index == 2 %}second{%  elif loop.index == 3 %}third{% endif %}_node_label">{{ node.node_identifier }}</td>
                     <td>{{ node.last_update }}</td>
                     <td>{{ node.last_update_ip }}</td>
                     <td>{{ node.status }}</td>

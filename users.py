@@ -60,8 +60,8 @@ class UserContext:
                 new_permission = each[1]
                 if new_permission not in new_acl["administrator"]:
                     new_acl["administrator"].append(new_permission)
-        new_acl["membership"] = member_tokens
-        new_acl["management"] = manager_tokens
+        new_acl["membership"] = self.member_tokens
+        new_acl["management"] = self.manager_tokens
         self._acl = new_acl
 
     def _remove_permission(self,permission,token_id=None):

@@ -13,6 +13,7 @@ TOKEN_NAME_REGEX = re.compile("^[A-Za-z0-9]{4,36}$")
 TOKEN_SYMBOL_REGEX = re.compile("^[A-Z0-9]{1,5}$")
 TOKEN_COUNT_REGEX = re.compile("^[0-9]{1,16}$")
 
+
 admin_blueprint = Blueprint('admin', __name__, url_prefix="/admin")
 
 
@@ -154,6 +155,37 @@ def admin_create_user(session_token):
     abort(403)
 
 
+@admin_blueprint.route('/tokens/<session_token>')
+def admin_tokens(session_token):
+    if session_token:
+        db = database.Database()
+        db.logger = current_app.logger
+        user_id = db.validate_session(session_token)
+        ctx = UserContext(user_id, db=db, logger=db.logger)
+        can_launch_ico = ctx.check_acl("launch-ico")
+        can_launch_ico = True
+        if can_launch_ico or len(ctx.acl()["management"]) > 0:
+            owned_tokens = []
+            for key in ctx.acl()["management"].keys():
+                token_id = ctx.acl()["management"][key]["token_id"]
+                token_info = db.get_smart_contract_info(token_id)
+                owned_tokens.append(token_info)
+            smart_contracts = db.get_smart_contracts(user_id)
+            for each in smart_contracts:
+                owned_tokens.append({"token_id": each["token_id"],
+                                        "token_name": each["token_name"],
+                                        "ico_tokens": each["tokens"],
+                                        "token_symbol": each["token_symbol"],
+                                        "eth_address": each["eth_address"]})
+            if len(owned_tokens) == 0:
+                owned_tokens = None
+            return render_template("admin/admin_tokens.jinja2",
+                                   session_token=session_token,
+                                   owned_tokens=owned_tokens,
+                                   can_launch_ico=can_launch_ico)
+    abort(403)
+
+
 @admin_blueprint.route('/tokens/create', methods=["POST"])
 def create_tokens_form():
     session_token = request.form["session_token"]
@@ -163,6 +195,7 @@ def create_tokens_form():
         user_id = db.validate_session(session_token)
         ctx = UserContext(user_id, db, logger)
         auth = ctx.check_acl("launch-ico")
+        auth = True
         token_name = request.form['token_name']
         if not TOKEN_NAME_REGEX.match(token_name):
             return render_template("admin/admin_tokens.jinja2",
@@ -173,9 +206,7 @@ def create_tokens_form():
             return render_template("admin/admin_tokens.jinja2",
                                    session_token=session_token,
                                    create_token_error="Invalid token symbol, must consist of between 1-5 uppercase letters or numbers. This field is optional.")
-        elif len(token_symbol) > 0:
-            token_symbol = " = \"" + token_symbol.upper() + "\";"
-        else:
+        elif len(token_symbol) == 0:
             token_symbol = None
         token_count = request.form['token_count']
         if not TOKEN_COUNT_REGEX.match(token_count):
@@ -187,8 +218,36 @@ def create_tokens_form():
             sc = SmartContract(token_name=token_name,
                                token_symbol=token_symbol,
                                token_count=token_count,
-                               logger=current_app.logger)
+                               logger=current_app.logger,
+                               owner_id=user_id)
+            smart_contracts = db.get_smart_contracts(user_id)
+            owned_contracts = []
+            for each in smart_contracts:
+                owned_contracts.append({"token_id": each["token_id"],
+                                        "token_name": each["token_name"],
+                                        "ico_tokens": each["tokens"],
+                                        "token_symbol": each["token_symbol"],
+                                        "eth_address": each["eth_address"]})
+            return render_template("admin/admin_tokens.jinja2",
+                                   session_token=session_token,
+                                   owned_tokens=owned_contracts,
+                                   can_launch_ico=True)
 
+    abort(403)
+
+
+@admin_blueprint.route('/tokens/view_source/<token_id>/<session_token>')
+def admin_view_source(token_id,session_token):
+    token_id = int(token_id)
+    db = database.Database()
+    db.logger = current_app.logger
+    user_id = db.validate_session(session_token)
+    if user_id and token_id > 0:
+        token_info = db.get_smart_contract_info(token_id)
+        if token_info["owner_id"] == user_id:
+            sc = SmartContract(smart_token_id=token_id)
+            return render_template("view_smart_contract.html",
+                                   new_solidity_contract=sc.solidity_code)
     abort(403)
 
 

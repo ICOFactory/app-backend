@@ -4,6 +4,10 @@ from ethereum_node import EthereumNode
 from flask import render_template
 
 
+def token_symbol_decorator(symbol):
+    return " = \"" + symbol.upper() + "\""
+
+
 class SmartContract:
     def __init__(self,
                  eth_address=None,
@@ -12,7 +16,8 @@ class SmartContract:
                  token_count=-1,
                  token_symbol=None,
                  max_priority=10,
-                 owner_id=None):
+                 owner_id=None,
+                 smart_token_id=None):
         self.tokens = token_count
         self.eth_node = EthereumNode()
         self.contract_address = eth_address
@@ -35,7 +40,7 @@ class SmartContract:
                 token_count_string = "{0}".format(token_count)
                 new_smart_contract = render_template("erc20_token.sol",
                                                      ico_name=token_name,
-                                                     ico_symbol=token_symbol,
+                                                     ico_symbol=token_symbol_decorator(token_symbol),
                                                      total_supply=token_count_string,
                                                      owner_id=None)
                 sql = "INSERT INTO smart_contracts (token_name,tokens,max_priority,eth_address,"
@@ -52,6 +57,32 @@ class SmartContract:
                 self.smart_contract_id = new_row_id
                 self.solidity_code = new_smart_contract
                 c.close()
+            except MySQLdb.Error as e:
+                try:
+                    if self.logger:
+                        self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                    else:
+                        print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                except IndexError:
+                    if self.logger:
+                        self.logger.error("MySQL Error: %s" % (str(e),))
+                    else:
+                        print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+        elif smart_token_id:
+            try:
+                c = self.db.cursor()
+                sql = "SELECT id, token_name, tokens, max_priority, created, token_symbol, solidity_source FROM smart_contracts"
+                sql += " WHERE id=%s"
+                c.execute(sql, (smart_token_id,))
+                inner_row = c.fetchone()
+                if inner_row:
+                    self.smart_contract_id = inner_row[0]
+                    self.token_name = inner_row[1]
+                    self.tokens = inner_row[2]
+                    self.max_priority = inner_row[3]
+                    self.created = inner_row[4]
+                    self.token_symbol = inner_row[5]
+                    self.solidity_code = inner_row[6]
             except MySQLdb.Error as e:
                 try:
                     if self.logger:
