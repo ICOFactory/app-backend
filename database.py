@@ -79,12 +79,20 @@ class Database:
     def update_user_permissions(self, user_id, acl_data_json):
         acl_data = json.loads(acl_data_json)
         new_admin_permissions = []
+        new_membership_permissions = []
+        new_management_permissions = []
         if type(acl_data) == dict:
             if "administrator" in acl_data:
                 for every_admin_permission in acl_data["administrator"]:
                     new_admin_permissions.append(every_admin_permission)
-            else:
-                return False
+            if "membership" in acl_data:
+                for every_member_acl in acl_data["membership"]:
+                    token_data = every_member_acl["token"]
+                    new_membership_permissions.append(token_data)
+            if "management" in acl_data:
+                for every_management_acl in acl_data["management"]:
+                    token_data = every_management_acl["token"]
+                    new_management_permissions.append(token_data)
         else:
             return False
         try:
@@ -96,6 +104,17 @@ class Database:
                 # insert new admin permissions
                 for each in new_admin_permissions:
                     c.execute("INSERT INTO access_control_list (user_id,permission) VALUES (%s,%s);",each[0],each[1])
+                sql = "INSERT INTO access_control_list (user_id, smart_contract_id, permission) VALUES (%s,%s,%s)"
+                # insert new membership permissions
+                for each in new_membership_permissions:
+                    token_id = each["token_id"]
+                    for each_token_permission in each["permissions"]:
+                        c.execute(sql, (user_id, token_id, each_token_permission))
+                # insert new management permissions
+                for each in new_management_permissions:
+                    token_id = each["token_id"]
+                    for each_token_permission in each["permissions"]:
+                        c.execute(sql, (user_id, token_id, each_token_permission))
                 self.db.commit()
                 return True
         except MySQLdb.Error as e:
@@ -115,13 +134,13 @@ class Database:
             c = self.db.cursor()
             output = ["view-event-log"]
             if smart_contract_id:
-                sql = "SELECT permission FROM access_control_list WHERE user_id=%s AND smart_contract_id=%s"
+                sql = "SELECT permission,smart_contract_id FROM access_control_list WHERE user_id=%s AND smart_contract_id=%s"
                 c.execute(sql, (user_id, smart_contract_id))
             else:
-                sql = "SELECT permission FROM access_control_list WHERE user_id=%s"
+                sql = "SELECT permission,smart_contract_id FROM access_control_list WHERE user_id=%s"
                 c.execute(sql, (user_id,))
             for row in c:
-                output.append(row[0])
+                output.append((row[0], row[1]))
             return output
         except MySQLdb.Error as e:
             try:
@@ -304,14 +323,54 @@ class Database:
         self.db.commit()
         return commands
 
-    def get_smart_contracts(self, user_id):
-        # TODO: where user_id = owner
-        sql = "SELECT smart_contracts.id,token_name,tokens,smart_contracts.created,max_priority,ethereum_address_pool."
-        sql += "ethereum_address,token_symbol,owner_id FROM smart_contracts LEFT JOIN ethereum_address_pool "
-        sql += "ON eth_address=ethereum_address_pool.id;"
+    def get_smart_contract_info(self, token_id):
+        if not token_id or int(token_id) < 1:
+            return None
+
+        sql = """SELECT token_name,tokens,ethereum_address,max_priority,token_symbol,published,owner_id 
+FROM smart_contracts LEFT JOIN ethereum_address_pool ON smart_contracts.eth_address=ethereum_address_pool.id 
+WHERE smart_contracts.id=%s"""
+
         try:
             c = self.db.cursor()
-            c.execute(sql)
+            c.execute(sql, (token_id,))
+            row = c.fetchone()
+            if row:
+                output = {"token_name":row[0],
+                          "ico_tokens":row[1],
+                          "ethereum_address":row[2],
+                          "max_priority":row[3],
+                          "token_symbol":row[4],
+                          "published":row[5],
+                          "owner_id":row[6],
+                          "token_id":token_id}
+                return output
+        except MySQLdb.Error as e:
+            try:
+                if self.logger:
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                if self.logger:
+                    self.logger.error("MySQL Error: %s" % (str(e),))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+        return None
+
+    def get_smart_contracts(self, user_id):
+        sql = "SELECT smart_contracts.id,token_name,tokens,smart_contracts.created,max_priority,ethereum_address_pool."
+        sql += "ethereum_address,token_symbol,owner_id FROM smart_contracts LEFT JOIN ethereum_address_pool "
+        sql += "ON eth_address=ethereum_address_pool.id"
+
+        if user_id:
+            sql += " WHERE smart_contracts.owner_id=%s"
+        try:
+            c = self.db.cursor()
+            if user_id:
+                c.execute(sql, (user_id,))
+            else:
+                c.execute(sql)
             output = []
             for row in c:
                 output.append({

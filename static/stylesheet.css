@@ -147,6 +147,23 @@ div.permissions {
     margin-right:auto;
 }
 
+#admin_create_users_form_table {
+    margin-left:auto;
+    margin-right:auto;
+    margin-top:20px;
+    padding:10px;
+}
+
+#email_confirm_msg {
+    font-size: smaller;
+}
+
+#admin_content {
+    width:1024px;
+    height: 768px;
+    color:white;
+}
+
 #admin_header {
     padding:15px;
     color:white;

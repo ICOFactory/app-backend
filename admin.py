@@ -4,6 +4,7 @@ from flask import (
 from werkzeug.exceptions import abort
 import database
 import json
+from hashlib import sha256
 
 admin_blueprint = Blueprint('admin', __name__, url_prefix="/admin")
 
@@ -134,3 +135,40 @@ def eth_network_admin(session_token):
     abort(403)
 
 
+@admin_blueprint.route('/users/create/<session_token>')
+def admin_create_user(session_token):
+    db = database.Database()
+    user_id = db.validate_session(session_token)
+    if user_id:
+        authorized = db.validate_permission(user_id, "onboard-users")
+        if authorized:
+            return render_template("admin/admin_create_user.jinja2",
+                                   session_token=session_token)
+    abort(403)
+
+
+@admin_blueprint.route('/users/create', methods=["POST"])
+def admin_create_user_acl():
+    session_token = request.form["session_token"]
+    full_name = request.form["full_name"]
+    email_address = request.form["email_address"]
+    password = request.form["password"]
+    password_repeat = request.form["password_repeat"]
+    if password == password_repeat:
+        data = email_address + password
+        pw_hash = sha256(data.encode("utf-8"))
+    else:
+        return render_template("admin/admin_create_user.jinja2",
+                               session_token=session_token,
+                               error="Password must match both times.")
+    db = database.Database()
+    user_id = db.validate_session(session_token)
+    if user_id:
+        authorized = db.validate_permission(user_id, "onboard-users")
+        if authorized:
+            return render_template("admin/admin_create_user_acl.jinja2",
+                                   session_token=session_token,
+                                   full_name=full_name,
+                                   email_address=email_address,
+                                   password_hash=pw_hash)
+    abort(403)

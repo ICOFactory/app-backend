@@ -1,0 +1,40 @@
+
+{% extends "admin/admin_base.jinja2" %}
+
+{% block header %}
+<h1>{% block title %}On-board new user{% endblock %}</h1>
+<p id="back_nav">[ <a class="header_anchor" href="/admin/{{ session_token }}">back to administration</a> ]</p>
+{% endblock %}
+
+{% block content %}
+    <form action="/admin/users/create" method="post">
+        <input type="hidden" name="session_token" value="{{ session_token }}"/>
+        <table id="admin_create_users_form_table" cellpadding="5">
+            <tbody>
+            <tr>
+                <td>Full Name</td>
+                <td><input size="35" name="full_name" class="login_input" /></td>
+            </tr>
+            <tr>
+                <td>E-mail Address</td>
+                <td><input size="35" name="email_address" class="login_input" type="email"/></td>
+            </tr>
+            <tr>
+                <td>Password</td>
+                <td><input size="35" name="password" class="login_input" type="password"/></td>
+            </tr>
+            <tr>
+                <td>Password (repeat)</td>
+                <td><input size="35" name="password_repeat" class="login_input" type="password"/></td>
+            </tr>
+            <tr>
+                <td align="right" colspan="2">
+                    <input type="checkbox" name="confirm_email" id="confirm_email_checkbox">
+                    <span id="email_confirm_msg">E-mail confirmation?</span></input>&nbsp;
+                    <input type="submit" value="Configure new user's ACL"/>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </form>
+{% endblock %}
