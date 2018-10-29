@@ -84,7 +84,7 @@ def filter_event_log():
                         new_event_obj["event_type"] = event_type_name
                         events.append(new_event_obj)
 
-                events = sorted(events,key=lambda event:event['event_id'])
+                events = sorted(events, key=lambda event: event['event_id'])
                 events.reverse()
                 for every_event in events:
                     every_event['event_created'] = every_event['event_created'].isoformat()

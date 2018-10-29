@@ -76,7 +76,7 @@ class Database:
         # TODO: return false if permission not found
         return True
 
-    def update_user_permissions(self,user_id,acl_data_json):
+    def update_user_permissions(self, user_id, acl_data_json):
         acl_data = json.loads(acl_data_json)
         new_admin_permissions = []
         if type(acl_data) == dict:
@@ -110,7 +110,7 @@ class Database:
                 print(error_message)
         return False
 
-    def list_permissions(self,user_id,smart_contract_id=None):
+    def list_permissions(self, user_id, smart_contract_id=None):
         try:
             c = self.db.cursor()
             output = ["view-event-log"]
@@ -215,7 +215,7 @@ class Database:
             directed_commands = -1
             if row:
                 directed_commands = row[0]
-            return undirected_commands,directed_commands
+            return undirected_commands, directed_commands
         except MySQLdb.Error as e:
             try:
                 self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
@@ -262,7 +262,7 @@ class Database:
         try:
             c = self.db.cursor()
             sql = "UPDATE ethereum_network SET status=%s,last_event_id=%s,last_update_ip=%s,last_update=NOW() WHERE id=%s"
-            c.execute(sql,(status,event_id,ip_addr,node_id))
+            c.execute(sql, (status, event_id, ip_addr, node_id))
             if c.rowcount == 1:
                 self.db.commit()
                 return True
@@ -371,7 +371,7 @@ class Database:
         sql = "UPDATE commands SET dispatch_event_id=%s WHERE command_id=%s"
         try:
             c = self.db.cursor()
-            c.execute(sql, (new_event_id,command_id))
+            c.execute(sql, (new_event_id, command_id))
             self.db.commit()
             if c.rowcount == 1:
                 return True
@@ -473,12 +473,12 @@ class Database:
             output = []
             c.execute("SELECT user_id,email_address,last_logged_in,last_logged_in_ip,created,created_ip FROM users")
             for row in c:
-                output.append({"user_id":row[0],
-                               "email":row[1],
-                               "last_logged_in":row[2],
-                               "last_logged_in_ip":row[3],
-                               "created":row[4],
-                               "created_ip":row[5]})
+                output.append({"user_id": row[0],
+                               "email": row[1],
+                               "last_logged_in": row[2],
+                               "last_logged_in_ip": row[3],
+                               "created": row[4],
+                               "created_ip": row[5]})
             c.close()
             return output
         except MySQLdb.Error as e:
@@ -557,7 +557,7 @@ class Database:
                 if pw_hash.hexdigest() == row[2]:
                     new_session_token = random_token()
                     sql = "UPDATE users SET session_token=%s,last_logged_in=NOW(),last_logged_in_ip=%s WHERE user_id=%s"
-                    if c.execute(sql, (new_session_token,ip_addr,row[0])) == 1:
+                    if c.execute(sql, (new_session_token, ip_addr, row[0])) == 1:
                         c.close()
                         self.db.commit()
                         return row[0], new_session_token

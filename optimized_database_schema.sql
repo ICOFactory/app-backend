@@ -53,22 +53,22 @@ CREATE TABLE `event_log` (
   KEY `event_log_event_type_id_index` (`event_type_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE 'credits' (
-  'credit_id' bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  'user_id' int unsigned NOT NULL,
-  'amount' bigint(20) unsigned DEFAULT 0,
-  'event_id' bigint(20) unsigned NOT NULL,
-  'created' timestamp  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY('credit_id')
+CREATE TABLE `credits` (
+  `credit_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int unsigned NOT NULL,
+  `amount` bigint(20) unsigned DEFAULT 0,
+  `event_id` bigint(20) unsigned NOT NULL,
+  `created` timestamp  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY(`credit_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE 'debits' (
-  'debit_id' bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  'user_id' int unsigned NOT NULL,
-  'amount' bigint(20) unsigned DEFAULT 0,
-  'event_id' bigint(20) unsigned NOT NULL,
-  'created' timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ,
-  PRIMARY KEY('debit_id')
+CREATE TABLE `debits` (
+  `debit_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int unsigned NOT NULL,
+  `amount` bigint(20) unsigned DEFAULT 0,
+  `event_id` bigint(20) unsigned NOT NULL,
+  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ,
+  PRIMARY KEY(`debit_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `event_type` (
