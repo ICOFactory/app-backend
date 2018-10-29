@@ -96,9 +96,9 @@ CREATE TABLE `smart_contracts` (
   `max_priority` int unsigned DEFAULT 10,
   `token_symbol` varchar(55) DEFAULT NULL,
   `published` datetime DEFAULT NULL,
-  'owner_id' int unsigned DEFAULT NULL,
+  `owner_id` int unsigned DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY 'token_name' ('token_name')
+  UNIQUE KEY `token_name` (`token_name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE `tokens` (
