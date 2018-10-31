@@ -81,7 +81,7 @@ CREATE TABLE `frames` (
   `frame_id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `device_id` int(10) unsigned NOT NULL,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `viewed` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
+  `viewed` datetime DEFAULT NULL DEFAULT,
   `metadata` text,
   PRIMARY KEY (`frame_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
