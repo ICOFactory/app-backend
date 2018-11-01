@@ -148,7 +148,7 @@ if __name__ == "__main__":
         if command == "add":
             api_key = db.add_ethereum_node(sys.argv[2])
             if api_key:
-                print("API key of new node: " + api_key)
+                print("API key of new node: " + api_key.decode())
         elif command == "remove":
             success = db.remove_ethereum_node(int(sys.argv[2]))
             if success:
