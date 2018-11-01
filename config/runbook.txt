@@ -1,0 +1,17 @@
+Building a node
+Dependencies (apt-get,yum)
+install golang
+install git
+
+Create user ethereum
+Switch to user ethereum
+
+~ git clone https://github.com/ethereum/go-ethereum.git
+
+~ cd go-ethereum
+~ make geth
+
+Switch to root
+Install config/geth.service into systemd
+
+# systemctl enable geth.service

@@ -1,0 +1,13 @@
+[Unit]
+Description=geth
+
+[Service]
+User=ethereum
+Group=ethereum
+ExecStart=/bin/bash --login -c "/home/ethereum/go-ethereum/build/bin/geth --metrics --maxpeers 300 --bootnodes enode://22e2293e74503b41153cf8d976101533c8c8558b5e5a029437edff12feb4e5fc28afeabe449e581c9d350f16776d4ab12ffe286d4506a603572dc6c004528f0a@95.168.177.151:30303,enode://ec2527efe63e38f7c24680e158f93ec8c71d07558f56b74aff883f1bf18df90690ebcc50c2b35576628cc5a963ee740a5b0eaf3a82158eadf98e0859c829839b@81.171.3.78:30303"
+Restart=always
+StartLimitBurst=3
+StartLimitInterval=60s
+
+[Install]
+WantedBy=multi-user.target
