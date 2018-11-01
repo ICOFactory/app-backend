@@ -103,7 +103,7 @@ class Database:
                 c.execute("DELETE FROM access_control_list WHERE user_id=%s")
                 # insert new admin permissions
                 for each in new_admin_permissions:
-                    c.execute("INSERT INTO access_control_list (user_id,permission) VALUES (%s,%s);",each[0],each[1])
+                    c.execute("INSERT INTO access_control_list (user_id,permission) VALUES (%s,%s);", each[0], each[1])
                 sql = "INSERT INTO access_control_list (user_id, smart_contract_id, permission) VALUES (%s,%s,%s)"
                 # insert new membership permissions
                 for each in new_membership_permissions:
@@ -230,7 +230,8 @@ class Database:
             undirected_commands = -1
             if row:
                 undirected_commands = row[0]
-            c.execute("SELECT COUNT(*) FROM commands WHERE dispatch_event_id IS NULL AND node_id=%s",node_id)
+            c.execute("SELECT COUNT(*) FROM commands WHERE dispatch_event_id IS NULL AND node_id=%s",
+                      (node_id,))
             directed_commands = -1
             if row:
                 directed_commands = row[0]
@@ -511,6 +512,24 @@ WHERE smart_contracts.id=%s"""
             if row:
                 return row[0], row[1]
             return None
+
+    def get_admin_id(self):
+        try:
+            c = self.db.cursor()
+            c.execute("SELECT user_id FROM users WHERE email_address='admin';")
+            row = c.fetchone()
+            c.close()
+            if row:
+                return row[0]
+            return 0
+        except MySQLdb.Error as e:
+            # don't even check for the logger since this only runs from the console.
+            try:
+                print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                print("MySQL Error: %s" % (str(e),))
+            c.close()
+            return -1
 
     def list_devices(self, user_id):
         c = self.db.cursor()
