@@ -296,3 +296,8 @@ div.permissions {
     text-decoration: none;
 }
 
+#users {
+    height: 768px;
+    overflow-y: scroll;
+}
+
