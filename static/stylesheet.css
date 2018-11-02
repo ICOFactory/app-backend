@@ -1,6 +1,6 @@
 
 #header {
-    width: -moz-fit-content;
+    width: 1024px;
     padding: 20px;
     margin-left: auto;
     margin-right: auto;
@@ -34,7 +34,6 @@
 
 #create_erc20_token {
     padding: 15px;
-    width: -moz-fit-content;
     margin-left: 20px;
     background-color: rgb(40,40,40);
 }
@@ -168,7 +167,7 @@ li.acl_type {
 }
 
 #onboard_user {
-    width:-moz-fit-content;
+    width:320px;
     margin-left:auto;
     margin-right:auto;
     padding:20px;
@@ -194,7 +193,7 @@ div.permissions {
 }
 
 #admin_content_view {
-    width:-moz-fit-content;
+    width:1024px;
     margin-left:auto;
     margin-right:auto;
 }

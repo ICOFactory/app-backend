@@ -13,6 +13,14 @@ import getpass
 
 UUID_REGEX = re.compile("[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}")
 
+class ReadOnlyException(Exception):
+    """Raised when the database is in readonly mode. (like during a deployment)"""
+    pass
+
+def hash_password(email_address,password):
+    combined = email_address + password
+    hashed_pw = sha256(combined.encode())
+    return hashed_pw.hexdigest()
 
 def random_token():
     new_session_token = binascii.hexlify(os.urandom(8))
@@ -49,7 +57,7 @@ class Database:
                              ETH_NODE_STATUS_RESTART,
                              ETH_NODE_STATUS_ERROR]
 
-    def __init__(self, logger=None):
+    def __init__(self, logger=None,read_only_mode=False):
         config_stream = open("config.json", "r")
         config_data = json.load(config_stream)
         config_stream.close()
@@ -59,6 +67,7 @@ class Database:
         db_name = config_data['mysql_database']
         self.db = MySQLdb.connect(db_host, db_username, db_password, db_name)
         self.logger = logger
+        self.read_only_mode = read_only_mode
 
     def validate_permission(self, user_id, permission, smart_contract_id=None):
         # TODO: query access control lists
@@ -626,15 +635,31 @@ WHERE smart_contracts.id=%s"""
         return None
 
     def reset_password(self, user_id, password):
-        c = self.db.cursor()
-        c.execute("SELECT email_address FROM users WHERE user_id=%s", (user_id,))
-        row = c.fetchone()
-        if row:
-            combined_pw = row[0] + password
-            passwd_hash = sha256(combined_pw)
-            result = c.execute("UPDATE users SET password=%s WHERE user_id=%s", (passwd_hash.hexdigest(), user_id))
-            if result > 0:
-                return True
+        try:
+            c = self.db.cursor()
+            if int(user_id > 1):
+                raise ValueError
+            if self.read_only_mode:
+                raise ReadOnlyException
+            c.execute("SELECT email_address FROM users WHERE user_id=%s", (user_id,))
+            row = c.fetchone()
+            if row:
+                password_hash = hash_password(row[0],password)
+                c.execute("UPDATE users SET password=%s WHERE user_id=%s", (password_hash, user_id))
+                self.db.commit()
+                if c.rowcount > 0:
+                    return True
+        except MySQLdb.Error as e:
+            try:
+                if self.logger:
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                if self.logger:
+                    self.logger.error("MySQL Error: %s" % (str(e),))
+                else:
+                    print("MySQL Error: %s" % (str(e),))
         return False
 
     def login(self, email_address, password, ip_addr):
@@ -669,14 +694,12 @@ WHERE smart_contracts.id=%s"""
 
     def create_user(self, full_name, email_address, password, ip_addr):
         c = self.db.cursor()
-        data = email_address + password
-        pw_hash = sha256(data.encode("utf-8"))
-        digest = pw_hash.hexdigest()
+        hashed_pw = hash_password(email_address,password)
         new_session_token = random_token()
         email_param = self.db.escape_string(email_address).decode('utf-8')
         sql = "INSERT INTO users (email_address,password,session_token,created_ip,created,full_name) VALUES (%s,%s,%s,%s,NOW(),%s);"
         try:
-            c.execute(sql, (email_param, digest, new_session_token,ip_addr,full_name))
+            c.execute(sql, (email_param, hashed_pw, new_session_token,ip_addr,full_name))
             last_row_id = c.lastrowid
             c.close()
             self.db.commit()
@@ -736,10 +759,11 @@ WHERE smart_contracts.id=%s"""
 
 
 if __name__ == "__main__":
+    import sys
     db = Database()
     print("Connected to database successfully, checking for admin user.")
     admin_id = db.get_admin_id()
-    if admin_id
+    if admin_id:
         print("Account 'admin' found, reset password? (Y/n)")
         raw_input = input("> ")
         if raw_input == "Y":
@@ -754,3 +778,6 @@ if __name__ == "__main__":
         if result:
             print("Successfully created new admin user.")
             sys.exit(0)
+        else:
+            print("Failed to create new admin user.")
+            sys.exit(1)
