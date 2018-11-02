@@ -9,6 +9,7 @@ import re
 import json
 import binascii
 import os
+import getpass
 
 UUID_REGEX = re.compile("[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}")
 
@@ -21,6 +22,18 @@ def random_token():
 def generate_api_key():
     new_api_key = binascii.hexlify(os.urandom(16))
     return new_api_key
+
+
+def reset_admin_password_console():
+    print("Setting new admin password:")
+    while 1:
+        first = getpass.getpass(prompt="new admin password: ")
+        repeat = getpass.getpass(prompt="repeat to confim: ")
+        if first == repeat:
+            print("New admin password.")
+            return first
+        else:
+            print("Passwords must match. CTRL-C to exit.")
 
 
 class Database:
@@ -36,7 +49,7 @@ class Database:
                              ETH_NODE_STATUS_RESTART,
                              ETH_NODE_STATUS_ERROR]
 
-    def __init__(self):
+    def __init__(self, logger=None):
         config_stream = open("config.json", "r")
         config_data = json.load(config_stream)
         config_stream.close()
@@ -45,7 +58,7 @@ class Database:
         db_password = config_data['mysql_password']
         db_name = config_data['mysql_database']
         self.db = MySQLdb.connect(db_host, db_username, db_password, db_name)
-        self.logger = None
+        self.logger = logger
 
     def validate_permission(self, user_id, permission, smart_contract_id=None):
         # TODO: query access control lists
@@ -724,8 +737,20 @@ WHERE smart_contracts.id=%s"""
 
 if __name__ == "__main__":
     db = Database()
-    print("Creating admin user...")
-    raw_password = input("Admin password: ")
-    result = db.create_user("Administrator", "admin", raw_password, None)
-    if result:
-        print("Admin user created successfully.")
+    print("Connected to database successfully, checking for admin user.")
+    admin_id = db.get_admin_id()
+    if admin_id
+        print("Account 'admin' found, reset password? (Y/n)")
+        raw_input = input("> ")
+        if raw_input == "Y":
+            new_passwd = reset_admin_password_console()
+            db.reset_password(admin_id, new_passwd)
+            print("Reset admin password.")
+            sys.exit(0)
+    else:
+        print("No admin account found, creating a new one.")
+        new_passwd = reset_admin_password_console()
+        result = db.create_user("Administrator","admin",new_passwd,"console")
+        if result:
+            print("Successfully created new admin user.")
+            sys.exit(0)
