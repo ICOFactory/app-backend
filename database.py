@@ -10,17 +10,26 @@ import json
 import binascii
 import os
 import getpass
+import events
 
 UUID_REGEX = re.compile("[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}")
+
 
 class ReadOnlyException(Exception):
     """Raised when the database is in readonly mode. (like during a deployment)"""
     pass
 
-def hash_password(email_address,password):
+class DummyDatabase:
+    def __init__(self,db_connection,logger):
+        self.db = db_connection
+        self.logger = logger
+
+
+def hash_password(email_address, password):
     combined = email_address + password
     hashed_pw = sha256(combined.encode())
     return hashed_pw.hexdigest()
+
 
 def random_token():
     new_session_token = binascii.hexlify(os.urandom(8))
@@ -57,7 +66,7 @@ class Database:
                              ETH_NODE_STATUS_RESTART,
                              ETH_NODE_STATUS_ERROR]
 
-    def __init__(self, logger=None,read_only_mode=False):
+    def __init__(self, logger=None, read_only_mode=False):
         config_stream = open("config.json", "r")
         config_data = json.load(config_stream)
         config_stream.close()
@@ -119,7 +128,7 @@ class Database:
             return False
         try:
             c = self.db.cursor()
-            c.execute("UPDATE users SET json_metadata=%s WHERE user_id=%s",(acl_data_json, user_id))
+            c.execute("UPDATE users SET json_metadata=%s WHERE user_id=%s", (acl_data_json, user_id))
             if c.rowcount == 1:
                 # flush old permissions
                 c.execute("DELETE FROM access_control_list WHERE user_id=%s")
@@ -156,7 +165,8 @@ class Database:
             c = self.db.cursor()
             output = ["view-event-log"]
             if smart_contract_id:
-                sql = "SELECT permission,smart_contract_id FROM access_control_list WHERE user_id=%s AND smart_contract_id=%s"
+                sql = "SELECT permission,smart_contract_id FROM access_control_list"
+                sql += " WHERE user_id=%s AND smart_contract_id=%s"
                 c.execute(sql, (user_id, smart_contract_id))
             else:
                 sql = "SELECT permission,smart_contract_id FROM access_control_list WHERE user_id=%s"
@@ -180,7 +190,7 @@ class Database:
         try:
             c = self.db.cursor()
             output = []
-            sql = """SELECT event_id,full_name,email_address,event_log.user_id,event_log.json_metadata,event_log.created
+            sql = """SELECT event_id,full_name,email_address,event_log.user_id,event_log.event_data,event_log.created
  FROM event_log LEFT JOIN users ON users.user_id=event_log.user_id WHERE event_type_id=%s 
  ORDER BY event_id DESC LIMIT %s"""
             c.execute(sql, (event_type_id, limit))
@@ -244,7 +254,7 @@ class Database:
                 print(error_message)
         return None
 
-    def get_pending_commands(self,node_id):
+    def get_pending_commands(self, node_id):
         try:
             c = self.db.cursor()
             c.execute("SELECT COUNT(*) FROM commands WHERE dispatch_event_id IS NULL AND node_id is NULL")
@@ -265,10 +275,10 @@ class Database:
                 self.logger.error("MySQL Error: %s" % (str(e),))
         return None
 
-    def remove_ethereum_node(self,node_id):
+    def remove_ethereum_node(self, node_id):
         try:
             c = self.db.cursor()
-            c.execute("DELETE FROM ethereum_network WHERE id=%s",(node_id,))
+            c.execute("DELETE FROM ethereum_network WHERE id=%s", (node_id,))
             self.db.commit()
             if c.rowcount == 1:
                 return True
@@ -280,30 +290,56 @@ class Database:
         return False
 
     def list_ethereum_nodes(self):
-        c = self.db.cursor()
-        sql = "SELECT id,node_identifier,last_event_id,last_update,last_update_ip,api_key,status"
-        sql += " FROM ethereum_network;"
-        c.execute(sql)
-        nodes = []
-        for row in c:
-            last_update = row[3]
-            if last_update:
-                last_update = last_update.isoformat()
-            nodes.append(dict(id=row[0],
-                              node_identifier=row[1],
-                              last_event_id=row[2],
-                              last_update=last_update,
-                              last_update_ip=row[4],
-                              api_key=row[5],
-                              status=row[6]))
-        return nodes
+        try:
+            c = self.db.cursor()
+            sql = "SELECT id,node_identifier,last_event_id,last_update,last_update_ip,api_key,status"
+            sql += " FROM ethereum_network;"
+            c.execute(sql)
+            nodes = []
+            for row in c:
+                last_update = row[3]
+                event_data = None
+                if last_update:
+                    last_update = last_update.isoformat()
+                    db_obj = DummyDatabase(self.db, self.logger)
+                    update_event = events.Event("Ethereum Node Update",
+                                                db_obj,
+                                                logger=self.logger)
+                    event_data = update_event.get_latest_event(row[0])
+                new_node_data = dict(id=row[0],
+                                     node_identifier=row[1],
+                                     last_event_id=row[2],
+                                     last_update=last_update,
+                                     last_update_ip=row[4],
+                                     api_key=row[5],
+                                     status=row[6])
+                if event_data:
+                    decoded_json = json.loads(event_data[0])
+                    new_node_data["peers"] = decoded_json["peers"]
+                nodes.append(new_node_data)
+            return nodes
+        except MySQLdb.Error as e:
+            try:
+                msg = "MySQL Error [{0}]: {1}".format(e.args[0], e.args[1])
+                if self.logger:
+                    self.logger.error(msg)
+                else:
+                    print(msg)
+            except IndexError:
+                msg = "MySQL Error: " + str(e)
+                if self.logger:
+                    self.logger.error(msg)
+                else:
+                    print(msg)
+        return None
 
     def update_ethereum_node_status(self, node_id, ip_addr, event_id, status):
         if status not in self.ETH_NODE_VALID_STATES:
             return False
         try:
             c = self.db.cursor()
-            sql = "UPDATE ethereum_network SET status=%s,last_event_id=%s,last_update_ip=%s,last_update=NOW() WHERE id=%s"
+            sql = "UPDATE ethereum_network SET status=%s,last_event_id=%s,last_update_ip=%s,last_update=NOW()"
+            sql += " WHERE id=%s"
             c.execute(sql, (status, event_id, ip_addr, node_id))
             if c.rowcount == 1:
                 self.db.commit()
@@ -359,14 +395,14 @@ WHERE smart_contracts.id=%s"""
             c.execute(sql, (token_id,))
             row = c.fetchone()
             if row:
-                output = {"token_name":row[0],
-                          "ico_tokens":row[1],
-                          "ethereum_address":row[2],
-                          "max_priority":row[3],
-                          "token_symbol":row[4],
-                          "published":row[5],
-                          "owner_id":row[6],
-                          "token_id":token_id}
+                output = {"token_name": row[0],
+                          "ico_tokens": row[1],
+                          "ethereum_address": row[2],
+                          "max_priority": row[3],
+                          "token_symbol": row[4],
+                          "published": row[5],
+                          "owner_id": row[6],
+                          "token_id": token_id}
                 return output
         except MySQLdb.Error as e:
             try:
@@ -484,22 +520,23 @@ WHERE smart_contracts.id=%s"""
             except IndexError:
                 self.logger.error("MySQL Error: %s" % (str(e),))
             return -1
-    
+
     def get_frame(self, device_id, offset):
         device_id_param = int(device_id)
         offset_param = int(offset)
         sql = "SELECT frame_id,created,metadata FROM frames WHERE device_id=%s ORDER BY frame_id ASC LIMIT 1 OFFSET %s;"
         c = self.db.cursor()
-        c.execute(sql, (device_id_param,offset_param))
+        c.execute(sql, (device_id_param, offset_param))
         return c.fetchone()
-    
+
     def last_frame(self, device_id):
         device_id_param = int(device_id)
-        sql = "SELECT frame_id,created,metadata FROM frames WHERE device_id={0} ORDER BY frame_id DESC LIMIT 1".format(device_id_param)
+        sql = "SELECT frame_id,created,metadata FROM frames WHERE device_id={0} ORDER BY frame_id DESC LIMIT 1".format(
+            device_id_param)
         c = self.db.cursor()
         c.execute(sql)
         return c.fetchone()
-    
+
     def frame_count(self, device_id):
         device_id_param = int(device_id)
         sql = "SELECT COUNT(*) FROM frames WHERE device_id=%s"
@@ -509,11 +546,12 @@ WHERE smart_contracts.id=%s"""
         if row:
             return row[0]
         return 0
-    
+
     def add_frame(self, device_id, json_string):
         device_id_param = int(device_id)
         escaped_string = self.db.escape_string(json_string)
-        sql = "INSERT INTO frames (device_id,metadata) VALUES ({0},'{1}')".format(device_id_param,escaped_string.decode('utf-8'))
+        sql = "INSERT INTO frames (device_id,metadata) VALUES ({0},'{1}')".format(device_id_param,
+                                                                                  escaped_string.decode('utf-8'))
         c = self.db.cursor()
         try:
             c.execute(sql)
@@ -550,7 +588,6 @@ WHERE smart_contracts.id=%s"""
                 print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
             except IndexError:
                 print("MySQL Error: %s" % (str(e),))
-            c.close()
             return -1
 
     def list_devices(self, user_id):
@@ -561,7 +598,7 @@ WHERE smart_contracts.id=%s"""
             output = []
             c.execute(sql)
             for each in c:
-                output.append((each[0],each[1]))
+                output.append((each[0], each[1]))
             return output
         except MySQLdb.Error as e:
             pass
@@ -571,7 +608,8 @@ WHERE smart_contracts.id=%s"""
         c = self.db.cursor()
         try:
             output = []
-            c.execute("SELECT user_id,email_address,last_logged_in,last_logged_in_ip,created,created_ip,full_name FROM users")
+            c.execute(
+                "SELECT user_id,email_address,last_logged_in,last_logged_in_ip,created,created_ip,full_name FROM users")
             for row in c:
                 output.append({"user_id": row[0],
                                "email": row[1],
@@ -579,7 +617,7 @@ WHERE smart_contracts.id=%s"""
                                "last_logged_in_ip": row[3],
                                "created": row[4],
                                "created_ip": row[5],
-                               "full_name":row[6]})
+                               "full_name": row[6]})
             c.close()
             return output
         except MySQLdb.Error as e:
@@ -597,7 +635,7 @@ WHERE smart_contracts.id=%s"""
             try:
                 if user_id:
                     user_id_param = int(user_id)
-                    c.execute("INSERT INTO devices (owner_id,uuid) VALUES (%s,%s);", (user_id_param,uuid_param))
+                    c.execute("INSERT INTO devices (owner_id,uuid) VALUES (%s,%s);", (user_id_param, uuid_param))
                 else:
                     c.execute("INSERT INTO devices (uuid) VALUES (%s);", (uuid_param,))
                 last_row_id = c.lastrowid
@@ -644,7 +682,7 @@ WHERE smart_contracts.id=%s"""
             c.execute("SELECT email_address FROM users WHERE user_id=%s", (user_id,))
             row = c.fetchone()
             if row:
-                password_hash = hash_password(row[0],password)
+                password_hash = hash_password(row[0], password)
                 c.execute("UPDATE users SET password=%s WHERE user_id=%s", (password_hash, user_id))
                 self.db.commit()
                 if c.rowcount > 0:
@@ -666,7 +704,8 @@ WHERE smart_contracts.id=%s"""
         c = self.db.cursor()
         email_param = self.db.escape_string(email_address)
         try:
-            c.execute("SELECT user_id, email_address, password FROM users WHERE email_address=%s;", (email_param.decode('utf-8'),))
+            c.execute("SELECT user_id, email_address, password FROM users WHERE email_address=%s;",
+                      (email_param.decode('utf-8'),))
             row = c.fetchone()
             if row:
                 data = email_address + password
@@ -694,12 +733,13 @@ WHERE smart_contracts.id=%s"""
 
     def create_user(self, full_name, email_address, password, ip_addr):
         c = self.db.cursor()
-        hashed_pw = hash_password(email_address,password)
+        hashed_pw = hash_password(email_address, password)
         new_session_token = random_token()
         email_param = self.db.escape_string(email_address).decode('utf-8')
-        sql = "INSERT INTO users (email_address,password,session_token,created_ip,created,full_name) VALUES (%s,%s,%s,%s,NOW(),%s);"
+        sql = "INSERT INTO users (email_address,password,session_token,created_ip,created,full_name)"
+        sql += "VALUES (%s,%s,%s,%s,NOW(),%s);"
         try:
-            c.execute(sql, (email_param, hashed_pw, new_session_token,ip_addr,full_name))
+            c.execute(sql, (email_param, hashed_pw, new_session_token, ip_addr, full_name))
             last_row_id = c.lastrowid
             c.close()
             self.db.commit()
@@ -719,12 +759,12 @@ WHERE smart_contracts.id=%s"""
             return None
         return last_row_id, new_session_token
 
-    def view_wallet(self,user_id):
+    def view_wallet(self, user_id):
         try:
             c = self.db.cursor()
             sql = "SELECT serial,ethereum_address_pool.ethereum_address,issued,smart_contract_id FROM tokens "
             sql += " LEFT JOIN ethereum_address_pool ON ethereum_address_pool.id=tokens.eth_address WHERE owner_id=%s"
-            c.execute(sql,(user_id,))
+            c.execute(sql, (user_id,))
             all_tokens = []
             for row in c:
                 all_tokens.append({"token_serial": row[0],
@@ -760,6 +800,7 @@ WHERE smart_contracts.id=%s"""
 
 if __name__ == "__main__":
     import sys
+
     db = Database()
     print("Connected to database successfully, checking for admin user.")
     admin_id = db.get_admin_id()
@@ -774,7 +815,7 @@ if __name__ == "__main__":
     else:
         print("No admin account found, creating a new one.")
         new_passwd = reset_admin_password_console()
-        result = db.create_user("Administrator","admin",new_passwd,"console")
+        result = db.create_user("Administrator", "admin", new_passwd, "console")
         if result:
             print("Successfully created new admin user.")
             sys.exit(0)

@@ -209,6 +209,10 @@ div.permissions {
     font-size: smaller;
 }
 
+#random_password_msg {
+    font-size: smaller;
+}
+
 #admin_content {
     width:1024px;
     height: 768px;
@@ -293,6 +297,19 @@ div.permissions {
 .login_anchor:visited {
     color: orangered;
     text-decoration: none;
+}
+
+.blue_submit_button {
+    background-color: rgb(54,88,128);
+    border: 1px solid rgb(76,122,140);
+    color: white;
+    padding: 5px;
+    width: 64px;
+}
+
+#onboard_user_validation {
+    font-weight: bold;
+    color:red;
 }
 
 #users {

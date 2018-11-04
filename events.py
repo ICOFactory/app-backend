@@ -52,16 +52,17 @@ class Event:
             else:
                 print(error_message)
 
-    def get_latest_event(self,user_id=None):
+    def get_latest_event(self, user_id=None):
         if self.event_type_id < 1:
             return None
         try:
+            c = self.db.cursor()
             if user_id:
-                sql = "SELECT json_metadata,created FROM event_log WHERE event_type_id=%s AND user_id=%s;"
-                c.execute(sql,(self.event_type_id,user_id))
+                sql = "SELECT event_data,created FROM event_log WHERE event_type_id=%s AND user_id=%s;"
+                c.execute(sql, (self.event_type_id, user_id))
             else:
-                sql = "SELECT json_metadata,created FROM event_log WHERE event_type_id=%s"
-                c.execute(sql,(self.event_type_id,))
+                sql = "SELECT event_data,created FROM event_log WHERE event_type_id=%s"
+                c.execute(sql, (self.event_type_id,))
             row = c.fetchone()
             return row
         except MySQLdb.Error as e:
@@ -81,7 +82,7 @@ class Event:
             if type(metadata) is not str:
                 metadata = json.dumps(metadata)
             c = self.db.cursor()
-            sql = "INSERT INTO event_log (event_type_id, user_id, json_metadata) VALUES (%s,%s,%s)"
+            sql = "INSERT INTO event_log (event_type_id, user_id, event_data) VALUES (%s,%s,%s)"
             try:
                 c.execute(sql, (self.event_type_id, user_id, metadata))
                 last_row_id = c.lastrowid

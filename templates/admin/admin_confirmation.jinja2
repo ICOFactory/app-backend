@@ -1,0 +1,49 @@
+{% extends "admin/admin_base.jinja2" %}
+
+{% block header %}
+<h1>{% block title %}{% endblock %}</h1>
+<p id="back_nav">[ <a class="header_anchor" href="/admin/{{ session_token }}">back to administration</a> ]</p>
+{% endblock %}
+
+{% block content %}
+    <div id="confirmation_form_container">
+        <form action="/admin/confirm" method="post">
+            <input type="hidden" name="session_token" value="{{ session_token }}" />
+            <input type="hidden" name="confirmation_type" value="{{ confirmation_type }}" />
+            <table>
+                <tr>
+                    <td><h3>{{ confirmation_title }}</h3></td>
+                </tr>
+                <tr>
+                    <td><p>{{ confirmation_message }}</p></td>
+                </tr>
+                {% if email_address %}
+                <tr>
+                    <td><label>E-mail Address</label></td>
+                    <td><input type="email" name="email_address" class="login_input" /></td>
+                </tr>
+                {% endif %}
+                {% if current_password %}
+                <tr>
+                    <td><label>Current Password</label></td>
+                    <td><input type="password" name="current_password" class="login_input" /></td>
+                </tr>
+                {% endif %}
+                {% if new_password %}
+                    <tr>
+                    <td><label>New Password</label></td>
+                    <td><input type="password" name="password" class="login_input" /></td>
+                </tr>
+                    <tr>
+                    <td><label>Repeat New Password</label></td>
+                    <td><input type="password" name="repeat_password" class="login_input" /></td>
+                </tr>
+                {% endif %}
+                <tr><td colspan="2">
+                    {% for each choices %}<input type="submit" name="choice" value="{{ each }}" />{% endfor %}
+                    <input type="submit" name="choice" value="{{ default_choice }}" class="blue_submit_button"/>
+                </td></tr>
+            </table>
+        </form>
+    </div>
+{% endblock %}
