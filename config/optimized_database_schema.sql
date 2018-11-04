@@ -9,7 +9,7 @@ CREATE TABLE `access_control_list` (
 CREATE TABLE `commands` (
   `command_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `node_id` smallint(5) unsigned NOT NULL,
-  `command` text,
+  `command` JSON,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `dispatch_event_id` int(20) unsigned DEFAULT NULL,
   PRIMARY KEY (`command_id`)
@@ -82,7 +82,7 @@ CREATE TABLE `frames` (
   `device_id` int(10) unsigned NOT NULL,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `viewed` datetime DEFAULT NULL,
-  `metadata` text,
+  `frame_data` JSON,
   PRIMARY KEY (`frame_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
@@ -133,7 +133,7 @@ CREATE TABLE `users` (
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `created_ip` varchar(15) DEFAULT NULL,
   `session_token` char(16) DEFAULT NULL,
-  `json_metadata` text,
+  `acl` JSON,
   `full_name` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`user_id`),
   UNIQUE KEY `email_address` (`email_address`)
