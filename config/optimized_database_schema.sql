@@ -47,7 +47,7 @@ CREATE TABLE `event_log` (
   `event_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `event_type_id` smallint(5) unsigned DEFAULT NULL,
   `user_id` int(10) unsigned DEFAULT NULL,
-  `json_metadata` longtext,
+  `event_data` JSON,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`event_id`),
   KEY `event_log_event_type_id_index` (`event_type_id`)
