@@ -19,8 +19,9 @@ class ReadOnlyException(Exception):
     """Raised when the database is in readonly mode. (like during a deployment)"""
     pass
 
+
 class DummyDatabase:
-    def __init__(self,db_connection,logger):
+    def __init__(self, db_connection, logger):
         self.db = db_connection
         self.logger = logger
 
@@ -316,6 +317,7 @@ class Database:
                 if event_data:
                     decoded_json = json.loads(event_data[0])
                     new_node_data["peers"] = decoded_json["peers"]
+                    new_node_data["commands"] = 0
                 nodes.append(new_node_data)
             return nodes
         except MySQLdb.Error as e:
