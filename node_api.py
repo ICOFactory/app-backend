@@ -13,18 +13,19 @@ node_api_blueprint = Blueprint('node_api', __name__, url_prefix="/node_api")
 def node_api_update(api_key):
     db = database.Database()
     db.logger = current_app.logger
+    ip_addr = request.access_route[-1]
     node_id = db.validate_api_key(api_key)
     if node_id:
         new_event = events.Event("Ethereum Node Update", db, current_app.logger)
         json_data = request.get_json(force=True)
         if type(json_data) is dict:
             event_data = dict(json_data)
-            event_data["ip_address"] = request.headers.get('Forwarded')
+            event_data["ip_address"] = ip_addr
             if "synchronized" in json_data:
                 if not event_data["synchronized"]:
                     new_event_log_id = new_event.log_event(node_id, json.dumps(event_data))
                     db.update_ethereum_node_status(node_id,
-                                                   request.remote_addr,
+                                                   ip_addr,
                                                    new_event_log_id,
                                                    db.ETH_NODE_STATUS_SYNCING)
                     return Response("{\"result\":\"OK\"}")
@@ -34,12 +35,12 @@ def node_api_update(api_key):
                             event_data["error"] = "output_blocked"
                             # No more commands if the output to a prior command is blocked
                             new_event_log_id = new_event.log_event(node_id, json.dumps(event_data))
-                            db.update_ethereum_node_status(node_id, request.remote_addr, new_event_log_id,
+                            db.update_ethereum_node_status(node_id, ip_addr, new_event_log_id,
                                                            db.ETH_NODE_STATUS_ERROR)
                             return Response(json.dumps({"result": "OK"}))
 
                     new_event_log_id = new_event.log_event(node_id, json.dumps(event_data))
-                    db.update_ethereum_node_status(node_id, request.remote_addr, new_event_log_id,
+                    db.update_ethereum_node_status(node_id, ip_addr, new_event_log_id,
                                                    db.ETH_NODE_STATUS_SYNCED)
                     # since the node is synchornized and not output blocked, we check for outstanding commands
                     pending_commands = db.get_pending_commands(node_id)

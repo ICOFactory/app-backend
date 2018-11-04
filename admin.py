@@ -42,7 +42,7 @@ def admin_login():
         username = request.form['username']
         password = request.form['password']
         db = database.Database()
-        session_data = db.login(username, password, request.remote_addr)
+        session_data = db.login(username, password, request.access_route[-1])
         if session_data:
             return redirect(url_for("admin.admin_main", session_token=session_data[1]))
         else:

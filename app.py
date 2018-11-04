@@ -14,7 +14,7 @@ app.register_blueprint(node_api.node_api_blueprint)
 @app.route('/json', methods=['POST'])
 def json_endpoint():
     json_data = request.get_json(force=True)
-    request_data = {"ip_address": request.remote_addr}
+    request_data = {"ip_address": request.access_route[-1]}
     jp = JSONProcessor(json_data, request_data)
     jp.logger = app.logger
     if jp.response:
@@ -48,7 +48,7 @@ def upload_form():
                 s3.Object('xscoating', new_filename).put(Body=frame_file, ACL='public-read')
                 json_data = json.loads(request.form['frame_data'])
                 json_data['filename'] = new_filename
-                json_data['remote_addr'] = request.remote_addr
+                json_data['remote_addr'] = request.access_route[-1]
                 json_text = json.dumps(json_data)
                 db = Database()
                 result = db.add_frame(device_id, json_text)
