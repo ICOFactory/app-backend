@@ -15,6 +15,9 @@ import database
 import os
 import sys
 import pprint
+import re
+
+ETH_ADDRESS_REGEX = re.compile("^0x[0-9a-fA-F]{40}$")
 
 
 def get_new_addresses(count):
@@ -95,6 +98,28 @@ class EthereumNode:
                     print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
             return None
         return output
+
+    def add_new_ethereum_address(self,new_address):
+        if not ETH_ADDRESS_REGEX.match(new_address):
+            return None
+        try:
+            c = self.db.cursor()
+            c.execute("INSERT INTO ethereum_address_pool (ethereum_address) VALUES (%s);",(new_address,))
+            self.db.commit()
+            return c.lastrowid
+        except MySQLdb.Error as e:
+            try:
+                if self.logger:
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                if self.logger:
+                    self.logger.error("MySQL Error: %s" % (str(e),))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+        return None
+
 
     def assign_new_ethereum_address(self):
         try:

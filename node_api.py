@@ -19,7 +19,7 @@ def node_api_update(api_key):
         json_data = request.get_json(force=True)
         if type(json_data) is dict:
             event_data = dict(json_data)
-            event_data["ip_address"] = request.remote_addr
+            event_data["ip_address"] = request.headers.get('Forwarded')
             if "synchronized" in json_data:
                 if not event_data["synchronized"]:
                     new_event_log_id = new_event.log_event(node_id, json.dumps(event_data))
