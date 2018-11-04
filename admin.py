@@ -51,6 +51,18 @@ def admin_login():
     return render_template("admin/admin_login.jinja2")
 
 
+@admin_blueprint.route('/users/recover/account')
+def view_account_recovery():
+    confirmation_message = "If your e-mail is in our database, you will receive an e-mail with "
+    confirmation_message += "instructions on resetting your password"
+    return render_template("admin/admin_confirmation.jinja2",
+                           email_address=True,
+                           title="Recover Account",
+                           confirmation_title="Reset your password",
+                           confirmation_message=confirmation_message,
+                           default_choice="Send E-mail")
+
+
 @admin_blueprint.route('/event_log/<session_token>')
 def view_event_log(session_token):
     db = database.Database()

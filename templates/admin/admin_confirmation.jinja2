@@ -2,7 +2,6 @@
 
 {% block header %}
 <h1>{% block title %}{% endblock %}</h1>
-<p id="back_nav">[ <a class="header_anchor" href="/admin/{{ session_token }}">back to administration</a> ]</p>
 {% endblock %}
 
 {% block content %}
@@ -39,8 +38,10 @@
                     <td><input type="password" name="repeat_password" class="login_input" /></td>
                 </tr>
                 {% endif %}
-                <tr><td colspan="2">
-                    {% for each choices %}<input type="submit" name="choice" value="{{ each }}" />{% endfor %}
+                <tr><td colspan="2" align="right">
+                    {% for each choices %}
+                        <input type="submit" class="grey_submit_button" name="choice" value="{{ each }}" />&nbsp;
+                    {% endfor %}
                     <input type="submit" name="choice" value="{{ default_choice }}" class="blue_submit_button"/>
                 </td></tr>
             </table>
