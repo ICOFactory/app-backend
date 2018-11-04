@@ -128,7 +128,7 @@ class Database:
             return False
         try:
             c = self.db.cursor()
-            c.execute("UPDATE users SET json_metadata=%s WHERE user_id=%s", (acl_data_json, user_id))
+            c.execute("UPDATE users SET acl=%s WHERE user_id=%s", (acl_data_json, user_id))
             if c.rowcount == 1:
                 # flush old permissions
                 c.execute("DELETE FROM access_control_list WHERE user_id=%s")
@@ -453,7 +453,7 @@ WHERE smart_contracts.id=%s"""
 
     def get_user_info(self, user_id):
         c = self.db.cursor()
-        sql = "SELECT email_address,last_logged_in,last_logged_in_ip,created,created_ip,json_metadata,full_name,user_id"
+        sql = "SELECT email_address,last_logged_in,last_logged_in_ip,created,created_ip,acl,full_name,user_id"
         sql += " FROM users WHERE user_id=%s"
         c.execute(sql, (user_id,))
         row = c.fetchone()
@@ -463,7 +463,7 @@ WHERE smart_contracts.id=%s"""
                          "last_logged_in_ip": row[2],
                          "created": row[3],
                          "created_ip": row[4],
-                         "json_metadata": row[5],
+                         "acl": row[5],
                          "full_name": row[6],
                          "user_id": row[7]}
             return user_info
@@ -550,7 +550,7 @@ WHERE smart_contracts.id=%s"""
     def add_frame(self, device_id, json_string):
         device_id_param = int(device_id)
         escaped_string = self.db.escape_string(json_string)
-        sql = "INSERT INTO frames (device_id,metadata) VALUES ({0},'{1}')".format(device_id_param,
+        sql = "INSERT INTO frames (device_id,frame_data) VALUES ({0},'{1}')".format(device_id_param,
                                                                                   escaped_string.decode('utf-8'))
         c = self.db.cursor()
         try:

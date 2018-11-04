@@ -58,7 +58,8 @@ def view_account_recovery():
     return render_template("admin/admin_confirmation.jinja2",
                            email_address=True,
                            title="Recover Account",
-                           confirmation_title="Reset your password",
+                           confirmation_type="password-recovery",
+                           confirmation_title="Recover your account",
                            confirmation_message=confirmation_message,
                            default_choice="Send E-mail")
 
