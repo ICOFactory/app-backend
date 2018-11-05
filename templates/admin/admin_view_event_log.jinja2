@@ -30,10 +30,10 @@
 </div>
 <div id="event_log_output">
 {% if json_data %}
-    <textarea rows="50" cols="80">{{ json_data }}</textarea>
+    <textarea id="dark_text_area" rows="50" cols="80">{{ json_data }}</textarea>
 {%  endif %}
 {% if csv_data %}
-    <textarea rows="50" cols="80">{{ csv_data }}</textarea>
+    <textarea id="dark_text_area" rows="50" cols="80">{{ csv_data }}</textarea>
 {%  endif %}
 </div>
 {% endblock %}
