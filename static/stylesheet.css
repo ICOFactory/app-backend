@@ -186,6 +186,7 @@ div.permissions {
 }
 
 
+
 #admin_main_menu {
     padding-top:5px;
     width: 220px;
@@ -303,7 +304,7 @@ div.permissions {
     background-color: rgb(54,88,128);
     border: 1px solid rgb(76,122,140);
     color: white;
-    padding: 5px;
+    padding: 12px;
 }
 
 .grey_submit_button {
@@ -323,3 +324,29 @@ div.permissions {
     overflow-y: scroll;
 }
 
+#onboard_checkboxes {
+    float:left;
+}
+
+#onboard_submit {
+    margin-top:6px;
+    padding: 12px;
+    margin-left: 48px;
+}
+
+.dark_input_field {
+    background-color: black;
+    color: white;
+    text-align: right;
+    padding: 5px;
+    border: 1px solid rgb(96,96,96);
+}
+
+textarea {
+    background-color: black;
+    color: lightgray;
+    text-align: left;
+    padding: 5px;
+    border: 1px solid rgb(96,96,96);
+    margin: 36px;
+}

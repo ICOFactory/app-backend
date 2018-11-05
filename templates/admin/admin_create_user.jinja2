@@ -1,7 +1,7 @@
 {% extends "admin/admin_base.jinja2" %}
 
 {% block header %}
-    <h1>{% block title %}On-board new user{% endblock %}</h1>
+    <h1>{% block title %}Onboard new user{% endblock %}</h1>
     <p id="back_nav">[ <a class="header_anchor" href="/admin/{{ session_token }}">back to administration</a> ]</p>
 {% endblock %}
 
@@ -32,7 +32,7 @@
             </tr>
             <tr>
                 <td align="right" colspan="2">
-                    <table>
+                    <table id="onboard_checkboxes">
                         <tr>
                             <td><input type="checkbox" name="confirm_email" id="confirm_email_checkbox">
                                 <span id="email_confirm_msg">E-mail confirmation</span></input>&nbsp;
@@ -43,7 +43,7 @@
                                 <span id="random_password_msg">Random password</span></td>
                         </tr>
                     </table>
-                    <input type="submit" class="blue_submit_button" value="Next"/>
+                    <input id="onboard_submit" type="submit" class="blue_submit_button" value="Next Page"/>
                 </td>
             </tr>
             </tbody>
