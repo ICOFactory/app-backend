@@ -110,7 +110,7 @@ class SmartContract:
                         self.tokens = inner_row[2]
                         self.max_priority = inner_row[3]
                         self.created = inner_row[4]
-                        self.token_symbol=inner_row[5]
+                        self.token_symbol = inner_row[5]
                         self.solidity_code = inner_row[6]
                 c.close()
             except MySQLdb.Error as e:

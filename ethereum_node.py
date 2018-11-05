@@ -25,7 +25,7 @@ def get_new_addresses(count):
     for x in range(0, count):
         new_address = "0x"
         rng_out = os.urandom(20)
-        new_address += binascii.hexlify(rng_out).encode()
+        new_address += binascii.hexlify(rng_out).decode()
         output.append(new_address)
     return output
 
@@ -33,8 +33,8 @@ def get_new_addresses(count):
 def create_erc20_smart_contract(token_name, token_symbol, token_count,owner_id):
     smart_token = {"action": "create_erc2_token",
                    "token_info": {"token_name": token_name,
-                                 "token_symbol": token_symbol,
-                                 "token_count": token_count,
+                                  "token_symbol": token_symbol,
+                                  "token_count": token_count,
                                   "owner_id": owner_id}}
     token_data = json.dumps(smart_token)
     db = database.Database()
@@ -119,7 +119,6 @@ class EthereumNode:
                 else:
                     print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
         return None
-
 
     def assign_new_ethereum_address(self):
         try:

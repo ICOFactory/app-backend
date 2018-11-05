@@ -115,7 +115,6 @@ class UserContext:
             self.logger.info("Remove permission {0} for {1}: {2}".format(permission,self.user_info["email_address"],result))
         return result
 
-
     def add_permission(self,permission,token_id=None):
         result = self._add_permission(permission,token_id)
         if token_id and self.logger:
