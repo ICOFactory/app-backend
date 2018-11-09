@@ -253,12 +253,12 @@ div.permissions {
 }
 
 .header_anchor:visited {
-    color:orangered;
+    color:rgb(54,88,128);
     text-decoration: underline;
 }
 
 .main_menu_anchor {
-    color: white;
+    color: orange;
     text-decoration: none;
 }
 
@@ -268,7 +268,7 @@ div.permissions {
 }
 
 .main_menu_anchor:visited {
-    color:white;
+    color:rgb(54,88,128);
     text-decoration: none;
 }
 
@@ -286,7 +286,7 @@ div.permissions {
 }
 
 .login_anchor {
-    color: orange;
+    color: rgb(54,88,128);
     text-decoration: none;
 }
 
