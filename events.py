@@ -150,10 +150,12 @@ class Event:
         try:
             c = self.db.cursor()
             if user_id:
-                sql = "SELECT event_data,created FROM event_log WHERE event_type_id=%s AND user_id=%s;"
+                sql = "SELECT event_data,created FROM event_log WHERE event_type_id=%s AND user_id=%s"
+                sql += " ORDER BY event_id DESC LIMIT 1;"
                 c.execute(sql, (self.event_type_id, user_id))
             else:
                 sql = "SELECT event_data,created FROM event_log WHERE event_type_id=%s"
+                sql += " ORDER BY event_id DESC LIMIT 1;"
                 c.execute(sql, (self.event_type_id,))
             row = c.fetchone()
             return row
