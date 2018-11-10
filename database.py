@@ -335,14 +335,14 @@ class Database:
                     print(msg)
         return None
 
-    def update_ethereum_node_status(self, node_id, ip_addr, event_id, status, peers=0):
+    def update_ethereum_node_status(self, node_id, ip_addr, event_id, status):
         if status not in self.ETH_NODE_VALID_STATES:
             return False
         try:
             c = self.db.cursor()
-            sql = "UPDATE ethereum_network SET status=%s,last_event_id=%s,last_update_ip=%s,last_update=NOW(),peer=%s"
+            sql = "UPDATE ethereum_network SET status=%s,last_event_id=%s,last_update_ip=%s,last_update=NOW()"
             sql += " WHERE id=%s"
-            c.execute(sql, (status, event_id, ip_addr,peers, node_id))
+            c.execute(sql, (status, event_id, ip_addr, node_id))
             if c.rowcount == 1:
                 self.db.commit()
                 return True
