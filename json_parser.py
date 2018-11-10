@@ -14,7 +14,7 @@ class APIAction:
     AUTH_LEVEL_MEMBER = 1
     AUTH_LEVEL_ADMIN = 2
 
-    def __init__(self,name,required_arguments,auth_level):
+    def __init__(self, name, required_arguments, auth_level):
         self.name = name
         self.required_arguments = required_arguments
         self.auth_level = auth_level

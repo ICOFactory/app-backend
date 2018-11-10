@@ -553,7 +553,7 @@ WHERE smart_contracts.id=%s"""
         device_id_param = int(device_id)
         escaped_string = self.db.escape_string(json_string)
         sql = "INSERT INTO frames (device_id,frame_data) VALUES ({0},'{1}')".format(device_id_param,
-                                                                                  escaped_string.decode('utf-8'))
+                                                                                    escaped_string.decode('utf-8'))
         c = self.db.cursor()
         try:
             c.execute(sql)

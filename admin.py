@@ -6,6 +6,8 @@ import database
 import json
 from hashlib import sha256
 from users import UserContext
+from event import Event
+import datetime
 from smart_contract import SmartContract
 import re
 
@@ -22,12 +24,24 @@ def admin_no_session():
     return render_template("admin/admin_login.jinja2")
 
 
+@admin_blueprint.route('/peer_graph/<session_token')
+def peer_graph(session_token):
+    db = database.Database(logger=current_app.logger)
+    user_id = db.validate_session(session_token)
+    if user_id:
+        update_node_event_type = Event("Ethereum Node Update", db, logger=current_app.logger)
+        epoch = datetime.datetime.today() - datetime.timedelta(hours=24)
+        nodes = db.list_ethereum_nodes()
+        updates = update_node_event_type.get_events_since(epoch)
+    abort(403)
+
 @admin_blueprint.route('/<session_token>')
 def admin_main(session_token):
-    db = database.Database()
+    db = database.Database(logger=current_app.logger)
     user_id = db.validate_session(session_token)
     if user_id:
         admin_permissions = db.list_permissions(user_id)
+        # TODO: major bug here unauthrozied users could get into the admin!
         if len(admin_permissions) > 0:
             return render_template("admin/admin_main.jinja2",
                                    session_token=session_token,
@@ -41,7 +55,7 @@ def admin_login():
     if request.method == "POST":
         username = request.form['username']
         password = request.form['password']
-        db = database.Database()
+        db = database.Database(logger=current_app.logger)
         session_data = db.login(username, password, request.access_route[-1])
         if session_data:
             return redirect(url_for("admin.admin_main", session_token=session_data[1]))
@@ -66,7 +80,7 @@ def view_account_recovery():
 
 @admin_blueprint.route('/event_log/<session_token>')
 def view_event_log(session_token):
-    db = database.Database()
+    db = database.Database(logger=current_app.logger)
     user_id = db.validate_session(session_token)
     if user_id:
         authorized = db.validate_permission(user_id, "view-event-log")
@@ -81,12 +95,12 @@ def view_event_log(session_token):
 @admin_blueprint.route('/event_log/filter', methods=['GET', 'POST'])
 def filter_event_log():
     if request.method == "POST":
-
         session_token = request.form['session_token']
         output_format = request.form['output_format']
         event_limit = int(request.form['event_limit'])
         event_filters = request.form.getlist('event_filter')
-        db = database.Database()
+
+        db = database.Database(logger=current_app.logger)
         user_id = db.validate_session(session_token)
         if user_id:
             authorized = db.validate_permission(user_id, "view-event-log")
@@ -144,7 +158,7 @@ def filter_event_log():
 
 @admin_blueprint.route('/eth_network/<session_token>')
 def eth_network_admin(session_token):
-    db = database.Database()
+    db = database.Database(logger=current_app.logger)
     user_id = db.validate_session(session_token)
     if user_id:
         authorized = db.validate_permission(user_id, "ethereum-network")
@@ -158,7 +172,7 @@ def eth_network_admin(session_token):
 
 @admin_blueprint.route('/users/create/<session_token>')
 def admin_create_user(session_token):
-    db = database.Database()
+    db = database.Database(current_app.logger)
     user_id = db.validate_session(session_token)
     if user_id:
         authorized = db.validate_permission(user_id, "onboard-users")
@@ -171,11 +185,11 @@ def admin_create_user(session_token):
 @admin_blueprint.route('/tokens/<session_token>')
 def admin_tokens(session_token):
     if session_token:
-        db = database.Database()
-        db.logger = current_app.logger
+        db = database.Database(logger=current_app.logger)
         user_id = db.validate_session(session_token)
         ctx = UserContext(user_id, db=db, logger=db.logger)
         can_launch_ico = ctx.check_acl("launch-ico")
+        # TODO: DEBUGGING
         can_launch_ico = True
         if can_launch_ico or len(ctx.acl()["management"]) > 0:
             owned_tokens = []
@@ -203,7 +217,7 @@ def admin_tokens(session_token):
 def create_tokens_form():
     session_token = request.form["session_token"]
     if session_token:
-        db = database.Database()
+        db = database.Database(logger=current_app.logger)
         logger = current_app.logger
         user_id = db.validate_session(session_token)
         ctx = UserContext(user_id, db, logger)
@@ -252,8 +266,7 @@ def create_tokens_form():
 @admin_blueprint.route('/tokens/view_source/<token_id>/<session_token>')
 def admin_view_source(token_id,session_token):
     token_id = int(token_id)
-    db = database.Database()
-    db.logger = current_app.logger
+    db = database.Database(logger=current_app.logger)
     user_id = db.validate_session(session_token)
     if user_id and token_id > 0:
         token_info = db.get_smart_contract_info(token_id)
