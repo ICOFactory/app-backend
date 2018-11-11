@@ -30,7 +30,7 @@ def admin_main(session_token):
     db = database.Database(logger=current_app.logger)
     user_id = db.validate_session(session_token)
     if user_id:
-        user_ctx = UserContext(user_id, db, logger)
+        user_ctx = UserContext(user_id, db, current_app.logger)
         launch_ico = user_ctx.check_acl("launch-ico")
         onboard_users = user_ctx.check_acl("onboard-users")
         reset_passwords = user_ctx.check_acl("reset-passwords")
@@ -196,6 +196,31 @@ def admin_create_user(session_token):
     abort(403)
 
 
+def get_owned_tokens(user_id,db,logger=None):
+    erc20_publish_event = Event("ERC20 Token Created", db, logger)
+    event_count = erc20_publish_event.get_event_count()
+    # get all ERC20 publish events for now...
+    publish_events = erc20_publish_event.get_latest_events(event_count)
+    smart_contracts = db.get_smart_contracts(user_id)
+    owned_tokens = []
+    for each in smart_contracts:
+        pending = False
+        for every_event in publish_events:
+            event_data = json.loads(every_event[0])
+            if event_data["token_id"] == each["token_id"]:
+                pending = True
+        owned_tokens.append({"token_id": each["token_id"],
+                             "token_name": each["token_name"],
+                             "ico_tokens": each["tokens"],
+                             "token_symbol": each["token_symbol"],
+                             "eth_address": each["eth_address"],
+                             "created": each["created"],
+                             "published": each["published"],
+                             "pending": pending})
+    owned_tokens = sorted(owned_tokens, key=lambda token: token['created'],reverse=True)
+    return owned_tokens
+
+
 @admin_blueprint.route('/tokens/<session_token>')
 def admin_tokens(session_token):
     if session_token:
@@ -203,21 +228,17 @@ def admin_tokens(session_token):
         user_id = db.validate_session(session_token)
         ctx = UserContext(user_id, db=db, logger=db.logger)
         can_launch_ico = ctx.check_acl("launch-ico")
+        erc20_publish_event = Event("ERC20 Token Created",db,current_app.logger)
+        event_count = erc20_publish_event.get_event_count()
+        # get all ERC20 publish events for now...
+        publish_events = erc20_publish_event.get_latest_events(event_count)
         if can_launch_ico or len(ctx.acl()["management"]) > 0:
             owned_tokens = []
             for key in ctx.acl()["management"].keys():
                 token_id = ctx.acl()["management"][key]["token_id"]
                 token_info = db.get_smart_contract_info(token_id)
                 owned_tokens.append(token_info)
-            smart_contracts = db.get_smart_contracts(user_id)
-            for each in smart_contracts:
-                owned_tokens.append({"token_id": each["token_id"],
-                                        "token_name": each["token_name"],
-                                        "ico_tokens": each["tokens"],
-                                        "token_symbol": each["token_symbol"],
-                                        "eth_address": each["eth_address"],
-                                        "created": each["created"],
-                                     "published": each["published"]})
+            owned_tokens.extend(get_owned_tokens(user_id,db,current_app.logger))
             if len(owned_tokens) == 0:
                 owned_tokens = None
             email_address = ctx.user_info["email_address"]
@@ -245,6 +266,8 @@ def admin_confirm():
         return redirect(url_for('admin.admin_main', session_token=session_token))
     elif confirmation_type == "erc20_publish" and choice == "Cancel":
         return redirect(url_for('admin.admin_tokens', session_token=session_token))
+    elif confirmation_type == "create_erc20_failed" and choice == "OK":
+        return redirect(url_for('admin.admin_tokens', session_token=session_token))
     db = database.Database(logger=current_app.logger)
     user_id = db.validate_session(session_token)
     if user_id:
@@ -264,7 +287,11 @@ def admin_confirm():
                         event_id = new_event.log_event(user_id, event_data)
                         event_data["event_id"] = event_id
                         credits.debit(credits.erc20_publish_price, event_data)
-                        return redirect(url_for("admin.admin_tokens", session_token=session_token))
+                        command_id = db.post_command(json.dumps(event_data))
+                        if command_id:
+                            return redirect(url_for("admin.admin_tokens", session_token=session_token))
+                        else:
+                            abort(500)
                     else:
                         credits.logger.error("Insufficient credits for ERC20 Publish: "
                                              + user_ctx.user_info["email_address"])
@@ -327,21 +354,32 @@ def create_tokens_form():
         auth = ctx.check_acl("launch-ico")
         token_name = request.form['token_name']
         if not TOKEN_NAME_REGEX.match(token_name):
-            return render_template("admin/admin_tokens.jinja2",
+            create_token_error = "Invalid token name, must consist of 4-36 alphanumeric characters only."
+            return render_template("admin/admin_confirmation.jinja2",
                                    session_token=session_token,
-                                   create_token_error="Invalid token name, must consist of 4-36 alphanumeric characters only.")
+                                   confirmation_title="Invalid ERC20 parameter(s)",
+                                   confirmation_message=create_token_error,
+                                   confirmation_type="create_erc20_failed",
+                                   default_choice="OK")
         token_symbol = request.form['token_symbol']
         if len(token_symbol) > 0 and not TOKEN_SYMBOL_REGEX.match(token_symbol):
-            return render_template("admin/admin_tokens.jinja2",
+            create_token_error = "Invalid token symbol, must consist of between 1-5 uppercase letters or numbers. This field is optional."
+            return render_template("admin/admin_confirmation.jinja2",
                                    session_token=session_token,
-                                   create_token_error="Invalid token symbol, must consist of between 1-5 uppercase letters or numbers. This field is optional.")
+                                   confirmation_title="Invalid ERC20 parameter(s)",
+                                   confirmation_message=create_token_error,
+                                   confirmation_type="create_erc20_failed",
+                                   default_choice="OK")
         elif len(token_symbol) == 0:
             token_symbol = None
         token_count = request.form['token_count']
         if not TOKEN_COUNT_REGEX.match(token_count):
-            return render_template("admin/admin_tokens.jinja2",
+            return render_template("admin/admin_confirmation.jinja2",
                                    session_token=session_token,
-                                   create_token_error="Invalid inital token count value, must be a positive integer.")
+                                   confirmation_title="Invalid ERC20 parameter(s)",
+                                   confirmation_message="Invalid initial token count value, must be a positive integer.",
+                                   confirmation_type="create_erc20_failed",
+                                   default_choice="OK")
         token_count = int(token_count)
         if auth:
             sc = SmartContract(token_name=token_name,
@@ -349,19 +387,9 @@ def create_tokens_form():
                                token_count=token_count,
                                logger=current_app.logger,
                                owner_id=user_id)
-            smart_contracts = db.get_smart_contracts(user_id)
-            owned_contracts = []
-            for each in smart_contracts:
-                owned_contracts.append({"token_id": each["token_id"],
-                                        "token_name": each["token_name"],
-                                        "ico_tokens": each["tokens"],
-                                        "token_symbol": each["token_symbol"],
-                                        "eth_address": each["eth_address"]})
-            return render_template("admin/admin_tokens.jinja2",
-                                   session_token=session_token,
-                                   owned_tokens=owned_contracts,
-                                   can_launch_ico=True)
-
+            if sc.smart_contract_id > 0:
+                return redirect(url_for("admin.admin_tokens", session_token=session_token))
+            abort(500)
     abort(403)
 
 

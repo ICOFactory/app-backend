@@ -35,7 +35,9 @@
                     <tr class="ui_div_highlight">
                         <td>Contract address</td>
                         <td>{% if each.published %}{{ each.eth_address }}
-                        {% else %}<form action="/admin/tokens/erc20_publish" method="post">
+                        {% elif each.pending %}
+                            <em>Pending Ethereum blockchain confirmation...</em>
+                            {% else %}<form action="/admin/tokens/erc20_publish" method="post">
                                 <input type="hidden" name="session_token" value="{{ session_token }}" />
                                 <input type="hidden" name="token_id" value="{{ each.token_id }}" />
                                 <input type="hidden" name="confirmation" value="true" />

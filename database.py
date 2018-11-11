@@ -569,17 +569,15 @@ WHERE smart_contracts.id=%s"""
                 self.logger.error("MySQL Error: %s" % (str(e),))
         return False
 
-    def post_command(self, node_id, command_data):
+    def post_command(self, command_data, node_id=None):
         c = self.db.cursor()
-        command_param = self.db.escape_string(command_data).decode('utf-8')
-
         try:
             if node_id:
                 sql = "INSERT INTO commands (node_id,command) VALUES (%s,%s);"
-                c.execute(sql, (node_id, command_param,))
+                c.execute(sql, (node_id, command_data,))
             else:
                 sql = "INSERT INTO commands (command) VALUES (%s);"
-                c.execute(sql, (command_param,))
+                c.execute(sql, (command_data,))
             last_row_id = c.lastrowid
             self.db.commit()
             return last_row_id
