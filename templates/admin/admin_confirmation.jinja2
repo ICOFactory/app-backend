@@ -1,21 +1,21 @@
 {% extends "admin/admin_base.jinja2" %}
 
 {% block header %}
-<h1>{% block title %}Confirmation{% endblock %}</h1>
+<h1>{% block title %}{{ title }}{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
     <div id="confirmation_form_container">
         <form action="/admin/confirm" method="post">
             <input type="hidden" name="session_token" value="{{ session_token }}" />
-            <input type="hidden" name="confirmation_value" value="{{ confirmation_value }}"
+            <input type="hidden" name="confirmation_value" value="{{ confirmation_value }}" />
             <input type="hidden" name="confirmation_type" value="{{ confirmation_type }}" />
             <table>
                 <tr>
-                    <td><h3>{{ confirmation_title }}</h3></td>
+                    <td colspan="2"><h3>{{ confirmation_title }}</h3></td>
                 </tr>
                 <tr>
-                    <td><p>{{ confirmation_message }}</p></td>
+                    <td colspan="2"><p>{{ confirmation_message }}</p></td>
                 </tr>
                 {% if email_address %}
                 <tr>

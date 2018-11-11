@@ -5,19 +5,29 @@
 {% endblock %}
 
 {% block content %}
-<div id="admin_main_menu">
-    <h3 class="ui_h3">Main Menu</h3>
+    <div id="admin_main_menu">
+        <h3 class="ui_h3">Main Menu</h3>
         <ul id="admin_ul" class="ui_div_background">
             <li class="admin_li"><a class="main_menu_anchor" href="/admin/users/{{ session_token }}">Users</a></li>
-            <li class="admin_li"><a class="main_menu_anchor" href="/admin/users/create/{{ session_token }}">Onboard User</a></li>
-            <li class="admin_li"><a class="main_menu_anchor" href="/admin/eth_network/{{ session_token }}">Ethereum Network</a></li>
-            <li class="admin_li"><a class="main_menu_anchor" href="/admin/tokens/{{ session_token }}">ERC20 Tokens</a></li>
-            <li class="admin_li"><a class="main_menu_anchor" href="/admin/event_log/{{ session_token }}">View Event Log</a></li>
+            {% if onboard_users %}
+                <li class="admin_li"><a class="main_menu_anchor" href="/admin/users/create/{{ session_token }}">Onboard
+                    User</a></li>
+            {% endif %}
+            {% if ethereum_network %}
+                <li class="admin_li"><a class="main_menu_anchor" href="/admin/eth_network/{{ session_token }}">Ethereum
+                    Network</a></li>
+            {% endif %}
+            <li class="admin_li"><a class="main_menu_anchor" href="/admin/tokens/{{ session_token }}">ERC20 Tokens</a>
+            </li>
+            {% if view_event_log %}
+                <li class="admin_li"><a class="main_menu_anchor" href="/admin/event_log/{{ session_token }}">View Event
+                    Log</a></li>
+            {% endif %}
             <li class="admin_li"><a class="main_menu_anchor" href="/admin/logout">Logout</a></li>
         </ul>
-</div>
-<div id="admin_home" class="dark_grey_background">
-    <div id="admin_home_graph"></div>
-    <div id="admin_home_latest_blocks"></div>
-</div>
+    </div>
+    <div id="admin_home" class="dark_grey_background">
+        <div id="admin_home_graph"></div>
+        <div id="admin_home_latest_blocks"></div>
+    </div>
 {% endblock %}

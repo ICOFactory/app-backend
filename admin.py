@@ -30,12 +30,21 @@ def admin_main(session_token):
     db = database.Database(logger=current_app.logger)
     user_id = db.validate_session(session_token)
     if user_id:
-        admin_permissions = db.list_permissions(user_id)
-        # TODO: major bug here unauthrozied users could get into the admin!
-        if len(admin_permissions) > 0:
-            return render_template("admin/admin_main.jinja2",
-                                   session_token=session_token,
-                                   admin_permissions=admin_permissions)
+        user_ctx = UserContext(user_id, db, logger)
+        launch_ico = user_ctx.check_acl("launch-ico")
+        onboard_users = user_ctx.check_acl("onboard-users")
+        reset_passwords = user_ctx.check_acl("reset-passwords")
+        ethereum_network = user_ctx.check_acl("ethereum-network")
+        view_event_log = user_ctx.check_acl("view-event-log")
+        issue_credits = user_ctx.check_acl("issue-credits")
+        return render_template("admin/admin_main.jinja2",
+                               session_token=session_token,
+                               launch_ico=launch_ico,
+                               onboard_users=onboard_users,
+                               reset_passwords=reset_passwords,
+                               ethereum_network=ethereum_network,
+                               view_event_log=view_event_log,
+                               issue_credits=issue_credits)
     return render_template("admin/admin_login.jinja2",
                            error="Invalid session.")
 
@@ -55,17 +64,18 @@ def admin_login():
     return render_template("admin/admin_login.jinja2")
 
 
-@admin_blueprint.route('/users/recover/account')
+@admin_blueprint.route('/users/recover_account')
 def view_account_recovery():
     confirmation_message = "If your e-mail is in our database, you will receive an e-mail with "
     confirmation_message += "instructions on resetting your password"
     return render_template("admin/admin_confirmation.jinja2",
                            email_address=True,
                            title="Recover Account",
-                           confirmation_type="password-recovery",
+                           confirmation_type="recover_email",
                            confirmation_title="Recover your account",
                            confirmation_message=confirmation_message,
-                           default_choice="Send E-mail")
+                           default_choice="Send E-mail",
+                           choices=["Cancel"])
 
 
 @admin_blueprint.route('/event_log/<session_token>')
@@ -193,8 +203,6 @@ def admin_tokens(session_token):
         user_id = db.validate_session(session_token)
         ctx = UserContext(user_id, db=db, logger=db.logger)
         can_launch_ico = ctx.check_acl("launch-ico")
-        # TODO: DEBUGGING
-        can_launch_ico = True
         if can_launch_ico or len(ctx.acl()["management"]) > 0:
             owned_tokens = []
             for key in ctx.acl()["management"].keys():
@@ -224,6 +232,44 @@ def admin_tokens(session_token):
                                    last_logged_in=last_logged_in,
                                    last_logged_in_ip=last_logged_in_ip,
                                    credit_balance=credit_balance)
+    abort(403)
+
+
+@admin_blueprint.route('/confirm', methods=["POST"])
+def admin_confirm():
+    session_token = request.form["session_token"]
+    confirmation_type = request.form["confirmation_type"]
+    confirmation_val = request.form["confirmation_value"]
+    choice = request.form["choice"]
+    if confirmation_type == "reset_email":
+        return redirect(url_for('admin.admin_main', session_token=session_token))
+    elif confirmation_type == "erc20_publish" and choice == "Cancel":
+        return redirect(url_for('admin.admin_tokens', session_token=session_token))
+    db = database.Database(logger=current_app.logger)
+    user_id = db.validate_session(session_token)
+    if user_id:
+        user_ctx = UserContext(user_id, db, current_app.logger)
+        if confirmation_type == "erc20_publish":
+            token_id = int(confirmation_val)
+            sc = SmartContract(smart_token_id=token_id)
+            credits = Credits(user_id, db, logger=current_app.logger)
+            if sc.smart_contract_id > 0:
+                event_data = {"token_name": sc.token_name,
+                              "token_symbol": sc.token_symbol,
+                              "token_count": sc.tokens,
+                              "token_id": sc.smart_contract_id}
+                if user_ctx.check_acl("launch-ico"):
+                    if credits.get_credit_balance() >= credits.erc20_publish_price:
+                        new_event = Event("ERC20 Token Created", db, logger=current_app.logger)
+                        event_id = new_event.log_event(user_id, event_data)
+                        event_data["event_id"] = event_id
+                        credits.debit(credits.erc20_publish_price, event_data)
+                        return redirect(url_for("admin.admin_tokens", session_token=session_token))
+                    else:
+                        credits.logger.error("Insufficient credits for ERC20 Publish: "
+                                             + user_ctx.user_info["email_address"])
+                abort(403)
+            abort(404)
     abort(403)
 
 
@@ -279,7 +325,6 @@ def create_tokens_form():
         user_id = db.validate_session(session_token)
         ctx = UserContext(user_id, db, logger)
         auth = ctx.check_acl("launch-ico")
-        auth = True
         token_name = request.form['token_name']
         if not TOKEN_NAME_REGEX.match(token_name):
             return render_template("admin/admin_tokens.jinja2",
@@ -372,8 +417,9 @@ def view_users(session_token):
             augmented_user_data = []
             for each_user in user_data:
                 new_obj = dict(each_user)
+                user_credits = Credits(user_id, db, current_app.logger)
                 new_obj['transactions'] = 0
-                new_obj['credits_balance'] = 0
+                new_obj['credits_balance'] = user_credits.get_credit_balance()
                 new_obj['member_tokens'] = 0
                 new_obj['manager_tokens'] = 0
                 new_obj['issued_tokens'] = 0
