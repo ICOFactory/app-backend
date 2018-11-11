@@ -13,6 +13,11 @@
     padding-top: 40px;
 }
 
+#chart_container {
+    height:400px;
+    margin-top:48px;
+}
+
 #network_admin_row_header {
     background-color: rgb(40,40,40);
     color:white;

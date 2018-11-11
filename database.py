@@ -108,6 +108,72 @@ class Database:
         # TODO: return false if permission not found
         return True
 
+    def get_credit_balance(self, user_id):
+        sql = "SELECT SUM(amount) FROM credits WHERE user_id=%s"
+        try:
+            c = self.db.cursor()
+            c.execute(sql, (user_id,))
+            row = c.fetchone()
+            if row:
+                sum_of_credits = row[0]
+                sql = "SELECT SUM(amount) FROM debits WHERE user_id=%s"
+                c.execute(sql, (user_id,))
+                debit_row = c.fetchone()
+                if debit_row:
+                    if debit_row[0]:
+                        return sum_of_credits - debit_row[0]
+                    else:
+                        return sum_of_credits
+        except MySQLdb.Error as e:
+            try:
+                error_message = "MySQL Error [%d]: %s" % (e.args[0], e.args[1])
+            except IndexError:
+                error_message = "MySQL Error: %s" % (str(e),)
+
+            if self.logger:
+                self.logger.error(error_message)
+            else:
+                print(error_message)
+        return None
+
+    def debit_user(self, user_id, amount, event_id):
+        try:
+            sql = "INSERT INTO debits (user_id, amount, event_id) VALUES (%s,%s,%s)"
+            c = self.db.cursor()
+            c.execute(sql, (user_id, amount, event_id))
+            self.db.commit()
+            return True
+        except MySQLdb.Error as e:
+            try:
+                error_message = "MySQL Error [%d]: %s" % (e.args[0], e.args[1])
+            except IndexError:
+                error_message = "MySQL Error: %s" % (str(e),)
+
+            if self.logger:
+                self.logger.error(error_message)
+            else:
+                print(error_message)
+        return False
+
+    def credit_user(self, user_id, amount, event_id):
+        try:
+            sql = "INSERT INTO credits (user_id, amount, event_id) VALUES (%s,%s,%s);"
+            c = self.db.cursor()
+            c.execute(sql, (user_id, amount, event_id))
+            self.db.commit()
+            return True
+        except MySQLdb.Error as e:
+            try:
+                error_message = "MySQL Error [%d]: %s" % (e.args[0], e.args[1])
+            except IndexError:
+                error_message = "MySQL Error: %s" % (str(e),)
+
+            if self.logger:
+                self.logger.error(error_message)
+            else:
+                print(error_message)
+        return False
+
     def update_user_permissions(self, user_id, acl_data_json):
         acl_data = json.loads(acl_data_json)
         new_admin_permissions = []
@@ -421,7 +487,7 @@ WHERE smart_contracts.id=%s"""
 
     def get_smart_contracts(self, user_id):
         sql = "SELECT smart_contracts.id,token_name,tokens,smart_contracts.created,max_priority,ethereum_address_pool."
-        sql += "ethereum_address,token_symbol,owner_id FROM smart_contracts LEFT JOIN ethereum_address_pool "
+        sql += "ethereum_address,token_symbol,owner_id,published FROM smart_contracts LEFT JOIN ethereum_address_pool "
         sql += "ON eth_address=ethereum_address_pool.id"
 
         if user_id:
@@ -442,7 +508,8 @@ WHERE smart_contracts.id=%s"""
                     "max_priority": row[4],
                     "eth_address": row[5],
                     "token_symbol": row[6],
-                    "owner_id": row[7]
+                    "owner_id": row[7],
+                    "published": row[8]
                 })
             c.close()
             return output

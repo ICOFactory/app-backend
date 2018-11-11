@@ -18,6 +18,7 @@ class Event:
                         "Users Assigned Tokens",
                         "Users Removed Tokens",
                         "Users Issued Credits",
+                        "Users Debit Credits",
                         "Users Purchased Credits",
                         "ERC20 Token Created",
                         "ERC20 Token Mined",
@@ -181,7 +182,6 @@ class Event:
                 c.execute(sql, (self.event_type_id, user_id, metadata))
                 last_row_id = c.lastrowid
                 self.db.commit()
-                c.close()
                 return last_row_id
             except MySQLdb.Error as e:
                 try:

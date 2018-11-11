@@ -4,6 +4,11 @@
 {% block header %}
 <h1>{% block title %}ERC20 Tokens{% endblock %}</h1>
 <p id="back_nav">[ <a class="header_anchor" href="/admin/{{ session_token }}">back to administration</a> ]</p>
+    <ul>
+    <li>{{ email_address }}</li>
+    <li>Last logged in: {{ last_logged_in }} UTC ({{ last_logged_in_ip }})</li>
+    <li>Credit balance: <span class="credit_balance">{{ credit_balance }}</span>&nbsp;[ <a class="header_anchor" href="/admin/credits/purchase/{{ session_token }}">purchase credits</a> ]</li>
+    </ul>
 {% endblock %}
 
 {% block content %}
@@ -11,6 +16,8 @@
         <div id="owned_tokens">
         {% for each in owned_tokens %}
             <div class="erc20_token">
+            <input type="hidden" name="session_token" value="{{ session_token }}" />
+            <input type="hidden" name="token_id" value="{{ each.token_id }}" />
             <table cellspacing="0" cellpadding="10" border="0">
                 <tbody>
                     <tr class="dark_grey_background">
@@ -27,15 +34,20 @@
                     </tr>
                     <tr class="ui_div_highlight">
                         <td>Contract address</td>
-                        <td>{% if each.eth_address %}{{ each.eth_address }}
-                        {% else %}<form action="/admin/contract/publish" method="post">
+                        <td>{% if each.published %}{{ each.eth_address }}
+                        {% else %}<form action="/admin/tokens/erc20_publish" method="post">
                                 <input type="hidden" name="session_token" value="{{ session_token }}" />
                                 <input type="hidden" name="token_id" value="{{ each.token_id }}" />
-                                <input type="submit" value="Publish to Ethereum Blockchain" /> (requires 1,000 credits) {% endif %}</td>
+                                <input type="hidden" name="confirmation" value="true" />
+                                <input class="blue_submit_button" type="submit" name="action" value="Publish to Ethereum Blockchain" /><span class="credit_price">&nbsp;(1000 credits)</span></form>{% endif %}</td>
                     </tr>
                     <tr class="dark_grey_background">
                         <td>Solidity source code</td>
                         <td>[ <a class="header_anchor" target="_blank" href="/admin/tokens/view_source/{{ each.token_id }}/{{ session_token }}">view smart contract source code</a> ]</td>
+                    </tr>
+                    <tr class="ui_div_highlight">
+                        <td>Generated</td>
+                        <td>{{ each.created }} UTC</td>
                     </tr>
                 </tbody>
             </table>

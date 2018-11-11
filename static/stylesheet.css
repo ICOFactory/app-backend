@@ -26,14 +26,30 @@
     color:white;
 }
 
+.credit_balance {
+    font-weight: bold;
+    color: chartreuse;
+}
+
+.credit_price {
+    font-weight: bold;
+    color: orangered;
+}
+
+#confirmation_form_container {
+    width:640px;
+    padding:15px;
+    margin-left:auto;
+    margin-right:auto;
+}
+
 #owned_tokens {
     width: 550px;
-    float: right;
+    float: left;
     margin-left: 50px;
 }
 
 #create_erc20_token {
-    padding: 15px;
     margin-left: 20px;
     background-color: rgb(40,40,40);
 }
@@ -216,7 +232,6 @@ div.permissions {
 
 #admin_content {
     width:1024px;
-    height: 768px;
     color:white;
 }
 

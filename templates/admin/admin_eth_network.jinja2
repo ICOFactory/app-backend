@@ -6,12 +6,14 @@
 {% endblock %}
 
 {% block content %}
+    <script src="{{ url_for('static', filename='code/highcharts.js') }}"></script>
+    <script src="{{ url_for('static', filename='code/highcharts.js') }}"></script>
     <div id="network_map"></div>
     <div id="network_table">
         <table cellspacing="0" cellpadding="5" id="node_table">
             <tr id="network_admin_row_header">
                 <td>Identifier</td>
-                <td>Last Update</td>
+                <td>Last Update (UTC)</td>
                 <td>IP Address</td>
                 <td>Status</td>
                 <td>API Key</td>
@@ -28,9 +30,10 @@
                     <td>{{ node.api_key }}</td>
                     <td>{{ node.peers }}</td>
                     <td>{{ node.commands }}</td>
-                    <td>{% if remove_node %}[&nbsp;<a class="eth_network_anchor" href="/admin/eth_network/remove/{{ node.id }}/{{ session_token }}">remove node</a>&nbsp;]&nbsp;{% endif %}[&nbsp;<a class="eth_network_anchor" href="/admin/eth_network/restart/{{ node.id }}/{{ session_token }}"">restart geth</a>&nbsp;]</td>
+                    <td>{% if remove_node %}[&nbsp;<a class="eth_network_anchor" href="/admin/eth_network/remove/{{ node.id }}/{{ session_token }}">remove node</a>&nbsp;]&nbsp;{% endif %}[&nbsp;<a class="eth_network_anchor" href="/admin/eth_network/restart/{{ node.id }}/{{ session_token }}">restart daemons</a>&nbsp;]</td>
                 </tr>
             {% endfor %}
+
         {% if create_node %}
             <tr id="create_new_node">
                 <td colspan="8" align="right">
@@ -44,4 +47,47 @@
         {% endif %}
         </table>
     </div>
+    <div id="chart_container"></div>
+    <script language="JavaScript">
+    Highcharts.chart('chart_container', {
+    chart: {
+        backgroundColor: '#3C3F41',
+
+    },
+        title:{text:"Peer Counts by Node Updates",
+            style:{color:"#ffffff"}},
+
+    yAxis: {
+        title: {
+            text: 'Peers'
+        }
+    },
+    legend: {
+        layout: 'vertical',
+        align: 'right',
+        verticalAlign: 'middle',
+        style:{color:"#ffffff"}
+    },
+
+    plotOptions: {
+        series: {
+            pointStart: 0
+        }
+    },
+
+    series: [{
+        name: 'Dallas',
+        data: [74, 89, 74, 89, 89, 74, 74, 75],
+        color:'#A6216B'
+    }, {
+        name: 'London',
+        data: [151, 160, 151, 160, 151, 160, 151, 160],
+        color:'#EC194B'
+    }, {
+        name: 'Amsterdam',
+        data: [147, 143, 143, 143, 143, 143, 143, 143],
+        color:'#F26A4E'
+    }]
+
+});</script>
 {% endblock %}

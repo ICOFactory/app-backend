@@ -4,4 +4,5 @@
 "mysql_password":"beligerent8136",
 "mysql_database":"service",
 "eth_address_pool_min":1000,
-"eth_address_pool_max":5000}
+"eth_address_pool_max":5000,
+"erc20_publish_price":1000}

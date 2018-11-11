@@ -6,8 +6,9 @@ import database
 import json
 from hashlib import sha256
 from users import UserContext
-from event import Event
+from events import Event
 import datetime
+from credits import Credits
 from smart_contract import SmartContract
 import re
 
@@ -23,17 +24,6 @@ admin_blueprint = Blueprint('admin', __name__, url_prefix="/admin")
 def admin_no_session():
     return render_template("admin/admin_login.jinja2")
 
-
-@admin_blueprint.route('/peer_graph/<session_token')
-def peer_graph(session_token):
-    db = database.Database(logger=current_app.logger)
-    user_id = db.validate_session(session_token)
-    if user_id:
-        update_node_event_type = Event("Ethereum Node Update", db, logger=current_app.logger)
-        epoch = datetime.datetime.today() - datetime.timedelta(hours=24)
-        nodes = db.list_ethereum_nodes()
-        updates = update_node_event_type.get_events_since(epoch)
-    abort(403)
 
 @admin_blueprint.route('/<session_token>')
 def admin_main(session_token):
@@ -163,10 +153,24 @@ def eth_network_admin(session_token):
     if user_id:
         authorized = db.validate_permission(user_id, "ethereum-network")
         if authorized:
-            eth_nodes = db.list_ethereum_nodes()
+            peer_data = {}
+            update_node_event_type = Event("Ethereum Node Update", db, logger=current_app.logger)
+            epoch = datetime.datetime.today() - datetime.timedelta(hours=24)
+            nodes = db.list_ethereum_nodes()
+            updates = update_node_event_type.get_events_since(epoch)
+            for each_node in nodes:
+                peer_data[each_node["node_identifier"]] = []
+                node_id = each_node["id"]
+                for each_update in updates:
+                    if each_update["user_id"] == node_id:
+                        event_data = json.loads(each_update["event_data"])
+                        peer_count = event_data["peers"]
+                        peer_data[each_node["node_identifier"]].append(peer_count)
+
             return render_template("admin/admin_eth_network.jinja2",
                                    session_token=session_token,
-                                   eth_nodes=eth_nodes)
+                                   eth_nodes=nodes,
+                                   peer_data=peer_data)
     abort(403)
 
 
@@ -203,14 +207,67 @@ def admin_tokens(session_token):
                                         "token_name": each["token_name"],
                                         "ico_tokens": each["tokens"],
                                         "token_symbol": each["token_symbol"],
-                                        "eth_address": each["eth_address"]})
+                                        "eth_address": each["eth_address"],
+                                        "created": each["created"],
+                                     "published": each["published"]})
             if len(owned_tokens) == 0:
                 owned_tokens = None
+            email_address = ctx.user_info["email_address"]
+            last_logged_in = ctx.user_info["last_logged_in"].isoformat()
+            last_logged_in_ip = ctx.user_info["last_logged_in_ip"]
+            credit_balance = db.get_credit_balance(user_id)
             return render_template("admin/admin_tokens.jinja2",
                                    session_token=session_token,
                                    owned_tokens=owned_tokens,
-                                   can_launch_ico=can_launch_ico)
+                                   can_launch_ico=can_launch_ico,
+                                   email_address=email_address,
+                                   last_logged_in=last_logged_in,
+                                   last_logged_in_ip=last_logged_in_ip,
+                                   credit_balance=credit_balance)
     abort(403)
+
+
+@admin_blueprint.route('/tokens/erc20_publish', methods=["POST"])
+def erc20_publish():
+    session_token = request.form["session_token"]
+    token_id_form_field = request.form["token_id"]
+    confirmation = request.form["confirmation"]
+    db = database.Database()
+    user_id = db.validate_session(session_token)
+    if user_id:
+        token_id = int(token_id_form_field)
+        if token_id < 1:
+            raise ValueError
+        sc = SmartContract(smart_token_id=token_id)
+        if sc.smart_contract_id < 1:
+            abort(404)
+        if confirmation == "true":
+            credits = Credits(user_id, db, current_app.logger)
+            current_balance = credits.get_credit_balance()
+            if current_balance < credits.erc20_publish_price:
+                message = "Your credit balance of <span class=\"credit_balance\">"
+                message += str(current_balance) + "</span> is less than the <span class=\"credit_price\">"
+                message += str(credits.erc20_publish_price) +"</span> required to publish an ERC20 token."
+                message += "<p>[ <a class=\"login_anchor\" href=\"/admin/credits/purchase/"
+                message += session_token + "\">purchase credits</a> ]</p>"
+                return render_template("admin/admin_confirmation.jinja2",
+                                       session_token=session_token,
+                                       confirmation_value=token_id,
+                                       confirmation_title="Insufficient Credits",
+                                       confirmation_type="insufficient_credits",
+                                       confirmation_message=message,
+                                       default_choice="Cancel")
+            message = "Are you sure you want to publish <em>" + sc.token_name + "</em> permanently to the Ethereum "
+            message += "blockchain, costing <span class=\"credit_price\">"
+            message += str(credits.erc20_publish_price) + "</span> credits?"
+            return render_template("admin/admin_confirmation.jinja2",
+                                   session_token=session_token,
+                                   confirmation_value=token_id,
+                                   confirmation_title="Publish ERC20 contract?",
+                                   confirmation_message=message,
+                                   confirmation_type="erc20_publish",
+                                   choices=["Cancel"],
+                                   default_choice="Publish")
 
 
 @admin_blueprint.route('/tokens/create', methods=["POST"])

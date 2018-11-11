@@ -1,13 +1,14 @@
 {% extends "admin/admin_base.jinja2" %}
 
 {% block header %}
-<h1>{% block title %}{% endblock %}</h1>
+<h1>{% block title %}Confirmation{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
     <div id="confirmation_form_container">
         <form action="/admin/confirm" method="post">
             <input type="hidden" name="session_token" value="{{ session_token }}" />
+            <input type="hidden" name="confirmation_value" value="{{ confirmation_value }}"
             <input type="hidden" name="confirmation_type" value="{{ confirmation_type }}" />
             <table>
                 <tr>
@@ -39,7 +40,7 @@
                 </tr>
                 {% endif %}
                 <tr><td colspan="2" align="right">
-                    {% for each choices %}
+                    {% for each in choices %}
                         <input type="submit" class="grey_submit_button" name="choice" value="{{ each }}" />&nbsp;
                     {% endfor %}
                     <input type="submit" name="choice" value="{{ default_choice }}" class="blue_submit_button"/>
