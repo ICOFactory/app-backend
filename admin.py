@@ -307,7 +307,8 @@ def admin_confirm():
                               "token_count": sc.tokens,
                               "token_id": sc.smart_contract_id}
                 if user_ctx.check_acl("launch-ico"):
-                    if credits.get_credit_balance() >= credits.erc20_publish_price:
+                    credits_balance = credits.get_credit_balance()
+                    if credits_balance >= credits.erc20_publish_price:
                         new_event = Event("ERC20 Token Created", db, logger=current_app.logger)
                         event_id = new_event.log_event(user_id, event_data)
                         event_data["event_id"] = event_id
