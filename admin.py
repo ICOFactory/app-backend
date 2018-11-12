@@ -239,6 +239,8 @@ def get_owned_tokens(user_id,db,logger=None):
         if not pending:
             sc = SmartContract(each["token_id"])
             token_data["issued_tokens"] = sc.get_issued_token_count()
+            token_data["issued_not_confirmed"] = 0
+            token_data["confirmed_not_assigned"] = 0
         owned_tokens.append(token_data)
     owned_tokens = sorted(owned_tokens, key=lambda token: token['created'],reverse=True)
     return owned_tokens

@@ -1,6 +1,7 @@
 {% extends "admin/admin_base.jinja2" %}
 
 {% block header %}
+     <script src="{{ url_for('static', filename='sha1.js') }}"></script>
     <h1>{% block title %}ERC20 Tokens{% endblock %}</h1>
     <p id="back_nav">[ <a class="header_anchor" href="/admin/{{ session_token }}">back to administration</a> ]</p>
     <ul>
@@ -15,6 +16,7 @@
 {% block content %}
     {% if owned_tokens %}
         <div id="owned_tokens">
+            <script src="{{ url_for('static', filename='acl_editor.js') }}"></script>
             {% for each in owned_tokens %}
                 <div class="erc20_token">
                     <input type="hidden" name="session_token" value="{{ session_token }}"/>
@@ -69,18 +71,35 @@
                                     <input type="hidden" name="token_id" value="{{ each.token_id }}" />
                                     <input type="hidden" name="session_token" value="{{ session_token }}" />
                                     <script language="JavaScript">
-                                        $()
+                                        $(document).ready(function () {
+
+                                            $("input:radio[name=generate]").change(function () {
+                                                if( $(this).val() === "random") {
+                                                    $("#hash_field").hide();
+                                                    $("#hash_data").hide();
+                                                }
+                                                else {
+                                                    $("#hash_field").show();
+                                                    $("#hash_data").show();
+                                                }
+                                            });
+                                            $("#hash_button").on('click',function () {
+                                                var hashed_input = Sha1.hash($("textarea").text());
+                                                $("#hash_data").val("0x" + hashed_input);
+                                            });
+
+                                        });
                                     </script>
                                     <table>
                                         <tr>
-                                            <td><input type="radio" name="generate" value="random">Random tokens</td>
+                                            <td><input type="radio" name="generate" value="random" checked="checked">Random tokens</td>
                                             <td><input type="number" name="tokens" class="dark_input" value="0" /></td>
                                         </tr>
                                         <tr>
-                                            <td colspan="2"><input type="radio" name="generate" value="hash">Tokens from hash</td>
+                                            <td><input type="radio" name="generate" value="hash">Tokens from hash</td><td colspan="2" align="right"><input type="submit" class="blue_small_submit_button" value="Issue"/></td>
                                         </tr>
                                         <tr>
-                                            <td colspan="2"><div id="hash_field"><input id="hash_data" size="48" name="hash" class="dark_input" /></div><div id="hash_data"><textarea cols="48" rows="5" class="dark_input_field" name="hash_data">{"email_address":"admin@example.com"}</textarea><br /><input type="button" id="hash_button" value="Hash" /></div></td>
+                                            <td colspan="3"><div id="hash_field"><input id="hash_data" size="44" name="hash" class="dark_input" /><br /><textarea cols="48" rows="5" class="dark_input_field" name="hash_data">{"email_address":"admin@example.com"}</textarea><br /><input class="grey_submit_button" type="button" id="hash_button" value="Hash" /></div></td>
                                         </tr>
                                     </table>
                                 </form></td>
@@ -108,7 +127,7 @@
                                         <input type="hidden" name="session_token" value="{{ session_token }}"/>
                                         <input type="hidden" name="token_id" value="{{ each.token_id }}"/>
                                         <input type="number" class="dark_input_field" size="5" value="{{ each.max_priority }}"/>&nbsp;
-                                        <input type="submit" value="Update" class="blue_submit_button"/>
+                                        <input type="submit" value="Update" class="blue_small_submit_button"/>
                                     </form>
                                 </td>
                             </tr>
@@ -121,7 +140,7 @@
                                         <input name="token_count" size="5" type="number" placeholder="Token Count"
                                                class="dark_input_field"/>&nbsp;
                                         <input name="withdrawal_address" class="dark_input_field" placeholder="ETH Address 0x"/>
-                                        <input type="submit" value="Withdraw" class="blue_submit_button"/>
+                                        <input type="submit" value="Withdraw" class="blue_small_submit_button"/>
                                     </form>
                                 </td>
                             </tr>
@@ -135,7 +154,7 @@
                                         <input type="hidden" name="token_id" value="{{ each.token_id }}"/>
                                         <input name="token_count" type="number" placeholder="Token Count"
                                                class="dark_input_field"/>&nbsp;
-                                        <input type="submit" value="Burn" class="blue_submit_button"/>
+                                        <input type="submit" value="Burn" class="blue_small_submit_button"/>
                                     </form>
                                 </td>
                             </tr>

@@ -268,6 +268,10 @@ div.permissions {
     text-align: right;
 }
 
+#hash_field {
+    display: none;
+}
+
 #admin_home_graph {
     background-color: rgb(40,40,40);
     width: 794px;
@@ -344,6 +348,13 @@ div.permissions {
     border: 1px solid rgb(76,122,140);
     color: white;
     padding: 12px;
+}
+
+.blue_small_submit_button {
+    background-color: rgb(54,88,128);
+    border: 1px solid rgb(76,122,140);
+    color: white;
+    padding: 5px;
 }
 
 .grey_submit_button {
