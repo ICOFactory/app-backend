@@ -264,6 +264,17 @@ div.permissions {
     padding:5px;
 }
 
+#hash_data {
+    text-align: right;
+}
+
+#admin_home_graph {
+    background-color: rgb(40,40,40);
+    width: 794px;
+    height: 400px;
+    margin-left: 230px;
+}
+
 .admin_li {
     width: 200px;
     padding:5px;
@@ -378,9 +389,3 @@ div.permissions {
     margin: 24px;
 }
 
-#admin_content {
-    width: 780px;
-    height: 400px;
-    margin-left: 240px;
-    background-color: rgb(40,40,40);
-}

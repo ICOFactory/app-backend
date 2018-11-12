@@ -65,7 +65,25 @@
                             </tr>
                             <tr class="ui_div_highlight">
                                 <td>Issue tokens</td>
-                                <td align="right"></td>
+                                <td align="right"><form action="/admin/tokens/issue" method="post">
+                                    <input type="hidden" name="token_id" value="{{ each.token_id }}" />
+                                    <input type="hidden" name="session_token" value="{{ session_token }}" />
+                                    <script language="JavaScript">
+                                        $()
+                                    </script>
+                                    <table>
+                                        <tr>
+                                            <td><input type="radio" name="generate" value="random">Random tokens</td>
+                                            <td><input type="number" name="tokens" class="dark_input" value="0" /></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2"><input type="radio" name="generate" value="hash">Tokens from hash</td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2"><div id="hash_field"><input id="hash_data" size="48" name="hash" class="dark_input" /></div><div id="hash_data"><textarea cols="48" rows="5" class="dark_input_field" name="hash_data">{"email_address":"admin@example.com"}</textarea><br /><input type="button" id="hash_button" value="Hash" /></div></td>
+                                        </tr>
+                                    </table>
+                                </form></td>
                             </tr>
                             <tr class="dark_grey_background">
                                 <td>Issued tokens, not yet confirmed</td>

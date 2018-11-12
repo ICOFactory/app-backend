@@ -7,7 +7,6 @@
 
 {% block content %}
     <script src="{{ url_for('static', filename='code/highcharts.js') }}"></script>
-    <script src="{{ url_for('static', filename='code/highcharts.js') }}"></script>
     <div id="network_map"></div>
     <div id="network_table">
         <table cellspacing="0" cellpadding="5" id="node_table">
@@ -48,6 +47,7 @@
         </table>
     </div>
     <div id="chart_container"></div>
+
     <script language="JavaScript">
     Highcharts.chart('chart_container', {
     chart: {
@@ -77,15 +77,15 @@
 
     series: [{
         name: 'Dallas',
-        data: [74, 89, 74, 89, 89, 74, 74, 75],
+        data: {{ peer_data.Dallas }},
         color:'#A6216B'
     }, {
         name: 'London',
-        data: [151, 160, 151, 160, 151, 160, 151, 160],
+        data: {{ peer_data.London }},
         color:'#EC194B'
     }, {
         name: 'Amsterdam',
-        data: [147, 143, 143, 143, 143, 143, 143, 143],
+        data: {{ peer_data.Amsterdam }},
         color:'#F26A4E'
     }]
 

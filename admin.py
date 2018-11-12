@@ -37,6 +37,19 @@ def admin_main(session_token):
         ethereum_network = user_ctx.check_acl("ethereum-network")
         view_event_log = user_ctx.check_acl("view-event-log")
         issue_credits = user_ctx.check_acl("issue-credits")
+
+        erc20_node_update = Event("Ethereum Node Update", db, current_app.logger)
+        node_events = erc20_node_update.get_events_since(datetime.timedelta(hours=-24))
+        events_per_hour = int(len(node_events) / 24)
+        gas_prices = []
+        for hour in range(0, 24):
+            offset = hour * events_per_hour
+            accumulator = 0
+            for x in range(offset, events_per_hour+offset):
+                if x < len(node_events):
+                    event_data = json.loads(node_events[x][0])
+                    accumulator += (event_data["gas_price"] * (10 ** 18))
+            gas_prices.append(int(float(accumulator)/float(events_per_hour)))
         return render_template("admin/admin_main.jinja2",
                                session_token=session_token,
                                launch_ico=launch_ico,
@@ -44,7 +57,8 @@ def admin_main(session_token):
                                reset_passwords=reset_passwords,
                                ethereum_network=ethereum_network,
                                view_event_log=view_event_log,
-                               issue_credits=issue_credits)
+                               issue_credits=issue_credits,
+                               gas_prices=json.dumps(gas_prices))
     return render_template("admin/admin_login.jinja2",
                            error="Invalid session.")
 
@@ -165,7 +179,7 @@ def eth_network_admin(session_token):
         if authorized:
             peer_data = {}
             update_node_event_type = Event("Ethereum Node Update", db, logger=current_app.logger)
-            epoch = datetime.datetime.today() - datetime.timedelta(hours=24)
+            epoch = datetime.datetime.today() - datetime.timedelta(hours=-24)
             nodes = db.list_ethereum_nodes()
             updates = update_node_event_type.get_events_since(epoch)
             for each_node in nodes:
@@ -176,6 +190,10 @@ def eth_network_admin(session_token):
                         event_data = json.loads(each_update["event_data"])
                         peer_count = event_data["peers"]
                         peer_data[each_node["node_identifier"]].append(peer_count)
+            peer_strings = {}
+
+            for key in peer_data.keys():
+                peer_strings[key] = str(peer_data[key])
 
             return render_template("admin/admin_eth_network.jinja2",
                                    session_token=session_token,

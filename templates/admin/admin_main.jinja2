@@ -1,6 +1,7 @@
 {% extends "admin/admin_base.jinja2" %}
 
 {% block header %}
+    <script src="{{ url_for('static', filename='code/highcharts.js') }}"></script>
 <h1 xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">{% block title %}ERC20 Master{% endblock %}</h1>
 {% endblock %}
 
@@ -27,7 +28,42 @@
         </ul>
     </div>
     <div id="admin_home" class="dark_grey_background">
-        <div id="admin_home_graph"></div>
+    <div id="admin_home_graph"></div>
+    <script language="JavaScript">
+    Highcharts.chart('admin_home_graph', {
+    chart: {
+        backgroundColor: '#3C3F41',
+
+    },
+        title:{text:"Gas Price",
+            style:{color:"#ffffff"}},
+
+    yAxis: {
+        title: {
+            text: 'Gwei'
+        }
+    },
+    legend: {
+        layout: 'vertical',
+        align: 'right',
+        verticalAlign: 'middle',
+        style:{color:"#ffffff"}
+    },
+
+    plotOptions: {
+        series: {
+            pointStart: 0
+        }
+    },
+
+    series: [{
+        name: 'Gas Price',
+        data: {{ gas_prices }},
+        color:'#A6216B'
+    }]
+
+});</script>
+
         <div id="admin_home_latest_blocks"></div>
     </div>
 {% endblock %}
