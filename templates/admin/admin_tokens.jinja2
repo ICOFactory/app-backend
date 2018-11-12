@@ -1,91 +1,162 @@
-
 {% extends "admin/admin_base.jinja2" %}
 
 {% block header %}
-<h1>{% block title %}ERC20 Tokens{% endblock %}</h1>
-<p id="back_nav">[ <a class="header_anchor" href="/admin/{{ session_token }}">back to administration</a> ]</p>
+    <h1>{% block title %}ERC20 Tokens{% endblock %}</h1>
+    <p id="back_nav">[ <a class="header_anchor" href="/admin/{{ session_token }}">back to administration</a> ]</p>
     <ul>
-    <li>{{ email_address }}</li>
-    <li>Last logged in: {{ last_logged_in }} UTC ({{ last_logged_in_ip }})</li>
-    <li>Credit balance: <span class="credit_balance">{{ credit_balance }}</span>&nbsp;[ <a class="header_anchor" href="/admin/credits/purchase/{{ session_token }}">purchase credits</a> ]</li>
+        <li>{{ email_address }}</li>
+        <li>Last logged in: {{ last_logged_in }} UTC ({{ last_logged_in_ip }})</li>
+        <li>Credit balance: <span class="credit_balance">{{ credit_balance }}</span>&nbsp;[ <a class="header_anchor"
+                                                                                               href="/admin/credits/purchase/{{ session_token }}">purchase credits</a> ]
+        </li>
     </ul>
 {% endblock %}
 
 {% block content %}
     {% if owned_tokens %}
         <div id="owned_tokens">
-        {% for each in owned_tokens %}
-            <div class="erc20_token">
-            <input type="hidden" name="session_token" value="{{ session_token }}" />
-            <input type="hidden" name="token_id" value="{{ each.token_id }}" />
-            <table cellspacing="0" cellpadding="10" border="0">
-                <tbody>
-                    <tr class="dark_grey_background">
-                        <td>Token name</td>
-                        <td>{{ each.token_name }}</td>
-                    </tr>
-                    <tr class="ui_div_highlight">
-                        <td>Token symbol</td>
-                        <td>{{ each.token_symbol }}</td>
-                    </tr>
-                    <tr class="dark_grey_background">
-                        <td>Initial token count</td>
-                        <td>{{ each.ico_tokens }}</td>
-                    </tr>
-                    <tr class="ui_div_highlight">
-                        <td>Contract address</td>
-                        <td>{% if each.published %}{{ each.eth_address }}
-                        {% elif each.pending %}
-                            <em>Pending Ethereum blockchain confirmation...</em>
-                            {% else %}<form action="/admin/tokens/erc20_publish" method="post">
-                                <input type="hidden" name="session_token" value="{{ session_token }}" />
-                                <input type="hidden" name="token_id" value="{{ each.token_id }}" />
-                                <input type="hidden" name="confirmation" value="true" />
-                                <input class="blue_submit_button" type="submit" name="action" value="Publish to Ethereum Blockchain" /><span class="credit_price">&nbsp;(1000 credits)</span></form>{% endif %}</td>
-                    </tr>
-                    <tr class="dark_grey_background">
-                        <td>Solidity source code</td>
-                        <td>[ <a class="header_anchor" target="_blank" href="/admin/tokens/view_source/{{ each.token_id }}/{{ session_token }}">view smart contract source code</a> ]</td>
-                    </tr>
-                    <tr class="ui_div_highlight">
-                        <td>Generated</td>
-                        <td>{{ each.created }} UTC</td>
-                    </tr>
-                </tbody>
-            </table>
-            </div>
-        {% endfor %}
+            {% for each in owned_tokens %}
+                <div class="erc20_token">
+                    <input type="hidden" name="session_token" value="{{ session_token }}"/>
+                    <input type="hidden" name="token_id" value="{{ each.token_id }}"/>
+                    <table class="erc20_token_table" cellspacing="0" cellpadding="10" border="0">
+                        <tbody>
+                        <tr class="dark_grey_background">
+                            <td>Token name</td>
+                            <td align="right">{{ each.token_name }}</td>
+                        </tr>
+                        <tr class="ui_div_highlight">
+                            <td>Token symbol</td>
+                            <td align="right">{{ each.token_symbol }}</td>
+                        </tr>
+                        <tr class="dark_grey_background">
+                            <td>Initial token count</td>
+                            <td align="right">{{ each.ico_tokens }}</td>
+                        </tr>
+                        <tr class="ui_div_highlight">
+                            <td>Contract address</td>
+                            <td align="right">{% if each.published %}{{ each.eth_address }}
+                            {% elif each.pending %}
+                                <em>Pending Ethereum blockchain confirmation...</em>
+                            {% else %}
+                                <form action="/admin/tokens/erc20_publish" method="post">
+                                    <input type="hidden" name="session_token" value="{{ session_token }}"/>
+                                    <input type="hidden" name="token_id" value="{{ each.token_id }}"/>
+                                    <input type="hidden" name="confirmation" value="true"/>
+                                    <input class="blue_submit_button" type="submit" name="action"
+                                           value="Publish to Ethereum Blockchain"/><span class="credit_price">&nbsp;(1000 credits)</span>
+                                </form>{% endif %}</td>
+                        </tr>
+                        <tr class="dark_grey_background">
+                            <td>Solidity source code</td>
+                            <td align="right">[ <a class="header_anchor" target="_blank"
+                                     href="/admin/tokens/view_source/{{ each.token_id }}/{{ session_token }}">view smart
+                                contract source code</a> ]
+                            </td>
+                        </tr>
+                        <tr class="ui_div_highlight">
+                            <td>Generated</td>
+                            <td align="right">{{ each.created }} UTC</td>
+                        </tr>
+                        {% if each.published %}
+                            <tr class="dark_grey_background">
+                                <td>Published to blockchain</td>
+                                <td align="right">{{ each.published }}</td>
+                            </tr>
+                            <tr class="ui_div_highlight">
+                                <td>Issue tokens</td>
+                                <td align="right"></td>
+                            </tr>
+                            <tr class="dark_grey_background">
+                                <td>Issued tokens, not yet confirmed</td>
+                                <td align="right">{{ each.issued_not_confirmed }}</td>
+                            </tr>
+                            <tr class="ui_div_highlight">
+                                <td>Issued, confirmed, not yet assigned</td>
+                                <td align="right">{{ each.confirmed_not_assigned }}</td>
+                            </tr>
+                            <tr class="dark_grey_background">
+                                <td>All issued tokens</td>
+                                <td align="right">{{ each.issued_tokens }}&nbsp;[ <a href="/admin/tokens/{{ each.token_id }}/{{ session_token }}" target="_blank" class="header_anchor">view all issued tokens</a> ]</td>
+                            </tr>
+                            <tr class="ui_div_highlight">
+                                <td>Remaining tokens</td>
+                                <td align="right">{{ each.remaining_tokens }}</td>
+                            </tr>
+                            <tr class="dark_grey_background">
+                                <td>Set max priority (credits per token created)</td>
+                                <td align="right">
+                                    <form action="/admin/tokens/set_max_priority" method="post">
+                                        <input type="hidden" name="session_token" value="{{ session_token }}"/>
+                                        <input type="hidden" name="token_id" value="{{ each.token_id }}"/>
+                                        <input type="number" class="dark_input_field" size="5" value="{{ each.max_priority }}"/>&nbsp;
+                                        <input type="submit" value="Update" class="blue_submit_button"/>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr class="ui_div_highlight">
+                                <td>Withdraw remaining tokens to address</td>
+                                <td align="right">
+                                    <form action="/admin/tokens/withdraw" method="post">
+                                        <input type="hidden" name="session_token" value="{{ session_token }}"/>
+                                        <input type="hidden" name="token_id" value="{{ each.token_id }}"/>
+                                        <input name="token_count" size="5" type="number" placeholder="Token Count"
+                                               class="dark_input_field"/>&nbsp;
+                                        <input name="withdrawal_address" class="dark_input_field" placeholder="ETH Address 0x"/>
+                                        <input type="submit" value="Withdraw" class="blue_submit_button"/>
+                                    </form>
+                                </td>
+                            </tr>
+                            <tr class="dark_grey_background">
+                                <td>
+                                    Burn remaining tokens
+                                </td>
+                                <td align="right">
+                                    <form action="/admin/tokens/burn" method="post">
+                                        <input type="hidden" name="session_token" value="{{ session_token }}"/>
+                                        <input type="hidden" name="token_id" value="{{ each.token_id }}"/>
+                                        <input name="token_count" type="number" placeholder="Token Count"
+                                               class="dark_input_field"/>&nbsp;
+                                        <input type="submit" value="Burn" class="blue_submit_button"/>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
         </div>
     {% endif %}
     {% if can_launch_ico %}
-    <div id="create_erc20_token" class="ui_div_highlight">
-        <form action="/admin/tokens/create" method="post">
-            <input name="session_token" type="hidden" value="{{ session_token }}" />
-            <table cellspacing="0" cellpadding="5">
-                <tbody>
-                <tr>
-                    <td colspan="2"><h3>Create new ERC20 token</h3></td>
-                </tr>
-                <tr class="ui_div_background">
-                    <td>Token name</td>
-                    <td><input name="token_name" size="35" class="dark_input"/></td>
-                </tr>
-                <tr>
-                    <td>Token symbol</td>
-                    <td><input name="token_symbol" size="35" class="dark_input"/></td>
-                </tr>
-                <tr class="ui_div_background">
-                    <td>Initial token count</td>
-                    <td align="right"><input name="token_count" type="number" class="dark_input"/></td>
-                </tr>
-                <tr>
-                    <td colspan="2" align="right">
-                        <input type="submit" class="blue_submit_button" value="Generate ERC20 Smart Contract"/>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </form>
-    </div>
+        <div id="create_erc20_token" class="ui_div_highlight">
+            <form action="/admin/tokens/create" method="post">
+                <input name="session_token" type="hidden" value="{{ session_token }}"/>
+                <table cellspacing="0" cellpadding="5" id="create_token_table">
+                    <tbody>
+                    <tr class="ui_div_background">
+                        <td colspan="2"><h3>Create new ERC20 token</h3></td>
+                    </tr>
+                    <tr class="ui_div_background">
+                        <td>Token name</td>
+                        <td align="right"><input name="token_name" size="20" class="dark_input"/></td>
+                    </tr>
+                    <tr>
+                        <td>Token symbol</td>
+                        <td align="right"><input name="token_symbol" size="20" class="dark_input"/></td>
+                    </tr>
+                    <tr class="ui_div_background">
+                        <td>Initial token count</td>
+                        <td align="right"><input name="token_count" type="number" class="dark_input"/></td>
+                    </tr>
+                    <tr class="ui_div_background">
+                        <td colspan="2" align="right">
+                            <input type="submit" class="blue_submit_button" value="Generate ERC20 Smart Contract"/>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </form>
+        </div>
     {% endif %}
 {% endblock %}

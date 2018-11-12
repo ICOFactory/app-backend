@@ -44,14 +44,26 @@
 }
 
 #owned_tokens {
-    width: 550px;
+    width: 700px;
     float: left;
-    margin-left: 50px;
+    margin-top:20px;
+}
+
+.erc20_token_table {
+    width:100%;
+}
+
+#create_token_table {
+    width:100%;
 }
 
 #create_erc20_token {
-    margin-left: 20px;
+    width:300px;
     background-color: rgb(40,40,40);
+    border: 3px solid rgb(60,60,60);
+    float: left;
+    margin-top: 20px;
+    margin-left: 18px;
 }
 
 #login_form {
@@ -71,7 +83,7 @@
 
 .erc20_token {
     margin-bottom:20px;
-    padding:15px;
+    border: 3px solid rgb(60,60,60);
 }
 
 .login_input {
@@ -238,6 +250,7 @@ div.permissions {
 #admin_header {
     padding:15px;
     color:white;
+    margin-bottom:20px;
 }
 
 #admin_home {
@@ -365,3 +378,9 @@ div.permissions {
     margin: 24px;
 }
 
+#admin_content {
+    width: 780px;
+    height: 400px;
+    margin-left: 240px;
+    background-color: rgb(40,40,40);
+}

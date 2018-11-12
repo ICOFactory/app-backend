@@ -209,14 +209,19 @@ def get_owned_tokens(user_id,db,logger=None):
             event_data = json.loads(every_event[0])
             if event_data["token_id"] == each["token_id"]:
                 pending = True
-        owned_tokens.append({"token_id": each["token_id"],
+        token_data = {"token_id": each["token_id"],
                              "token_name": each["token_name"],
                              "ico_tokens": each["tokens"],
                              "token_symbol": each["token_symbol"],
                              "eth_address": each["eth_address"],
                              "created": each["created"],
                              "published": each["published"],
-                             "pending": pending})
+                             "pending": pending,
+                             "max_priority": each["max_priority"]}
+        if not pending:
+            sc = SmartContract(each["token_id"])
+            token_data["issued_tokens"] = sc.get_issued_token_count()
+        owned_tokens.append(token_data)
     owned_tokens = sorted(owned_tokens, key=lambda token: token['created'],reverse=True)
     return owned_tokens
 

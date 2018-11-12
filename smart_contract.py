@@ -2,6 +2,9 @@ import MySQLdb
 import json
 from ethereum_node import EthereumNode
 from flask import render_template
+import re
+
+ETH_ADDRESS_REGEX = re.compile("^0x[0-9a-fA-F]{40}$")
 
 
 def token_symbol_decorator(symbol):
@@ -170,15 +173,41 @@ class SmartContract:
                     print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
         return 0
 
+    def issue_token(self, token_address):
+        if self.smart_contract_id > 0:
+            if not ETH_ADDRESS_REGEX.match(token_address):
+                raise ValueError
+            try:
+                c = self.db.cursor()
+                c.execute("INSERT INTO tokens (eth_address,smart_contract_id) VALUES (%s,%s)",
+                          (token_address, self.smart_contract_id))
+                self.db.commit()
+                c.close()
+                return c.lastrowid
+            except MySQLdb.Error as e:
+                try:
+                    if self.logger:
+                        self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                    else:
+                        print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                except IndexError:
+                    if self.logger:
+                        self.logger.error("MySQL Error: %s" % (str(e),))
+                    else:
+                        print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+        return None
+
     def issue_tokens(self, tokens):
         if self.smart_contract_id > 0:
             try:
-                # TODO: add commands to issue tokens
                 c = self.db.cursor()
                 for x in range(0, tokens):
                     eth_address = self.eth_node.assign_new_ethereum_address()
-                    c.execute("INSERT INTO tokens (eth_address,smart_contract_id) VALUES (%s,%s)",
-                              (eth_address[0], self.smart_contract_id))
+                    c.execute("INSERT INTO tokens (eth_address,smart_contract_id) VALUES (%s,%s);",
+                              (eth_address, self.smart_contract_id))
+                    command_data = {"issue-token": {"eth_address": eth_address,
+                                                    "smart_contract_id": self.smart_contract_id}}
+                    c.execute("INSERT INTO commands (command) VALUES (%s);", (json.dumps(command_data),))
                 self.db.commit()
                 c.close()
                 return tokens
