@@ -9,7 +9,7 @@
 {% block content %}
     <script src="{{ url_for('static', filename='acl_editor.js') }}"></script>
     <div id="button_container">
-        <input type="button" name="set-permissions" value="Change User Permissions"/>
+        <input type="submit" name="set-permissions" value="Change User Permissions"/>
         <input id="view-acl-btn" type="button" name="view-acl" value="View Full ACL"/>
     </div>
     <div id="view_acl"></div>
@@ -19,7 +19,7 @@
                 <li class="acl_type"><input type="radio" name="access_type" value="member"
                                             checked="checked">Member</input></li>
                 <li class="acl_type"><input type="radio" name="access_type" value="manager">Manager</input></li>
-                <li class="acl_type"><input type="radio" name="access_type" value="administator">Administator</input>
+                <li class="acl_type"><input type="radio" name="access_type" value="administrator">Administrator</input>
                 </li>
             </ul>
         </div>

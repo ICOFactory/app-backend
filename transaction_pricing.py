@@ -44,5 +44,5 @@ class BlockInfo:
 
 if __name__ == "__main__":
     epoch = datetime.datetime() - datetime.timedelta(hours=24)
-    db = datebase.Database()
+    db = database.Database()
 

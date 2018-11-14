@@ -16,6 +16,8 @@ class Credits:
 
     def get_credit_balance(self):
         balance = self.db.get_credit_balance(self.user_id)
+        if not balance:
+            balance = 0
         return balance
 
     def issue_credits(self, amount, event_data):

@@ -145,7 +145,7 @@ CREATE TABLE `event_log` (
   `event_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `event_type_id` smallint(5) unsigned DEFAULT NULL,
   `user_id` int(10) unsigned DEFAULT NULL,
-  `event_data` json DEFAULT NULL,
+  `event_data` LONGTEXT DEFAULT NULL,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`event_id`),
   KEY `event_log_event_type_id_index` (`event_type_id`)
@@ -239,7 +239,7 @@ CREATE TABLE `frames` (
   `device_id` int(10) unsigned NOT NULL,
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `viewed` datetime DEFAULT NULL,
-  `frame_data` json DEFAULT NULL,
+  `frame_data` LONGTEXT DEFAULT NULL,
   PRIMARY KEY (`frame_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;

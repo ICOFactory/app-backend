@@ -222,5 +222,3 @@ if __name__ == "__main__":
 
     print("Total node update events: {0}".format(event_count))
     print("Events in last 24 hours: {0}".format(len(todays_events)))
-    sorted
-    print(len(blocks))
