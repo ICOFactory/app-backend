@@ -183,7 +183,7 @@ CREATE TABLE `external_crc20_contracts` (
   `block_number` bigint(20) unsigned DEFAULT NULL,
   `decimals` smallint(5) unsigned DEFAULT '10',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -201,7 +201,7 @@ CREATE TABLE `external_tokens` (
   `block_number` bigint(20) unsigned NOT NULL,
   `external_crc_contract_id` bigint(20) unsigned DEFAULT NULL,
   PRIMARY KEY (`serial`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -224,7 +224,7 @@ CREATE TABLE `external_transaction_ledger` (
   `priority` bigint(20) unsigned DEFAULT NULL,
   `usd_price` bigint(20) unsigned DEFAULT NULL,
   PRIMARY KEY (`txid`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
