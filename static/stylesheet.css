@@ -96,6 +96,11 @@
 
 }
 
+#create_user_error {
+    font-weight: bold;
+    color:orangered;
+}
+
 
 #form_login {
     padding: 5px;
@@ -296,7 +301,7 @@ div.permissions {
 }
 
 .header_anchor:visited {
-    color:rgb(54,88,128);
+    color:rgb(124,136,198);
     text-decoration: underline;
 }
 
@@ -311,7 +316,7 @@ div.permissions {
 }
 
 .main_menu_anchor:visited {
-    color:rgb(54,88,128);
+    color:rgb(124,136,198);
     text-decoration: none;
 }
 
@@ -329,7 +334,7 @@ div.permissions {
 }
 
 .login_anchor {
-    color: rgb(54,88,128);
+    color: rgb(124,136,198);
     text-decoration: none;
 }
 
@@ -369,11 +374,6 @@ div.permissions {
     color:red;
 }
 
-#users {
-    height: 768px;
-    overflow-y: scroll;
-}
-
 #onboard_checkboxes {
     float:left;
 }
@@ -400,3 +400,22 @@ div.permissions {
     margin: 24px;
 }
 
+#commit_acl {
+    padding: 5px;
+    width:300px;
+}
+#acl_user_email{
+    font-weight: bold;
+    color:white;
+    float: right;
+    width: 780px;
+}
+#acl_editor {
+    padding-left: 16px;
+    height:300px;
+}
+
+.view_user_paging {
+    text-align: center;
+    color:white;
+}

@@ -8,6 +8,7 @@ from hashlib import sha256
 from users import UserContext
 from events import Event
 import datetime
+from ledger import TransactionLedger
 from credits import Credits
 from smart_contract import SmartContract
 import re
@@ -15,7 +16,6 @@ import re
 TOKEN_NAME_REGEX = re.compile("^[A-Za-z0-9]{4,36}$")
 TOKEN_SYMBOL_REGEX = re.compile("^[A-Z0-9]{1,5}$")
 TOKEN_COUNT_REGEX = re.compile("^[0-9]{1,16}$")
-
 
 admin_blueprint = Blueprint('admin', __name__, url_prefix="/admin")
 
@@ -25,8 +25,13 @@ def admin_no_session():
     return render_template("admin/admin_login.jinja2")
 
 
+@admin_blueprint.route('/<session_token>/transactions')
+def admin_main_transactions(session_token):
+    return admin_main(session_token, transactions=True)
+
+
 @admin_blueprint.route('/<session_token>')
-def admin_main(session_token):
+def admin_main(session_token, transactions=False):
     db = database.Database(logger=current_app.logger)
     user_id = db.validate_session(session_token)
     if user_id:
@@ -40,17 +45,20 @@ def admin_main(session_token):
 
         erc20_node_update = Event("Ethereum Node Update", db, current_app.logger)
         node_events = erc20_node_update.get_events_since(datetime.timedelta(hours=-24))
-        gas_prices = []
+        metrics = []
         if len(node_events) > 0:
             events_per_hour = int(len(node_events) / 24)
             for hour in range(0, 24):
                 offset = hour * events_per_hour
                 accumulator = 0
-                for x in range(offset, events_per_hour+offset):
+                for x in range(offset, events_per_hour + offset):
                     if x < len(node_events):
                         event_data = json.loads(node_events[x][0])
-                        accumulator += event_data["gas_price"]
-                gas_prices.append(int(float(accumulator)/float(events_per_hour)))
+                        if transactions:
+                            accumulator += event_data["latest_block_transaction_count"]
+                        else:
+                            accumulator += event_data["gas_price"]
+                metrics.append(int(float(accumulator) / float(events_per_hour)))
         return render_template("admin/admin_main.jinja2",
                                session_token=session_token,
                                launch_ico=launch_ico,
@@ -59,7 +67,8 @@ def admin_main(session_token):
                                ethereum_network=ethereum_network,
                                view_event_log=view_event_log,
                                issue_credits=issue_credits,
-                               gas_prices=json.dumps(gas_prices))
+                               metrics=json.dumps(metrics),
+                               transactions=transactions)
     return render_template("admin/admin_login.jinja2",
                            error="Invalid session.")
 
@@ -102,8 +111,8 @@ def view_event_log(session_token):
         if authorized:
             event_types = db.list_event_types()
             return render_template("admin/admin_view_event_log.jinja2",
-                            session_token=session_token,
-                            event_types=event_types)
+                                   session_token=session_token,
+                                   event_types=event_types)
     abort(403)
 
 
@@ -149,12 +158,12 @@ def filter_event_log():
                     csv_data = ""
                     for every_key in event_keys:
                         csv_data += every_key + ","
-                    csv_data = csv_data[:len(csv_data)-1] + "\n"
+                    csv_data = csv_data[:len(csv_data) - 1] + "\n"
                     for every_event in events:
                         event_row = ""
                         for every_key in event_keys:
                             event_row += str(every_event[every_key]) + ","
-                        event_row += event_row[:len(event_row)-1] + "\n"
+                        event_row += event_row[:len(event_row) - 1] + "\n"
                         csv_data += event_row
                 html_data = None
                 if output_format == "html":
@@ -215,7 +224,7 @@ def admin_create_user(session_token):
     abort(403)
 
 
-def get_owned_tokens(user_id,db,logger=None):
+def get_owned_tokens(user_id, db, logger=None):
     erc20_publish_event = Event("ERC20 Token Created", db, logger)
     event_count = erc20_publish_event.get_event_count()
     # get all ERC20 publish events for now...
@@ -229,21 +238,21 @@ def get_owned_tokens(user_id,db,logger=None):
             if event_data["token_id"] == each["token_id"]:
                 pending = True
         token_data = {"token_id": each["token_id"],
-                             "token_name": each["token_name"],
-                             "ico_tokens": each["tokens"],
-                             "token_symbol": each["token_symbol"],
-                             "eth_address": each["eth_address"],
-                             "created": each["created"],
-                             "published": each["published"],
-                             "pending": pending,
-                             "max_priority": each["max_priority"]}
+                      "token_name": each["token_name"],
+                      "ico_tokens": each["tokens"],
+                      "token_symbol": each["token_symbol"],
+                      "eth_address": each["eth_address"],
+                      "created": each["created"],
+                      "published": each["published"],
+                      "pending": pending,
+                      "max_priority": each["max_priority"]}
         if not pending:
             sc = SmartContract(each["token_id"])
             token_data["issued_tokens"] = sc.get_issued_token_count()
             token_data["issued_not_confirmed"] = 0
             token_data["confirmed_not_assigned"] = 0
         owned_tokens.append(token_data)
-    owned_tokens = sorted(owned_tokens, key=lambda token: token['created'],reverse=True)
+    owned_tokens = sorted(owned_tokens, key=lambda token: token['created'], reverse=True)
     return owned_tokens
 
 
@@ -254,7 +263,7 @@ def admin_tokens(session_token):
         user_id = db.validate_session(session_token)
         ctx = UserContext(user_id, db=db, logger=db.logger)
         can_launch_ico = ctx.check_acl("launch-ico")
-        erc20_publish_event = Event("ERC20 Token Created",db,current_app.logger)
+        erc20_publish_event = Event("ERC20 Token Created", db, current_app.logger)
         event_count = erc20_publish_event.get_event_count()
         # get all ERC20 publish events for now...
         publish_events = erc20_publish_event.get_latest_events(event_count)
@@ -264,14 +273,14 @@ def admin_tokens(session_token):
                 token_id = ctx.acl()["management"][key]["token_id"]
                 token_info = db.get_smart_contract_info(token_id)
                 owned_tokens.append(token_info)
-            owned_tokens.extend(get_owned_tokens(user_id,db,current_app.logger))
+            owned_tokens.extend(get_owned_tokens(user_id, db, current_app.logger))
             if len(owned_tokens) == 0:
                 owned_tokens = None
             email_address = ctx.user_info["email_address"]
             last_logged_in = ctx.user_info["last_logged_in"].isoformat()
             last_logged_in_ip = ctx.user_info["last_logged_in_ip"]
-            credit_ctx = Credits()
-            credit_balance = credit_ctx.get_credit_balance(user_id)
+            credit_ctx = Credits(user_id, db, current_app.logger)
+            credit_balance = credit_ctx.get_credit_balance()
             return render_template("admin/admin_tokens.jinja2",
                                    session_token=session_token,
                                    owned_tokens=owned_tokens,
@@ -295,6 +304,11 @@ def admin_confirm():
         return redirect(url_for('admin.admin_tokens', session_token=session_token))
     elif confirmation_type == "create_erc20_failed" and choice == "OK":
         return redirect(url_for('admin.admin_tokens', session_token=session_token))
+    elif confirmation_type == "onboarded_new_user":
+        if choice == "Administration":
+            return redirect(url_for('admin.admin_main', session_token=session_token))
+        else:
+            return redirect(url_for('admin.create_user', session_token=session_token))
     db = database.Database(logger=current_app.logger)
     user_id = db.validate_session(session_token)
     if user_id:
@@ -328,6 +342,44 @@ def admin_confirm():
     abort(403)
 
 
+@admin_blueprint.route('/users/new-user-acl', methods=["POST"])
+def onboard_user():
+    session_token = request.form["session_token"]
+    db = database.Database()
+    user_id = db.validate_session(session_token)
+    if user_id:
+        user_ctx = UserContext(user_id, db, current_app.logger)
+        auth = user_ctx.check_acl("onboard-users")
+        if auth:
+            acl = json.loads(request.form["acl"])
+            # TODO make sure the user is not issuing permissions they don't have themselves
+            full_name = request.form["full_name"]
+            email = request.form["email_address"]
+            pw_hash = request.form["pw_hash"]
+            ip_addr = request.access_route[-1]
+            new_user_id = db.onboard_user(full_name, email, pw_hash, json.dumps(acl), ip_addr)
+            if new_user_id:
+                new_user_context = UserContext(new_user_id, db, current_app.logger)
+                new_user_event = Event("Users Create User", db, current_app.logger)
+                new_user_event.log_event(user_id, {"user_id": new_user_id,
+                                                   "email": email,
+                                                   "full_name": full_name,
+                                                   "acl": json.dumps(acl)})
+
+                db.update_user_permissions(new_user_id, json.dumps(acl))
+                message = "Successfully created new user " + new_user_context.user_info["email_address"]
+                return render_template("admin/admin_confirmation.jinja2",
+                                       session_token=session_token,
+                                       confirmation_type="onboarded_new_user",
+                                       confirmation_title="Created New User",
+                                       confirmation_message=message,
+                                       default_choice="Create Another User",
+                                       choices=["Administration"])
+            else:
+                abort(500)
+    abort(403)
+
+
 @admin_blueprint.route('/tokens/erc20_publish', methods=["POST"])
 def erc20_publish():
     session_token = request.form["session_token"]
@@ -348,7 +400,7 @@ def erc20_publish():
             if current_balance < credits.erc20_publish_price:
                 message = "Your credit balance of <span class=\"credit_balance\">"
                 message += str(current_balance) + "</span> is less than the <span class=\"credit_price\">"
-                message += str(credits.erc20_publish_price) +"</span> required to publish an ERC20 token."
+                message += str(credits.erc20_publish_price) + "</span> required to publish an ERC20 token."
                 message += "<p>[ <a class=\"login_anchor\" href=\"/admin/credits/purchase/"
                 message += session_token + "\">purchase credits</a> ]</p>"
                 return render_template("admin/admin_confirmation.jinja2",
@@ -422,7 +474,7 @@ def create_tokens_form():
 
 
 @admin_blueprint.route('/tokens/view_source/<token_id>/<session_token>')
-def admin_view_source(token_id,session_token):
+def admin_view_source(token_id, session_token):
     token_id = int(token_id)
     db = database.Database(logger=current_app.logger)
     user_id = db.validate_session(session_token)
@@ -444,7 +496,7 @@ def admin_create_user_acl():
     password_repeat = request.form["password_repeat"]
     if password == password_repeat:
         data = email_address + password
-        pw_hash = sha256(data.encode("utf-8"))
+        pw_hash = sha256(data.encode("utf-8")).hexdigest()
     else:
         return render_template("admin/admin_create_user.jinja2",
                                session_token=session_token,
@@ -463,25 +515,93 @@ def admin_create_user_acl():
     abort(403)
 
 
-@admin_blueprint.route('/users/<session_token>')
-def view_users(session_token):
+@admin_blueprint.route('/users/change-permissions/<user_id>/<session_token>')
+def change_user_permissions(user_id, session_token):
+    user_id = int(user_id)
+    db = database.Database()
+    auth_user_id = db.validate_session(session_token)
+    if auth_user_id:
+        auth_ctx = UserContext(auth_user_id, db, current_app.logger)
+        # TODO: there is a lot more granularity we could get here
+        if auth_ctx.check_acl("change-permissions"):
+            user_ctx = UserContext(user_id, db, current_app.logger)
+            existing_acl = user_ctx.acl()
+            return render_template("admin/admin_create_user_acl.jinja2",
+                                   session_token=session_token,
+                                   user_id=user_id,
+                                   email_address=user_ctx.user_info['email_address'],
+                                   existing_acl=json.dumps(existing_acl),
+                                   new_user=False)
+    abort(403)
+
+
+@admin_blueprint.route('/users/change-user-acl', methods=["POST"])
+def change_user_acl():
+    session_token = request.form['session_token']
+    acl_data = request.form['acl']
+    db = database.Database()
+    auth_user_id = db.validate_session(session_token)
+    if auth_user_id:
+        auth_user_ctx = UserContext(auth_user_id, db, current_app.logger)
+        if auth_user_ctx.check_acl("change-permissions"):
+            user_id = int(request.form['user_id'])
+            user_ctx = UserContext(user_id, db, current_app.logger)
+            user_event = Event("Users Changed Permissions", db, current_app.logger)
+            event_data = {"email_address": user_ctx.user_info["email_address"],
+                          "user_id": user_id,
+                          "new_acl_data": acl_data}
+            user_event.log_event(auth_user_id, event_data)
+            result = db.update_user_permissions(user_id, acl_data)
+            if result:
+                message = "Access Control List updated for " + user_ctx.user_info['email_address']
+                return render_template("admin/admin_confirmation.jinja2",
+                                       session_token=session_token,
+                                       title="ACL Updated",
+                                       confirmation_title="ACL Updated",
+                                       confirmation_message=message,
+                                       confirmation_type="acl_updated",
+                                       default_choice="OK")
+
+
+@admin_blueprint.route('/users/<session_token>/<offset>/<limit>')
+def view_users(session_token, offset=0, limit=20):
     if session_token:
+        offset = int(offset)
+        limit = int(limit)
+        if offset < 0 or limit < 0:
+            raise ValueError
         db = database.Database()
         db.logger = current_app.logger
         user_id = db.validate_session(session_token)
         if user_id:
-            user_data = db.list_users()
+            user_ctx = UserContext(user_id, db, current_app.logger)
+            user_data = db.list_users(offset, limit)
+            user_count = db.get_user_count()
+            can_reset_password = user_ctx.check_acl("reset-passwords")
+            can_change_permissions = user_ctx.check_acl("change-permissions")
+            can_issue_credits = user_ctx.check_acl("issue-credits")
+            can_view_wallet = user_ctx.check_acl("assign-tokens") or user_ctx.check_acl("remove-tokens")
+
             augmented_user_data = []
             for each_user in user_data:
                 new_obj = dict(each_user)
-                user_credits = Credits(user_id, db, current_app.logger)
-                new_obj['transactions'] = 0
+                ledger = TransactionLedger(each_user['user_id'], db, current_app.logger)
+                user_credits = Credits(each_user['user_id'], db, current_app.logger)
+                new_obj['transactions'] = ledger.get_transaction_count()
                 new_obj['credits_balance'] = user_credits.get_credit_balance()
-                new_obj['member_tokens'] = 0
-                new_obj['manager_tokens'] = 0
-                new_obj['issued_tokens'] = 0
-                new_obj['owned_tokens'] = 0
+                new_obj['member_tokens'] = user_ctx.get_member_tokens()
+                new_obj['manager_tokens'] = user_ctx.get_manager_tokens()
+                issue_token_event = Event("ERC20 Token Issue", db, current_app.logger)
+                new_obj['issued_tokens'] = issue_token_event.get_event_count(each_user['user_id'])
+                new_obj['owned_tokens'] = ledger.get_owned_token_count()
                 augmented_user_data.append(new_obj)
             return render_template("admin/admin_users.jinja2",
                                    session_token=session_token,
-                                   users=augmented_user_data)
+                                   users=augmented_user_data,
+                                   reset_password=can_reset_password,
+                                   change_permissions=can_change_permissions,
+                                   issue_credits=can_issue_credits,
+                                   view_wallet=can_view_wallet,
+                                   user_count=user_count,
+                                   limit=limit,
+                                   offset=offset)

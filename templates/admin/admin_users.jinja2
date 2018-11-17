@@ -2,6 +2,13 @@
 
 {% block header %}<h1>{% block title %}Users{% endblock %}</h1>
     <p id="back_nav">[ <a class="header_anchor" href="/admin/{{ session_token }}">back to administration</a> ]</p>
+    <p class="view_user_paging">{% if offset > 0 %}[&nbsp;
+            <a class="header_anchor" href="/admin/users/{{ session_token }}/{{ offset-limit }}/{{ limit }}">Previous
+                page</a>&nbsp;]&nbsp;{% endif %}{{ user_count }} total users. Showing
+            {{ offset+1 }}-{% if (offset + limit) < user_count %}{{ offset+limit }}{% else %}{{ user_count }}{% endif %}
+                    {% if (offset+limit) < user_count %}&nbsp;[&nbsp;
+                        <a class="header_anchor" href="/admin/users/{{ session_token }}/{{ offset+limit }}/{{ limit }}">Next
+                            page</a>&nbsp;]{% endif %}</p>
 {% endblock %}
 
 {% block content %}
@@ -18,10 +25,16 @@
                     <td>E-mail address</td>
                     <td>{{ user.email }}</td>
                 </tr>
-                {% if can_reset_passwords %}
+                {% if reset_password %}
                     <tr>
                         <td>Password</td>
-                        <td>[&nbsp;<a class="header_anchor" href="/admin/users/reset-password/<user_id>/<session_token>">reset user's password</a>&nbsp;]</td>
+                        <td>[&nbsp;<a class="header_anchor" href="/admin/users/reset-password/{{ user.user_id }}/{{ session_token }}">reset password</a>&nbsp;]</td>
+                    </tr>
+                {% endif %}
+                {% if change_permissions %}
+                    <tr>
+                        <td>Access Control List</td>
+                        <td>[&nbsp;<a class="header_anchor" href="/admin/users/change-permissions/{{ user.user_id }}/{{ session_token }}">change permissions</a>&nbsp;]</td>
                     </tr>
                 {% endif %}
                 <tr>
@@ -40,10 +53,12 @@
                     <td>Created IP address</td>
                     <td>{{ user.created_ip }}</td>
                 </tr>
+                {% if issue_credits %}
                 <tr>
                     <td>Credits balance</td>
-                    <td>{{ user.credits_balance }}&nbsp;[&nbsp;<a class="header_anchor" href="/admin/users/issue_credit/{{ user.user_id }}/{{ session_token }}">issue credits</a>&nbsp;]</td>
+                    <td>{{ user.credits_balance }}&nbsp;[&nbsp;<a class="header_anchor" href="/admin/users/issue_credits/{{ user.user_id }}/{{ session_token }}">issue credits</a>&nbsp;]</td>
                 </tr>
+                {% endif %}
                 <tr>
                     <td>ERC20 memberships</td>
                     <td>{{ user.member_tokens }}</td>
@@ -68,5 +83,12 @@
             </table>
         </div>
     {% endfor %}
+        <p class="view_user_paging">{% if offset > 0 %}[&nbsp;
+            <a class="header_anchor" href="/admin/users/{{ session_token }}/{{ offset-limit }}/{{ limit }}">Previous
+                page</a>&nbsp;]&nbsp;{% endif %}{{ user_count }} total users. Showing
+            {{ offset+1 }}-{% if (offset + limit) < user_count %}{{ offset+limit }}{% else %}{{ user_count }}{% endif %}
+                    {% if (offset+limit) < user_count %}&nbsp;[&nbsp;
+                        <a class="header_anchor" href="/admin/users/{{ session_token }}/{{ offset+limit }}/{{ limit }}">Next
+                            page</a>&nbsp;]{% endif %}</p>
     </div>
 {% endblock %}

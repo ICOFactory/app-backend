@@ -1,83 +1,119 @@
-
 {% extends "admin/admin_base.jinja2" %}
 
 {% block header %}
-<h1>{% block title %}Access Control List{% endblock %}</h1>
-<p id="back_nav">[ <a class="header_anchor" href="/admin/{{ session_token }}">back to administration</a> ]</p>
+    <h1>{% block title %}Access Control List{% endblock %}</h1>
+    <p id="back_nav">[ <a class="header_anchor" href="/admin/{{ session_token }}">back to administration</a> ]</p>
 {% endblock %}
 
 {% block content %}
     <script src="{{ url_for('static', filename='acl_editor.js') }}"></script>
     <div id="button_container">
-        <input type="submit" name="set-permissions" value="Change User Permissions"/>
-        <input id="view-acl-btn" type="button" name="view-acl" value="View Full ACL"/>
-    </div>
-    <div id="view_acl"></div>
-    <div id="acl_manager">
-        <div id="access_type">
-            <ul id="access_type_list" class="control_group">
-                <li class="acl_type"><input type="radio" name="access_type" value="member"
-                                            checked="checked">Member</input></li>
-                <li class="acl_type"><input type="radio" name="access_type" value="manager">Manager</input></li>
-                <li class="acl_type"><input type="radio" name="access_type" value="administrator">Administrator</input>
-                </li>
-            </ul>
-        </div>
-        <div id="member" class="permissions">
-            <div id="member_ico_select">
-                <select name="member_ico"></select>
+        {% if new_user %}
+            <div id="commit_acl">
+                <form action="/admin/users/new-user-acl" method="post">
+                    <input type="hidden" name="session_token" value="{{ session_token }}"/>
+                    <input type="hidden" name="full_name" value="{{ full_name }}"/>
+                    <input type="hidden" name="email_address" value="{{ email_address }}"/>
+                    <input type="hidden" name="pw_hash" value="{{ password_hash }}"/>
+                    <input type="hidden" name="acl" id="acl_data" value="" />
+                    <input type="submit" name="new-user-permissions" class="blue_submit_button"
+                           value="Set New User Permissions"/>
+                </form>
             </div>
-            <ul id="member_permissions" class="control_group">
-                <li class="acl_type"><input class="member_permission_checkbox" type="checkbox" name="view-tokens">View/Internal
-                    Transfer tokens</input></li>
-                <li class="acl_type"><input class="member_permission_checkbox" type="checkbox"
-                                            name="external-transfer-tokens">External Transfer tokens</input></li>
-            </ul>
-        </div>
-        <div id="manager" class="permissions">
-            <div id="manager_ico_select">
-                <select name="manager_ico"></select>
+        {% else %}
+            <div id="commit_acl">
+                <form action="/admin/users/change-user-acl" method="post">
+                    <input type="hidden" name="session_token" value="{{ session_token }}"/>
+                    <input type="hidden" name="user_id" value="{{ user_id }}"/>
+                    <input type="hidden" name="acl" id="acl_data" value="" />
+                    <script language="JavaScript">
+                        var existing_acl = {{ existing_acl }};
+                    </script>
+                    <input type="submit" name="change-permissions" class="blue_submit_button"
+                           value="Change User Permissions"/>
+                </form>
             </div>
-            <ul id="manager_permissions" class="control_group">
-                <li class="acl_type"><input class="manager_permission_checkbox" type="checkbox" name="change-priority">Change
-                    priority (cost per token mined)</input></li>
-                <li class="acl_type"><input class="manager_permission_checkbox" type="checkbox" name="issue-tokens">Issue
-                    tokens</input></li>
-                <li class="acl_type"><input class="manager_permission_checkbox" type="checkbox" name="assign-tokens">Assign
-                    tokens</input></li>
-                <li class="acl_type"><input class="manager_permission_checkbox" type="checkbox" name="remove-tokens">Remove
-                    tokens</input></li>
-                <li class="acl_type"><input class="manager_permission_checkbox" type="checkbox" name="premine-tokens">Premine
-                    tokens</input></li>
-                <li class="acl_type"><input class="manager_permission_checkbox" type="checkbox" name="burn-tokens">Burn
-                    tokens</input></li>
-                <li class="acl_type"><input class="manager_permission_checkbox" type="checkbox" name="token-change-permissions">
-                    Change user permissions (this token)</input></li>
-            </ul>
-        </div>
-        <div id="administrator" class="permissions">
-            <ul id="admin_permissions" class="control_group">
-                <li class="acl_type"><input class="admin_permission_checkbox" type="checkbox" name="onboard-users">Onboard
-                    users</input></li>
-                <li class="acl_type"><input class="admin_permission_checkbox" type="checkbox" name="change-permissions">Change
-                    user permissions</input></li>
-                <li class="acl_type"><input class="admin_permission_checkbox" type="checkbox" name="reset-passwords">Reset
-                    passwords</input></li>
-                <li class="acl_type"><input class="admin_permission_checkbox" type="checkbox" name="launch-ico">Launch
-                    ICO</input></li>
-                <li class="acl_type"><input class="admin_permission_checkbox" type="checkbox" name="ethereum-network">Ethereum
-                    network</input></li>
-                <li class="acl_type"><input class="admin_permission_checkbox" type="checkbox" name="view-event-log">View
-                    event log</input></li>
-                <li class="acl_type"><input class="admin_permission_checkbox" type="checkbox" name="issue-credits">Issue
-                    credits</input></li>
-            </ul>
-        </div>
-        <div id="permission_list">
-            <p id="permissions_for"></p>
-            <select id="select_permissions" name="permissions" size="12">
-            </select>
-        </div>
+            <div id="acl_user_email">{{ email_address }}</div>
+        {% endif %}
     </div>
+    <div id="acl_editor">
+        <input id="view-acl-btn" type="button" name="view-acl" class="grey_submit_button" value="View Full ACL"/>
+
+        <div id="view_acl"></div>
+        <div id="acl_manager">
+            <div id="access_type">
+                <ul id="access_type_list" class="control_group">
+                    <li class="acl_type"><input type="radio" name="access_type" value="member"
+                                                checked="checked">Member</input></li>
+                    <li class="acl_type"><input type="radio" name="access_type" value="manager">Manager</input></li>
+                    <li class="acl_type"><input type="radio" name="access_type"
+                                                value="administrator">Administrator</input>
+                    </li>
+                </ul>
+            </div>
+            <div id="member" class="permissions">
+                <div id="member_ico_select">
+                    <select name="member_ico"></select>
+                </div>
+                <ul id="member_permissions" class="control_group">
+                    <li class="acl_type"><input class="member_permission_checkbox" type="checkbox" name="view-tokens">View/Internal
+                        Transfer tokens</input></li>
+                    <li class="acl_type"><input class="member_permission_checkbox" type="checkbox"
+                                                name="external-transfer-tokens">External Transfer tokens</input></li>
+                </ul>
+            </div>
+            <div id="manager" class="permissions">
+                <div id="manager_ico_select">
+                    <select name="manager_ico"></select>
+                </div>
+                <ul id="manager_permissions" class="control_group">
+                    <li class="acl_type"><input class="manager_permission_checkbox" type="checkbox"
+                                                name="change-priority">Change
+                        priority (cost per token mined)</input></li>
+                    <li class="acl_type"><input class="manager_permission_checkbox" type="checkbox" name="issue-tokens">Issue
+                        tokens</input></li>
+                    <li class="acl_type"><input class="manager_permission_checkbox" type="checkbox"
+                                                name="assign-tokens">Assign
+                        tokens</input></li>
+                    <li class="acl_type"><input class="manager_permission_checkbox" type="checkbox"
+                                                name="remove-tokens">Remove
+                        tokens</input></li>
+                    <li class="acl_type"><input class="manager_permission_checkbox" type="checkbox"
+                                                name="premine-tokens">Premine
+                        tokens</input></li>
+                    <li class="acl_type"><input class="manager_permission_checkbox" type="checkbox" name="burn-tokens">Burn
+                        tokens</input></li>
+                    <li class="acl_type"><input class="manager_permission_checkbox" type="checkbox"
+                                                name="token-change-permissions">
+                        Change user permissions (this token)</input></li>
+                </ul>
+            </div>
+            <div id="administrator" class="permissions">
+                <ul id="admin_permissions" class="control_group">
+                    <li class="acl_type"><input class="admin_permission_checkbox" type="checkbox" name="onboard-users">Onboard
+                        users</input></li>
+                    <li class="acl_type"><input class="admin_permission_checkbox" type="checkbox"
+                                                name="change-permissions">Change
+                        user permissions</input></li>
+                    <li class="acl_type"><input class="admin_permission_checkbox" type="checkbox"
+                                                name="reset-passwords">Reset
+                        passwords</input></li>
+                    <li class="acl_type"><input class="admin_permission_checkbox" type="checkbox" name="launch-ico">Launch
+                        ICO</input></li>
+                    <li class="acl_type"><input class="admin_permission_checkbox" type="checkbox"
+                                                name="ethereum-network">Ethereum
+                        network</input></li>
+                    <li class="acl_type"><input class="admin_permission_checkbox" type="checkbox" name="view-event-log">View
+                        event log</input></li>
+                    <li class="acl_type"><input class="admin_permission_checkbox" type="checkbox" name="issue-credits">Issue
+                        credits</input></li>
+                </ul>
+            </div>
+            <div id="permission_list">
+                <p id="permissions_for"></p>
+                <select id="select_permissions" class="dark_input_field" name="permissions" size="12">
+                </select>
+            </div>
+        </div>
     </div>
 {% endblock %}

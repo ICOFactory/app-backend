@@ -118,6 +118,11 @@ function show_admin_permissions() {
 }
 
 $(function(){
+  if(existing_acl) {
+    user_acl = existing_acl;
+  }
+
+
   tokens.forEach(function(element) {
     $("select[name=member_ico]").append("<option>" + element + "</option");
     $("select[name=manager_ico]").append("<option>" + element + "</option");
@@ -215,4 +220,7 @@ $(function(){
       $(this).val("View Full ACL");
     }
   });
+  $("form").submit(function () {
+      $("#acl_data").val(JSON.stringify(user_acl,null,'\t'));
+  })
 });

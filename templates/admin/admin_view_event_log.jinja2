@@ -26,6 +26,13 @@
         <div id="event_limit_actions" class="event_filter_row">
             <input type="button" class="grey_submit_button" name="select_all" id="event_filter_select_all" value="Select All" />&nbsp;<input type="button" class="grey_submit_button" name="select_none" id="event_filter_select_none" value="Select None"/>&nbsp;<input id="onboard_submit" class="blue_submit_button" type="submit" value="Filter Events" />
         </div>
+        <script language="JavaScript">
+            $(function () {
+                $("#event_filter_select_all").click(function(){
+                    $("option").attr("selected",true);
+                });
+            });
+        </script>
     </form>
 </div>
 <div id="event_log_output">

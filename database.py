@@ -674,12 +674,13 @@ WHERE smart_contracts.id=%s"""
             pass
         return None
 
-    def list_users(self):
+    def list_users(self, offset=0, limit=20):
         c = self.db.cursor()
         try:
             output = []
-            c.execute(
-                "SELECT user_id,email_address,last_logged_in,last_logged_in_ip,created,created_ip,full_name FROM users")
+            sql = "SELECT user_id,email_address,last_logged_in,last_logged_in_ip,created,created_ip,full_name "
+            sql += "FROM users ORDER BY user_id ASC LIMIT {0} OFFSET {1};".format(limit,offset)
+            c.execute(sql)
             for row in c:
                 output.append({"user_id": row[0],
                                "email": row[1],
@@ -797,21 +798,48 @@ WHERE smart_contracts.id=%s"""
             return None
         return None
 
+    def get_user_count(self, last_logged_in=None):
+        try:
+            c = self.db.cursor()
+            sql = "SELECT COUNT(*) FROM users"
+            if last_logged_in:
+                sql += " WHERE last_logged_in > %s"
+                c.execute(sql, (last_logged_in,))
+            else:
+                c.execute(sql)
+            row = c.fetchone()
+            if row:
+                return row[0]
+        except MySQLdb.Error as e:
+            try:
+                if self.logger:
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                if self.logger:
+                    self.logger.error("MySQL Error: %s" % (str(e),))
+                else:
+                    print("MySQL Error: %s" % (str(e),))
+        return None
+
     def onboard_user(self, full_name, email_address, pw_hash, acl, ip_addr):
         c = self.db.cursor()
+        acl_data = json.dumps(acl)
         email_param = self.db.escape_string(email_address).decode('utf-8')
         sql = "INSERT INTO users (email_address,password,created_ip,acl,created,full_name) "
-        sql += "VALUES (%s,%s,%s,%s,NOW(),%s"
+        sql += "VALUES (%s,%s,%s,%s,NOW(),%s);"
         try:
-            c.execute(sql, (email_param, pw_hash, ip_addr, json.dumps(acl), full_name))
+            c.execute(sql, (email_param, pw_hash, ip_addr, acl_data, full_name))
             last_row_id = c.lastrowid
             c.close()
             self.db.commit()
+            self.update_user_permissions(last_row_id, acl_data)
             return last_row_id
         except MySQLdb.Error as e:
             try:
                 if e.args[0] == 1062:
-                    return -1, "E-mail address already exists in database!"
+                    return -1
                 if self.logger:
                     self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
                 else:

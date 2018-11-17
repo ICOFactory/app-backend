@@ -64,6 +64,12 @@ class UserContext:
         new_acl["management"] = self.manager_tokens
         self._acl = new_acl
 
+    def get_member_tokens(self):
+        return self.member_tokens
+
+    def get_manager_tokens(self):
+        return self.manager_tokens
+
     def _remove_permission(self, permission, token_id=None):
         if token_id:
             if permission in self.MEMBER_PERMISSIONS:
@@ -156,6 +162,10 @@ class UserContext:
                 for key in self.manager_tokens.keys():
                     if token_id == self.manager_tokens[key]["token_id"]:
                         return permission in self.manager_tokens[key]["permissions"]
+        else:
+            if permission in self.ADMIN_PERMISSIONS:
+                return permission in self._acl["administrator"]
+        return False
 
     def acl(self):
         return self._acl

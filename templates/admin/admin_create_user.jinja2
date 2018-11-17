@@ -11,6 +11,11 @@
         <input type="hidden" name="session_token" value="{{ session_token }}"/>
         <table id="admin_create_users_form_table" cellpadding="5">
             <tbody>
+            {% if create_user_error %}
+            <tr>
+                <td colspan="2"><p id="create_user_error">{{ create_user_error }}</p></td>
+            </tr>
+            {% endif %}
             <tr>
                 <td>Full Name</td>
                 <td><input size="35" name="full_name" class="login_input"/></td>
@@ -34,12 +39,12 @@
                 <td align="right" colspan="2">
                     <table id="onboard_checkboxes">
                         <tr>
-                            <td><input type="checkbox" name="confirm_email" id="confirm_email_checkbox">
+                            <td><input type="checkbox" disabled="disabled" name="confirm_email" id="confirm_email_checkbox">
                                 <span id="email_confirm_msg">E-mail confirmation</span></input>&nbsp;
                             </td>
                         </tr>
                         <tr>
-                            <td><input type="checkbox" name="random_password" id="random_password_checkbox">
+                            <td><input disabled="disabled" type="checkbox" name="random_password" id="random_password_checkbox">
                                 <span id="random_password_msg">Random password</span></td>
                         </tr>
                     </table>

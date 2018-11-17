@@ -9,7 +9,7 @@
     <div id="admin_main_menu">
         <h3 class="ui_h3">Main Menu</h3>
         <ul id="admin_ul" class="ui_div_background">
-            <li class="admin_li"><a class="main_menu_anchor" href="/admin/users/{{ session_token }}">Users</a></li>
+            <li class="admin_li"><a class="main_menu_anchor" href="/admin/users/{{ session_token }}/0/20">Users</a></li>
             {% if onboard_users %}
                 <li class="admin_li"><a class="main_menu_anchor" href="/admin/users/create/{{ session_token }}">Onboard
                     User</a></li>
@@ -24,6 +24,11 @@
                 <li class="admin_li"><a class="main_menu_anchor" href="/admin/event_log/{{ session_token }}">View Event
                     Log</a></li>
             {% endif %}
+            {% if transactions %}
+                <li class="admin_li"><a class="main_menu_anchor" href="/admin/{{ session_token }}">Graph Gas Price</a></li>
+            {% else %}
+                <li class="admin_li"><a class="main_menu_anchor" href="/admin/{{ session_token }}/transactions">Graph Transaction Count</a></li>
+            {% endif %}
             <li class="admin_li"><a class="main_menu_anchor" href="/admin/logout">Logout</a></li>
         </ul>
     </div>
@@ -35,12 +40,12 @@
         backgroundColor: '#3C3F41',
 
     },
-        title:{text:"Gas Price",
+        title:{text:{% if transactions %}"Transactions per Block (Last 24 hours)"{% else %}"Gas Price (Last 24 hours)"{% endif %},
             style:{color:"#ffffff"}},
 
     yAxis: {
         title: {
-            text: 'Gwei'
+            text: {% if transactions %}"Transactions"{% else %}'Gwei'{% endif %}
         }
     },
     legend: {
@@ -57,9 +62,9 @@
     },
 
     series: [{
-        name: 'Gas Price',
-        data: {{ gas_prices }},
-        color:'#A6216B'
+        name: {% if transactions %}'Transactions'{% else %}'Gas Price'{% endif %},
+        data: {{ metrics }},
+        color:{% if transactions %}'#EC194B'{% else %}'#A6216B'{% endif %}
     }]
 
 });</script>
