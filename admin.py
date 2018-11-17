@@ -40,7 +40,7 @@ def admin_main(session_token):
 
         erc20_node_update = Event("Ethereum Node Update", db, current_app.logger)
         node_events = erc20_node_update.get_events_since(datetime.timedelta(hours=-24))
-        if node_events > 0:
+        if len(node_events) > 0:
             events_per_hour = int(len(node_events) / 24)
             gas_prices = []
             for hour in range(0, 24):
