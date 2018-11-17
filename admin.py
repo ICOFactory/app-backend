@@ -40,16 +40,17 @@ def admin_main(session_token):
 
         erc20_node_update = Event("Ethereum Node Update", db, current_app.logger)
         node_events = erc20_node_update.get_events_since(datetime.timedelta(hours=-24))
-        events_per_hour = int(len(node_events) / 24)
-        gas_prices = []
-        for hour in range(0, 24):
-            offset = hour * events_per_hour
-            accumulator = 0
-            for x in range(offset, events_per_hour+offset):
-                if x < len(node_events):
-                    event_data = json.loads(node_events[x][0])
-                    accumulator += (event_data["gas_price"] * (10 ** 18))
-            gas_prices.append(int(float(accumulator)/float(events_per_hour)))
+        if node_events > 0:
+            events_per_hour = int(len(node_events) / 24)
+            gas_prices = []
+            for hour in range(0, 24):
+                offset = hour * events_per_hour
+                accumulator = 0
+                for x in range(offset, events_per_hour+offset):
+                    if x < len(node_events):
+                        event_data = json.loads(node_events[x][0])
+                        accumulator += (event_data["gas_price"] * (10 ** 18))
+                gas_prices.append(int(float(accumulator)/float(events_per_hour)))
         return render_template("admin/admin_main.jinja2",
                                session_token=session_token,
                                launch_ico=launch_ico,
