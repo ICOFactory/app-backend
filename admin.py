@@ -49,7 +49,7 @@ def admin_main(session_token):
                 for x in range(offset, events_per_hour+offset):
                     if x < len(node_events):
                         event_data = json.loads(node_events[x][0])
-                        accumulator += (event_data["gas_price"] * (10 ** 18))
+                        accumulator += event_data["gas_price"]
                 gas_prices.append(int(float(accumulator)/float(events_per_hour)))
         return render_template("admin/admin_main.jinja2",
                                session_token=session_token,
