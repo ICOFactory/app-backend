@@ -28,6 +28,7 @@ def node_api_update(api_key):
                                                    ip_addr,
                                                    new_event_log_id,
                                                    db.ETH_NODE_STATUS_SYNCING)
+                    db.close()
                     return Response("{\"result\":\"OK\"}")
                 else:
                     if "error" in json_data:
@@ -37,6 +38,7 @@ def node_api_update(api_key):
                             new_event_log_id = new_event.log_event(node_id, json.dumps(event_data))
                             db.update_ethereum_node_status(node_id, ip_addr, new_event_log_id,
                                                            db.ETH_NODE_STATUS_ERROR)
+                            db.close()
                             return Response(json.dumps({"result": "OK"}))
 
                     new_event_log_id = new_event.log_event(node_id, json.dumps(event_data))
@@ -44,8 +46,10 @@ def node_api_update(api_key):
                                                    db.ETH_NODE_STATUS_SYNCED)
                     # since the node is synchronized and not output blocked, we check for outstanding commands
                     pending_commands = db.get_pending_commands(node_id)
+                    db.close()
                     response_obj = dict(result="OK",
                                         directed_commands=pending_commands[1],
                                         undirected_commands=pending_commands[0])
                     return Response(json.dumps(response_obj))
+    db.close()
     abort(403)
