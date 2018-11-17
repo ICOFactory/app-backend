@@ -648,7 +648,7 @@ WHERE smart_contracts.id=%s"""
             c.close()
             if row:
                 return row[0]
-            return 0
+            return None
         except MySQLdb.Error as e:
             # don't even check for the logger since this only runs from the console.
             try:
