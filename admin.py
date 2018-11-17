@@ -187,8 +187,8 @@ def eth_network_admin(session_token):
                 peer_data[each_node["node_identifier"]] = []
                 node_id = each_node["id"]
                 for each_update in updates:
-                    if each_update["user_id"] == node_id:
-                        event_data = json.loads(each_update["event_data"])
+                    if each_update[2] == node_id:
+                        event_data = json.loads(each_update[0])
                         peer_count = event_data["peers"]
                         peer_data[each_node["node_identifier"]].append(peer_count)
             peer_strings = {}
