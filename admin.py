@@ -182,7 +182,7 @@ def eth_network_admin(session_token):
             update_node_event_type = Event("Ethereum Node Update", db, logger=current_app.logger)
             epoch = datetime.datetime.today() - datetime.timedelta(hours=24)
             nodes = db.list_ethereum_nodes()
-            updates = update_node_event_type.get_events_since(epoch)
+            updates = update_node_event_type.get_latest_events(100)
             for each_node in nodes:
                 peer_data[each_node["node_identifier"]] = []
                 node_id = each_node["id"]
@@ -270,7 +270,8 @@ def admin_tokens(session_token):
             email_address = ctx.user_info["email_address"]
             last_logged_in = ctx.user_info["last_logged_in"].isoformat()
             last_logged_in_ip = ctx.user_info["last_logged_in_ip"]
-            credit_balance = db.get_credit_balance(user_id)
+            credit_ctx = Credits()
+            credit_balance = credit_ctx.get_credit_balance(user_id)
             return render_template("admin/admin_tokens.jinja2",
                                    session_token=session_token,
                                    owned_tokens=owned_tokens,
@@ -447,7 +448,7 @@ def admin_create_user_acl():
     else:
         return render_template("admin/admin_create_user.jinja2",
                                session_token=session_token,
-                               error="Password must match both times.")
+                               create_user_error="Password must match both times.")
     db = database.Database()
     user_id = db.validate_session(session_token)
     if user_id:
@@ -457,7 +458,8 @@ def admin_create_user_acl():
                                    session_token=session_token,
                                    full_name=full_name,
                                    email_address=email_address,
-                                   password_hash=pw_hash)
+                                   password_hash=pw_hash,
+                                   new_user=True)
     abort(403)
 
 
