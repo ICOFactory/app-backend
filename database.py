@@ -79,6 +79,9 @@ class Database:
         self.logger = logger
         self.read_only_mode = read_only_mode
 
+    def close(self):
+        self.db.close()
+
     def validate_permission(self, user_id, permission, smart_contract_id=None):
         # TODO: query access control lists
         try:
@@ -792,6 +795,32 @@ WHERE smart_contracts.id=%s"""
                 else:
                     print("MySQL Error: %s" % (str(e),))
             return None
+        return None
+
+    def onboard_user(self, full_name, email_address, pw_hash, acl, ip_addr):
+        c = self.db.cursor()
+        email_param = self.db.escape_string(email_address).decode('utf-8')
+        sql = "INSERT INTO users (email_address,password,created_ip,acl,created,full_name) "
+        sql += "VALUES (%s,%s,%s,%s,NOW(),%s"
+        try:
+            c.execute(sql, (email_param, pw_hash, ip_addr, json.dumps(acl), full_name))
+            last_row_id = c.lastrowid
+            c.close()
+            self.db.commit()
+            return last_row_id
+        except MySQLdb.Error as e:
+            try:
+                if e.args[0] == 1062:
+                    return -1, "E-mail address already exists in database!"
+                if self.logger:
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                if self.logger:
+                    self.logger.error("MySQL Error: %s" % (str(e),))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
         return None
 
     def create_user(self, full_name, email_address, password, ip_addr):
