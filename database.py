@@ -742,10 +742,6 @@ WHERE smart_contracts.id=%s"""
     def reset_password(self, user_id, password):
         try:
             c = self.db.cursor()
-            if int(user_id > 1):
-                raise ValueError
-            if self.read_only_mode:
-                raise ReadOnlyException
             c.execute("SELECT email_address FROM users WHERE user_id=%s", (user_id,))
             row = c.fetchone()
             if row:
