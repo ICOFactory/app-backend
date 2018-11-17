@@ -180,7 +180,7 @@ def eth_network_admin(session_token):
         if authorized:
             peer_data = {}
             update_node_event_type = Event("Ethereum Node Update", db, logger=current_app.logger)
-            epoch = datetime.datetime.today() - datetime.timedelta(hours=-24)
+            epoch = datetime.datetime.today() - datetime.timedelta(hours=24)
             nodes = db.list_ethereum_nodes()
             updates = update_node_event_type.get_events_since(epoch)
             for each_node in nodes:
