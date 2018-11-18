@@ -42,7 +42,9 @@ def admin_main(session_token, transactions=False):
         ethereum_network = user_ctx.check_acl("ethereum-network")
         view_event_log = user_ctx.check_acl("view-event-log")
         issue_credits = user_ctx.check_acl("issue-credits")
-
+        manager = len(user_ctx.acl()["administrator"]) > 0 or len(user_ctx.get_manager_tokens()) > 0
+        if user_ctx.user_info["email_address"] == "admin":
+            manager = True
         erc20_node_update = Event("Ethereum Node Update", db, current_app.logger)
         node_events = erc20_node_update.get_events_since(datetime.timedelta(hours=-24))
         metrics = []
@@ -68,7 +70,8 @@ def admin_main(session_token, transactions=False):
                                view_event_log=view_event_log,
                                issue_credits=issue_credits,
                                metrics=json.dumps(metrics),
-                               transactions=transactions)
+                               transactions=transactions,
+                               manager=manager)
     return render_template("admin/admin_login.jinja2",
                            error="Invalid session.")
 
@@ -551,7 +554,7 @@ def change_user_acl():
                           "user_id": user_id,
                           "new_acl_data": acl_data}
             user_event.log_event(auth_user_id, event_data)
-            result = db.update_user_permissions(user_id, acl_data)
+            result = db.update_user_permissions(user_id, json.loads(acl_data))
             if result:
                 message = "Access Control List updated for " + user_ctx.user_info['email_address']
                 return render_template("admin/admin_confirmation.jinja2",
@@ -561,6 +564,9 @@ def change_user_acl():
                                        confirmation_message=message,
                                        confirmation_type="acl_updated",
                                        default_choice="OK")
+            else:
+                abort(500)
+    abort(403)
 
 
 @admin_blueprint.route('/users/<session_token>/<offset>/<limit>')

@@ -9,7 +9,11 @@
     <div id="admin_main_menu">
         <h3 class="ui_h3">Main Menu</h3>
         <ul id="admin_ul" class="ui_div_background">
-            <li class="admin_li"><a class="main_menu_anchor" href="/admin/users/{{ session_token }}/0/20">Users</a></li>
+            {% if manager %}
+                <li class="admin_li"><a class="main_menu_anchor" href="/admin/users/{{ session_token }}/0/20">Users</a></li>
+            {% else %}
+                <li class="admin_li"><a class="main_menu_anchor" href="/admin/user-profile/{{ user_id }}/{{ session_token }}">User Profile</a></li>
+            {% endif %}
             {% if onboard_users %}
                 <li class="admin_li"><a class="main_menu_anchor" href="/admin/users/create/{{ session_token }}">Onboard
                     User</a></li>

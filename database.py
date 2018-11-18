@@ -177,8 +177,7 @@ class Database:
                 print(error_message)
         return False
 
-    def update_user_permissions(self, user_id, acl_data_json):
-        acl_data = json.loads(acl_data_json)
+    def update_user_permissions(self, user_id, acl_data):
         new_admin_permissions = []
         new_membership_permissions = []
         new_management_permissions = []
@@ -198,13 +197,14 @@ class Database:
             return False
         try:
             c = self.db.cursor()
-            c.execute("UPDATE users SET acl=%s WHERE user_id=%s", (acl_data_json, user_id))
+            c.execute("UPDATE users SET acl=%s WHERE user_id=%s", (json.dumps(acl_data), user_id))
             if c.rowcount == 1:
                 # flush old permissions
-                c.execute("DELETE FROM access_control_list WHERE user_id=%s")
+                c.execute("DELETE FROM access_control_list WHERE user_id=%s",(user_id,))
                 # insert new admin permissions
                 for each in new_admin_permissions:
-                    c.execute("INSERT INTO access_control_list (user_id,permission) VALUES (%s,%s);", each[0], each[1])
+                    c.execute("INSERT INTO access_control_list (user_id,permission) VALUES (%s,%s);",
+                              (each[0], each[1]))
                 sql = "INSERT INTO access_control_list (user_id, smart_contract_id, permission) VALUES (%s,%s,%s)"
                 # insert new membership permissions
                 for each in new_membership_permissions:
