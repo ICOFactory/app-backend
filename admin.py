@@ -19,6 +19,7 @@ TOKEN_COUNT_REGEX = re.compile("^[0-9]{1,16}$")
 
 admin_blueprint = Blueprint('admin', __name__, url_prefix="/admin")
 
+PAGE_LIMIT = 20
 
 @admin_blueprint.route('/')
 def admin_no_session():
@@ -74,6 +75,30 @@ def admin_main(session_token, transactions=False):
                                manager=manager)
     return render_template("admin/admin_login.jinja2",
                            error="Invalid session.")
+
+
+@admin_blueprint.route('/users/reset-password/<user_id>/<session_token>')
+def reset_password(user_id, session_token):
+    user_id = int(user_id)
+    if user_id < 1:
+        raise ValueError
+    db = database.Database()
+    auth_user_id = db.validate_session(session_token)
+    if auth_user_id:
+        auth_user_ctx = UserContext(auth_user_id, db, current_app.logger)
+        if auth_user_ctx.check_acl("reset-passwords"):
+            user_info = db.get_user_info(user_id)
+            return render_template("admin/admin_confirmation.jinja2",
+                                   confirmation_type="reset-password",
+                                   confirmation_value=user_id,
+                                   title="Reset Password",
+                                   confirmation_title="Reset Password",
+                                   confirmation_message="Reset password for <span class=\"sky_blue\">{0}</span>?".format(user_info["email_address"]),
+                                   new_password=True,
+                                   choices=["Cancel"],
+                                   default_choice="Reset Password",
+                                   session_token=session_token)
+    abort(403)
 
 
 @admin_blueprint.route('/login', methods=['GET', 'POST'])
@@ -312,6 +337,12 @@ def admin_confirm():
             return redirect(url_for('admin.admin_main', session_token=session_token))
         else:
             return redirect(url_for('admin.create_user', session_token=session_token))
+    elif confirmation_type == "reset-password":
+        if choice == "Cancel":
+            return redirect(url_for("admin.view_users", session_token=session_token,limit=PAGE_LIMIT,offset=0))
+    elif confirmation_type == "acl_updated":
+        if choice == "OK":
+            return redirect(url_for("admin.view_users", session_token=session_token,limit=PAGE_LIMIT,offset=0))
     db = database.Database(logger=current_app.logger)
     user_id = db.validate_session(session_token)
     if user_id:
@@ -341,7 +372,22 @@ def admin_confirm():
                         credits.logger.error("Insufficient credits for ERC20 Publish: "
                                              + user_ctx.user_info["email_address"])
                 abort(403)
-            abort(404)
+        elif confirmation_type == "reset-password":
+            user_id = int(confirmation_val)
+            if request.form["password"] != request.form["repeat_password"]:
+                return render_template("admin/admin_confirmation.jinja2",
+                                       confirmation_type="reset-password",
+                                       confirmation_value=user_id,
+                                       title="Reset Password",
+                                       confirmation_title="Reset Password",
+                                       confirmation_message="Passwords must match both times.",
+                                       new_password=True,
+                                       choices=["Cancel"],
+                                       default_choice="Reset Password",
+                                       session_token=session_token)
+            if db.reset_password(int(confirmation_val), request.form["password"]):
+                return redirect(url_for("admin.view_users", session_token=session_token, limit=PAGE_LIMIT, offset=0))
+
     abort(403)
 
 

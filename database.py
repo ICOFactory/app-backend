@@ -200,11 +200,11 @@ class Database:
             c.execute("UPDATE users SET acl=%s WHERE user_id=%s", (json.dumps(acl_data), user_id))
             if c.rowcount == 1:
                 # flush old permissions
-                c.execute("DELETE FROM access_control_list WHERE user_id=%s",(user_id,))
+                c.execute("DELETE FROM access_control_list WHERE user_id={0};".format(user_id))
                 # insert new admin permissions
                 for each in new_admin_permissions:
                     c.execute("INSERT INTO access_control_list (user_id,permission) VALUES (%s,%s);",
-                              (each[0], each[1]))
+                              (user_id, each))
                 sql = "INSERT INTO access_control_list (user_id, smart_contract_id, permission) VALUES (%s,%s,%s)"
                 # insert new membership permissions
                 for each in new_membership_permissions:
@@ -679,7 +679,7 @@ WHERE smart_contracts.id=%s"""
         try:
             output = []
             sql = "SELECT user_id,email_address,last_logged_in,last_logged_in_ip,created,created_ip,full_name "
-            sql += "FROM users ORDER BY user_id ASC LIMIT {0} OFFSET {1};".format(limit,offset)
+            sql += "FROM users ORDER BY user_id ASC LIMIT {0} OFFSET {1};".format(limit, offset)
             c.execute(sql)
             for row in c:
                 output.append({"user_id": row[0],
@@ -834,8 +834,10 @@ WHERE smart_contracts.id=%s"""
             last_row_id = c.lastrowid
             c.close()
             self.db.commit()
-            self.update_user_permissions(last_row_id, acl_data)
-            return last_row_id
+            if self.update_user_permissions(last_row_id, acl_data):
+                return last_row_id
+            else:
+                return None
         except MySQLdb.Error as e:
             try:
                 if e.args[0] == 1062:

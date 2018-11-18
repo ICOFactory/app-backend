@@ -101,7 +101,7 @@ class EthereumNode:
 
     def add_new_ethereum_address(self,new_address):
         if not ETH_ADDRESS_REGEX.match(new_address):
-            return None
+            raise TypeError
         try:
             c = self.db.cursor()
             c.execute("INSERT INTO ethereum_address_pool (ethereum_address) VALUES (%s);",(new_address,))
