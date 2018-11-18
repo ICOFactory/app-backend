@@ -118,7 +118,7 @@ function show_admin_permissions() {
 }
 
 $(function(){
-  if(existing_acl == undefined) {
+  if($("input[name=pw_hash").length == 1) {
     user_acl = existing_acl;
   }
 
