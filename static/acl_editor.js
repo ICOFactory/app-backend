@@ -118,7 +118,7 @@ function show_admin_permissions() {
 }
 
 $(function(){
-  if(existing_acl) {
+  if(existing_acl == undefined) {
     user_acl = existing_acl;
   }
 
