@@ -51,22 +51,42 @@ def admin_main(session_token, transactions=False):
         erc20_node_update = NodeUpdateEvent(db, logger=current_app.logger)
         eth_nodes = db.list_ethereum_nodes()
         all_events = []
-        metrics = {"moving_average": {"gas_price":[]}}
+        metrics = {
+            "moving_average": {"gas_price": []},
+            "London": {"gas_price": []},
+            "Amsterdam": {"gas_price": []},
+            "Dallas": {"gas_price": []}
+        }
+
         for node in eth_nodes:
             metrics[node["node_identifier"]] = []
             # erc20_node_update.get_events_since(datetime.timedelta(hours=-24))
             node_events = erc20_node_update.get_latest_events(1000, node["id"])
             for each in node_events:
                 if each.synchronized:
+                    if each.node_id == node["id"]:
+                        metrics[node["node_identifier"]].append(each.gas_price)
                     all_events.append(each)
         synchronized_events = list(filter(lambda event_obj: event_obj.synchronized, all_events))
         sorted(synchronized_events, key=lambda event_data: event_data.latest_block_timestamp)
-
         for x in range(0, (len(synchronized_events) - MOVING_AVERAGE_WINDOW)):
             moving_average_window = synchronized_events[x:x + MOVING_AVERAGE_WINDOW]
             gas_price_window = map(lambda event_data: event_data.gas_price, moving_average_window)
             moving_average = float(sum(gas_price_window)) / float(MOVING_AVERAGE_WINDOW)
             metrics["moving_average"]["gas_price"].append(moving_average)
+
+        graphing_metrics = {
+            "moving_average": {"gas_price": json.dumps(metrics["moving_average"]["gas_price"])},
+            "London": {
+                "gas_price": json.dumps(metrics["London"]),
+            },
+            "Amsterdam": {
+                "gas_price": json.dumps(metrics["Amsterdam"]),
+            },
+            "Dallas": {
+                "gas_price": json.dumps(metrics["Dallas"])
+            }
+        }
 
         return render_template("admin/admin_main.jinja2",
                                session_token=session_token,
@@ -76,17 +96,10 @@ def admin_main(session_token, transactions=False):
                                ethereum_network=ethereum_network,
                                view_event_log=view_event_log,
                                issue_credits=issue_credits,
-                               metrics={
-                                   "moving_average": {"gas_price": json.dumps(metrics["moving_average"]["gas_price"])},
-                                   "London": {
-                                       "gas_price": ""},
-                                   "Amsterdam": {
-                                       "gas_price": ""},
-                                   "Dallas": {
-                                       "gas_price": ""}
-                               })
-    return render_template("admin/admin_login.jinja2",
-                           error="Invalid session.")
+                               manager=manager,
+                               metrics=graphing_metrics)
+    else:
+        return render_template("admin/admin_login.jinja2", error="Invalid session.")
 
 
 @admin_blueprint.route('/users/reset-password/<user_id>/<session_token>')
@@ -239,8 +252,11 @@ def eth_network_admin(session_token):
                 for each_update in updates:
                     if each_update[2] == node_id:
                         event_data = json.loads(each_update[0])
-                        peer_count = event_data["peers"]
-                        peer_data[each_node["node_identifier"]].append(peer_count)
+                        if event_data["synchronized"]:
+                            peer_count = event_data["peers"]
+                        else:
+                            blocks_behind = {"blocks_behind": {"count": event_data['blocks_behind'],
+                                             "node_id": node_id}}
             peer_strings = {}
 
             for key in peer_data.keys():
@@ -249,7 +265,8 @@ def eth_network_admin(session_token):
             return render_template("admin/admin_eth_network.jinja2",
                                    session_token=session_token,
                                    eth_nodes=nodes,
-                                   peer_data=peer_data)
+                                   peer_data=peer_data,
+                                   blocks_behind=blocks_behind)
     abort(403)
 
 

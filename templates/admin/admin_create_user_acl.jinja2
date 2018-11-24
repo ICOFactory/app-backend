@@ -27,7 +27,7 @@
                     <input type="hidden" name="user_id" value="{{ user_id }}"/>
                     <input type="hidden" name="acl" id="acl_data" value="" />
                     <script language="JavaScript">
-                        var existing_acl = {{ existing_acl }};
+                        var existing_acl = {% if existing_acl %}{{ existing_acl }}{% else %}{{ default_permissions }}{% endif %};;
                     </script>
                     <input type="submit" name="change-permissions" class="blue_submit_button"
                            value="Change User Permissions"/>

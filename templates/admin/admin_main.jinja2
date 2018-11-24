@@ -28,47 +28,62 @@
                 <li class="admin_li"><a class="main_menu_anchor" href="/admin/event_log/{{ session_token }}">View Event
                     Log</a></li>
             {% endif %}
-            {% if transactions %}
-                <li class="admin_li"><a class="main_menu_anchor" href="/admin/{{ session_token }}">Graph Gas Price</a></li>
-            {% endif %}
             <li class="admin_li"><a class="main_menu_anchor" href="/admin/logout">Logout</a></li>
         </ul>
     </div>
     <div id="admin_home" class="dark_grey_background">
     <div id="admin_home_graph"></div>
     <script language="JavaScript">
-    Highcharts.chart('admin_home_graph', {
-    chart: {
-        backgroundColor: '#3C3F41',
+        Highcharts.chart('admin_home_graph', {
+            chart: {
+                backgroundColor: '#3C3F41',
 
-    },
-        title:{text:{% if transactions %}"Transactions per Block (Last 24 hours)"{% else %}"Gas Price (Last 24 hours)"{% endif %},
-            style:{color:"#ffffff"}},
+            },
+            title: {
+                text: {% if transactions %}"Transactions per Block (Last 24 hours)"
+                    {% else %}"Gas Price (Last 24 hours)"{% endif %},
+                style: {color: "#ffffff"}
+            },
 
-    yAxis: {
-        title: {
-            text: {% if transactions %}"Transactions"{% else %}'Gwei'{% endif %}
-        }
-    },
-    legend: {
-        layout: 'vertical',
-        align: 'right',
-        verticalAlign: 'middle',
-        style:{color:"#ffffff"}
-    },
+            yAxis: {
+                title: {
+                    text: {% if transactions %}"Transactions"{% else %}'Gwei'{% endif %}
+                }
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle',
+                style: {color: "#ffffff"}
+            },
 
-    plotOptions: {
-        series: {
-            pointStart: 0
-        }
-    },
+            plotOptions: {
+                series: {
+                    pointStart: 0
+                }
+            },
 
-        series: [
-            {
-                name: "Gas Price Moving Average",
-                data: {{ metrics.moving_average.gas_price }},
-                color:'#00FF00'
-            }]
+            series: [
+
+                {
+                    name: "Gas Prices London Node",
+                    data: {{ metrics.London.gas_price }},
+                    color: '#A6216B'
+                },
+                {
+                    name: "Gas Prices Amsterdam Node",
+                    data: {{ metrics.Amsterdam.gas_price }},
+                    color: '#EC194B'
+                },
+                {
+                    name: "Gas Price Dallas Node",
+                    data: {{ metrics.Dallas.gas_price }},
+                    color: '#F26A4E'
+                }, {
+                    name: "Gas Price Moving Average",
+                    data: {{ metrics.moving_average.gas_price }},
+                    color: '#00FF00'
+                }]
 
 
 });</script>
