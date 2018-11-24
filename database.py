@@ -371,10 +371,7 @@ class Database:
                 event_data = None
                 if last_update:
                     last_update = last_update.isoformat()
-                    db_obj = DummyDatabase(self.db, self.logger)
-                    update_event = events.Event("Ethereum Node Update",
-                                                db_obj,
-                                                logger=self.logger)
+                    update_event = events.NodeUpdateEvent(self.db, logger=self.logger)
                     event_data = update_event.get_latest_event(row[0])
                 new_node_data = dict(id=row[0],
                                      node_identifier=row[1],

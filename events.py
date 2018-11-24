@@ -1,6 +1,7 @@
 import MySQLdb
 import json
 import datetime
+import database
 
 
 class InvalidEventException(Exception):
@@ -30,7 +31,10 @@ class Event:
     def __init__(self, event_type, db, logger=None):
         if event_type not in self.AVAILABLE_EVENTS:
             raise InvalidEventException(event_type)
-        self.db = db.db
+        if isinstance(db, database.Database):
+            self.db = db.db
+        else:
+            self.db = db
         self.logger = logger
         self.event_type = event_type
 
@@ -125,10 +129,10 @@ class Event:
             last_events = []
             c = self.db.cursor()
             if user_id:
-                sql = "SELECT event_data,created,user_id FROM event_log WHERE event_type_id=%s AND user_id=%s LIMIT %s;"
+                sql = "SELECT event_data,created,user_id FROM event_log WHERE event_type_id=%s AND user_id=%s ORDER BY created DESC LIMIT %s;"
                 c.execute(sql, (self.event_type_id, user_id, limit))
             else:
-                sql = "SELECT event_data,created,user_id FROM event_log WHERE event_type_id=%s LIMIT %s;"
+                sql = "SELECT event_data,created,user_id FROM event_log WHERE event_type_id=%s ORDER BY created DESC LIMIT %s;"
                 c.execute(sql, (self.event_type_id, limit))
             for row in c:
                 last_events.append(row)
@@ -198,27 +202,97 @@ class Event:
             raise InvalidEventException
 
 
+class NodeUpdateEvent(Event):
+    def __init__(self,
+                 db,
+                 synchronized=False,
+                 blocks_behind=0,
+                 latest_block_timestamp=None,
+                 latest_block_number=0,
+                 latest_block_hash=None,
+                 latest_block_size=0,
+                 latest_gas_used=0,
+                 latest_gas_limit=0,
+                 transaction_count=0,
+                 gas_price=0,
+                 node_id=0,
+                 logger=None):
+        super().__init__("Ethereum Node Update", db, logger=logger)
+        self.synchronized = synchronized
+        self.blocks_behind = blocks_behind
+        self.latest_block_timestamp = latest_block_timestamp
+        self.latest_block_number = latest_block_number
+        self.latest_block_hash = latest_block_hash
+        self.latest_block_size = latest_block_size
+        self.latest_gas_used = latest_gas_used
+        self.latest_gas_limit = latest_gas_limit
+        self.gas_price = gas_price
+        self.transaction_count = transaction_count
+        self.node_id = node_id
+        if isinstance(db,database.Database):
+            self.db = db.db
+        else:
+            self.db = db
+        self.logger = logger
+
+    def __str__(self):
+        return "Ethereum Node Update"
+
+    def deserialize_event_data(self, event_tuples):
+        output = []
+        for event in event_tuples:
+            event_data = json.loads(event[0])
+            if event_data["synchronized"]:
+                timestamp = datetime.datetime.fromtimestamp(event_data["latest_block_timestamp"])
+                new_event = NodeUpdateEvent(db=self.db,
+                                            synchronized=event_data["synchronized"],
+                                            blocks_behind=event_data["blocks_behind"],
+                                            latest_block_timestamp=timestamp,
+                                            latest_block_number=event_data["latest_block_number"],
+                                            latest_block_hash=event_data["latest_block_hash"],
+                                            latest_block_size=event_data["latest_block_size"],
+                                            latest_gas_limit=event_data["latest_block_gas_limit"],
+                                            latest_gas_used=event_data["latest_block_gas_used"],
+                                            transaction_count=event_data["latest_block_transaction_count"],
+                                            gas_price=event_data["gas_price"],
+                                            node_id=event[2],
+                                            logger=self.logger)
+            else:
+                new_event = NodeUpdateEvent(db=self.db,
+                                            synchronized=event_data["synchronized"],
+                                            blocks_behind=event_data["blocks_behind"],
+                                            node_id=event[2],
+                                            logger=self.logger)
+            output.append(new_event)
+        return output
+
+    def get_latest_events(self, limit, user_id=None):
+        event_tuples = super().get_latest_events(limit, user_id)
+        return self.deserialize_event_data(event_tuples)
+
+    def get_events_since(self, epoch, user_id=None):
+        event_tuples = super().get_events_since(epoch, user_id)
+        return self.deserialize_event_data(event_tuples)
+
+
 if __name__ == "__main__":
-    import database
     epoch = datetime.datetime.today() - datetime.timedelta(hours=24)
     db = database.Database()
-    node_update_event = Event("Ethereum Node Update", db)
+    node_update_event = NodeUpdateEvent(db)
     latest_events = node_update_event.get_latest_events(1000)
     todays_events = node_update_event.get_events_since(epoch)
     event_count = node_update_event.get_event_count()
     blocks = {}
+    block_numbers = []
     for each_event in todays_events:
-        event_data = json.loads(each_event[0])
-        event_timestamp = each_event[1]
-        latest_block_hash = event_data["latest_block_hash"]
+        latest_block_hash = each_event.latest_block_hash
         if latest_block_hash not in blocks:
-            blocks[latest_block_hash] = {"block_size": event_data["latest_block_size"],
-                                         "block_number": event_data["latest_block_number"],
-                                         "gas_used": event_data["latest_block_gas_used"],
-                                         "gas_limit": event_data["latest_block_gas_limit"],
-                                         "timestamp": event_data["latest_block_timestamp"],
-                                         "tx_count": event_data["latest_block_transaction_count"],
-                                         "gas_price": event_data["gas_price"]}
-
+            blocks[latest_block_hash] = {"block_size": each_event.latest_block_size,
+                                         "block_number": each_event.latest_block_number,
+                                         "gas_used": each_event.latest_gas_used,
+                                         "gas_limit": each_event.latest_gas_limit,
+                                         "timestamp": each_event.latest_block_timestamp,
+                                         "tx_count": each_event.transaction_count,
+                                         "gas_price": each_event.gas_price}
     print("Total node update events: {0}".format(event_count))
-    print("Events in last 24 hours: {0}".format(len(todays_events)))
+    print("Events in last 24 days: {0}".format(len(todays_events)))

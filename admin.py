@@ -6,7 +6,7 @@ import database
 import json
 from hashlib import sha256
 from users import UserContext
-from events import Event
+from events import Event, NodeUpdateEvent
 import datetime
 from ledger import TransactionLedger
 from credits import Credits
@@ -20,6 +20,8 @@ TOKEN_COUNT_REGEX = re.compile("^[0-9]{1,16}$")
 admin_blueprint = Blueprint('admin', __name__, url_prefix="/admin")
 
 PAGE_LIMIT = 20
+MOVING_AVERAGE_WINDOW = 50
+
 
 @admin_blueprint.route('/')
 def admin_no_session():
@@ -46,22 +48,26 @@ def admin_main(session_token, transactions=False):
         manager = len(user_ctx.acl()["administrator"]) > 0 or len(user_ctx.get_manager_tokens()) > 0
         if user_ctx.user_info["email_address"] == "admin":
             manager = True
-        erc20_node_update = Event("Ethereum Node Update", db, current_app.logger)
-        node_events = erc20_node_update.get_events_since(datetime.timedelta(hours=-24))
-        metrics = []
-        if len(node_events) > 0:
-            events_per_hour = int(len(node_events) / 24)
-            for hour in range(0, 24):
-                offset = hour * events_per_hour
-                accumulator = 0
-                for x in range(offset, events_per_hour + offset):
-                    if x < len(node_events):
-                        event_data = json.loads(node_events[x][0])
-                        if transactions:
-                            accumulator += event_data["latest_block_transaction_count"]
-                        else:
-                            accumulator += event_data["gas_price"]
-                metrics.append(int(float(accumulator) / float(events_per_hour)))
+        erc20_node_update = NodeUpdateEvent(db, logger=current_app.logger)
+        eth_nodes = db.list_ethereum_nodes()
+        all_events = []
+        metrics = {"moving_average": {"gas_price":[]}}
+        for node in eth_nodes:
+            metrics[node["node_identifier"]] = []
+            # erc20_node_update.get_events_since(datetime.timedelta(hours=-24))
+            node_events = erc20_node_update.get_latest_events(1000, node["id"])
+            for each in node_events:
+                if each.synchronized:
+                    all_events.append(each)
+        synchronized_events = list(filter(lambda event_obj: event_obj.synchronized, all_events))
+        sorted(synchronized_events, key=lambda event_data: event_data.latest_block_timestamp)
+
+        for x in range(0, (len(synchronized_events) - MOVING_AVERAGE_WINDOW)):
+            moving_average_window = synchronized_events[x:x + MOVING_AVERAGE_WINDOW]
+            gas_price_window = map(lambda event_data: event_data.gas_price, moving_average_window)
+            moving_average = float(sum(gas_price_window)) / float(MOVING_AVERAGE_WINDOW)
+            metrics["moving_average"]["gas_price"].append(moving_average)
+
         return render_template("admin/admin_main.jinja2",
                                session_token=session_token,
                                launch_ico=launch_ico,
@@ -70,9 +76,15 @@ def admin_main(session_token, transactions=False):
                                ethereum_network=ethereum_network,
                                view_event_log=view_event_log,
                                issue_credits=issue_credits,
-                               metrics=json.dumps(metrics),
-                               transactions=transactions,
-                               manager=manager)
+                               metrics={
+                                   "moving_average": {"gas_price": json.dumps(metrics["moving_average"]["gas_price"])},
+                                   "London": {
+                                       "gas_price": ""},
+                                   "Amsterdam": {
+                                       "gas_price": ""},
+                                   "Dallas": {
+                                       "gas_price": ""}
+                               })
     return render_template("admin/admin_login.jinja2",
                            error="Invalid session.")
 
@@ -93,7 +105,8 @@ def reset_password(user_id, session_token):
                                    confirmation_value=user_id,
                                    title="Reset Password",
                                    confirmation_title="Reset Password",
-                                   confirmation_message="Reset password for <span class=\"sky_blue\">{0}</span>?".format(user_info["email_address"]),
+                                   confirmation_message="Reset password for <span class=\"sky_blue\">{0}</span>?".format(
+                                       user_info["email_address"]),
                                    new_password=True,
                                    choices=["Cancel"],
                                    default_choice="Reset Password",
@@ -339,10 +352,10 @@ def admin_confirm():
             return redirect(url_for('admin.create_user', session_token=session_token))
     elif confirmation_type == "reset-password":
         if choice == "Cancel":
-            return redirect(url_for("admin.view_users", session_token=session_token,limit=PAGE_LIMIT,offset=0))
+            return redirect(url_for("admin.view_users", session_token=session_token, limit=PAGE_LIMIT, offset=0))
     elif confirmation_type == "acl_updated":
         if choice == "OK":
-            return redirect(url_for("admin.view_users", session_token=session_token,limit=PAGE_LIMIT,offset=0))
+            return redirect(url_for("admin.view_users", session_token=session_token, limit=PAGE_LIMIT, offset=0))
     db = database.Database(logger=current_app.logger)
     user_id = db.validate_session(session_token)
     if user_id:

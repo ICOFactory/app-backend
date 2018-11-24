@@ -30,8 +30,6 @@
             {% endif %}
             {% if transactions %}
                 <li class="admin_li"><a class="main_menu_anchor" href="/admin/{{ session_token }}">Graph Gas Price</a></li>
-            {% else %}
-                <li class="admin_li"><a class="main_menu_anchor" href="/admin/{{ session_token }}/transactions">Graph Transaction Count</a></li>
             {% endif %}
             <li class="admin_li"><a class="main_menu_anchor" href="/admin/logout">Logout</a></li>
         </ul>
@@ -65,11 +63,13 @@
         }
     },
 
-    series: [{
-        name: {% if transactions %}'Transactions'{% else %}'Gas Price'{% endif %},
-        data: {{ metrics }},
-        color:{% if transactions %}'#EC194B'{% else %}'#A6216B'{% endif %}
-    }]
+        series: [
+            {
+                name: "Gas Price Moving Average",
+                data: {{ metrics.moving_average.gas_price }},
+                color:'#00FF00'
+            }]
+
 
 });</script>
 

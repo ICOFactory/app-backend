@@ -28,17 +28,18 @@ class BlockInfo:
         block_objects = []
         for each_event in selected_events:
             event_data = json.loads(each_event[0])
-            latest_block_hash = event_data["latest_block_hash"]
-            if latest_block_hash not in blocks:
-                block_data = {"block_size": event_data["latest_block_size"],
-                              "block_number": event_data["latest_block_number"],
-                              "gas_used": event_data["latest_block_gas_used"],
-                              "gas_limit": event_data["latest_block_gas_limit"],
-                              "timestamp": event_data["latest_block_timestamp"],
-                              "tx_count": event_data["latest_block_transaction_count"],
-                              "gas_price": event_data["gas_price"]}
-                block_objects.append(BlockData(latest_block_hash, block_data))
-            sorted_block_data = sorted(block_data, key=lambda block: block.block.number)
+            if event_data["synchronized"]:
+                latest_block_hash = event_data["latest_block_hash"]
+                if latest_block_hash not in blocks:
+                    block_data = {"block_size": event_data["latest_block_size"],
+                                  "block_number": event_data["latest_block_number"],
+                                  "gas_used": event_data["latest_block_gas_used"],
+                                  "gas_limit": event_data["latest_block_gas_limit"],
+                                  "timestamp": event_data["latest_block_timestamp"],
+                                  "tx_count": event_data["latest_block_transaction_count"],
+                                  "gas_price": event_data["gas_price"]}
+                    block_objects.append(BlockData(latest_block_hash, block_data))
+                sorted_block_data = sorted(block_data, key=lambda block: block.block.number)
         return sorted_block_data
 
 
