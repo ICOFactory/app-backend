@@ -103,7 +103,10 @@ class BlockInfo:
             for each in node_events:
                 if each.synchronized:
                     if each.node_id == node["id"]:
-                        metrics[node_identifier]["gas_price"].append(each.gas_price)
+                        try:
+                            metrics[node_identifier]["gas_price"].append(each.gas_price)
+                        except TypeError:
+                            pass
                     all_events.append(each)
         synchronized_events = list(filter(lambda event_obj: event_obj.synchronized, all_events))
         sorted(synchronized_events, key=lambda event_data: event_data.latest_block_timestamp)

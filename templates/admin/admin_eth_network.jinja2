@@ -24,7 +24,7 @@
                     <td id="{% if loop.index == 1 %}first{% elif loop.index == 2 %}second{%  elif loop.index == 3 %}third{% endif %}_node_label">{{ node.node_identifier }}</td>
                     <td>{{ node.last_update }}</td>
                     <td>{{ node.last_update_ip }}</td>
-                    <td>{{ node.status }}&nbsp;{% if blocks_behind[node_id] > 0 %}<em>{{ int(blocks_behind[node_id]) + " blocks behind" }}</em>{% endif %}</td>
+                    <td>{{ node.status }}&nbsp;{% if blocks_behind.node_id == node.id %}<em>{{ blocks_behind.count }} blocks behind</em>{% endif %}</td>
                     <td>{{ node.api_key }}</td>
                     <td>{{ node.peers }}</td>
                     <td colspan="2">{{ node.commands }}&nbsp;{% if remove_node %}[&nbsp;<a class="eth_network_anchor" href="/admin/eth_network/remove/{{ node.id }}/{{ session_token }}">remove node</a>&nbsp;]&nbsp;{% endif %}[&nbsp;<a class="eth_network_anchor" href="/admin/eth_network/restart/{{ node.id }}/{{ session_token }}">restart daemons</a>&nbsp;]</td>

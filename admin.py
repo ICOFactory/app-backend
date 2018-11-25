@@ -232,8 +232,8 @@ def eth_network_admin(session_token):
                         if event_data["synchronized"]:
                             peer_count = event_data["peers"]
                         else:
-                            blocks_behind = {"blocks_behind": {"count": event_data['blocks_behind'],
-                                             "node_id": node_id}}
+                            blocks_behind = {"count": event_data['blocks_behind'],
+                                             "node_id": node_id}
             peer_strings = {}
 
             for key in peer_data.keys():
