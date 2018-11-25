@@ -2,6 +2,13 @@ import events
 import json
 import datetime
 import database
+import time
+import MySQLdb
+from events import NodeUpdateEvent
+
+# in minutes
+CACHE_TIME = 8
+MOVING_AVERAGE_WINDOW = 100
 
 
 class BlockData:
@@ -22,8 +29,11 @@ class BlockInfo:
         self.db = db
         self.node_update_event = events.Event("Ethereum Node Update", db, logger=logger)
 
-    def get_blocks_since(self, epoch):
-        selected_events = self.node_update_event.get_events_since(epoch)
+    def get_blocks_since(self, epoch, node_id=None):
+        if node_id:
+            selected_events = self.node_update_event.get_events_since(epoch)
+        else:
+            selected_events = self.node_update_event.get_events_since(epoch,user_id=node_id)
         blocks = {}
         block_objects = []
         for each_event in selected_events:
@@ -42,8 +52,118 @@ class BlockInfo:
                 sorted_block_data = sorted(block_data, key=lambda block: block.block.number)
         return sorted_block_data
 
+    def _calculate_secondary_graphs(self, db, logger=None):
+        self.db = db
+        self.logger = logger
+        erc20_node_update = NodeUpdateEvent(db, logger=logger)
+        eth_nodes = db.list_ethereum_nodes()
+        all_events = []
+        metrics = {
+            "moving_average": {},
+            "London": {},
+            "Amsterdam": {},
+            "Dallas": {},
+        }
+
+        for node in eth_nodes:
+            metrics[node["node_identifier"]] = []
+            node_events = erc20_node_update.get_events_since(epoch)
+            for each in node_events:
+                if each.synchronized:
+                    if each.node_id == node["id"]:
+                        metrics[node["node_identifier"]].append(each.gas_price)
+                    all_events.append(each)
+        synchronized_events = list(filter(lambda event_obj: event_obj.synchronized, all_events))
+        sorted(synchronized_events, key=lambda event_data: event_data.latest_block_timestamp)
+        for x in range(0, (len(synchronized_events) - MOVING_AVERAGE_WINDOW)):
+            moving_average_window = synchronized_events[x:x + MOVING_AVERAGE_WINDOW]
+            gas_price_window = map(lambda event_data: event_data.gas_price, moving_average_window)
+            moving_average = float(sum(gas_price_window)) / float(MOVING_AVERAGE_WINDOW)
+            metrics["moving_average"]["gas_price"].append(moving_average)
+
+        return metrics
+
+    def _calculate_main_graphs(self, db, logger=None):
+        self.db = db
+        self.logger = logger
+        erc20_node_update = NodeUpdateEvent(db, logger=logger)
+        eth_nodes = db.list_ethereum_nodes()
+        all_events = []
+        metrics = {
+            "moving_average": {"gas_price": []},
+            "London": {"gas_price": []},
+            "Amsterdam": {"gas_price": []},
+            "Dallas": {"gas_price": []}
+        }
+        epoch = datetime.timedelta(hours=24)
+        for node in eth_nodes:
+            node_identifier = node["node_identifier"]
+            metrics[node_identifier] = []
+            node_events = erc20_node_update.get_events_since(epoch)
+            for each in node_events:
+                if each.synchronized:
+                    if each.node_id == node["id"]:
+                        metrics[node_identifier]["gas_price"].append(each.gas_price)
+                    all_events.append(each)
+        synchronized_events = list(filter(lambda event_obj: event_obj.synchronized, all_events))
+        sorted(synchronized_events, key=lambda event_data: event_data.latest_block_timestamp)
+        for x in range(0, (len(synchronized_events) - MOVING_AVERAGE_WINDOW)):
+            moving_average_window = synchronized_events[x:x + MOVING_AVERAGE_WINDOW]
+            gas_price_window = map(lambda event_data: event_data.gas_price, moving_average_window)
+            moving_average = float(sum(gas_price_window)) / float(MOVING_AVERAGE_WINDOW)
+            metrics["moving_average"]["gas_price"].append(moving_average)
+
+        return metrics
+
+    def calculate_main_graphs(self):
+        try:
+            db = self.db.db
+            c = db.cursor()
+            c.execute("SELECT value,updated FROM charting_cache WHERE name=%s", ("",))
+            row = c.fetchone()
+            if row and row[0]:
+                cache_time = datetime.datetime.now() - datetime.timedelta(minutes=CACHE_TIME)
+                if row[1] < cache_time:
+                    lastrowid = c.lastrowid
+                    metrics = self._calculate_main_graphs()
+                    c.execute("UPDATE charting_cache SET value=%s,updated=NOW() WHERE id=%s",
+                              (metrics, lastrowid))
+                    db.commit()
+                    return metrics
+                return json.loads(row[0])
+            else:
+                metrics = self._calculate_main_graphs(self.db)
+                c.execute("INSERT INTO charting_cache (name,value) VALUES (%s,%s);",
+                    ("main_graphs", json.dumps(metrics).encode()))
+                db.commit()
+                return metrics
+        except MySQLdb.Error as e:
+            try:
+                if e.args[0] == 1062:
+                    return -1
+                if self.logger:
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                if self.logger:
+                    self.logger.error("MySQL Error: %s" % (str(e),))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+        return None
+
 
 if __name__ == "__main__":
-    epoch = datetime.datetime() - datetime.timedelta(hours=24)
+    epoch = datetime.datetime.now() - datetime.timedelta(hours=24)
     db = database.Database()
-
+    uncached_start = time.time()
+    block_info = BlockInfo(db, None)
+    metrics = block_info.calculate_main_graphs()
+    uncached_end = time.time()
+    uncached_elapsed = uncached_end - uncached_start
+    print("Elapsed uncached main graphs call: {0}".format(uncached_elapsed))
+    cached_start = time.time()
+    metrics = block_info.calculate_main_graphs()
+    cached_end = time.time()
+    uncached_elapsed = uncached_end -uncached_start
+    print("Cached main graphs call: {0}".format(uncached_elapsed))

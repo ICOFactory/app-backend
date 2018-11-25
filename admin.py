@@ -6,7 +6,8 @@ import database
 import json
 from hashlib import sha256
 from users import UserContext
-from events import Event, NodeUpdateEvent
+from events import Event
+from transaction_pricing import BlockInfo
 import datetime
 from ledger import TransactionLedger
 from credits import Credits
@@ -48,44 +49,20 @@ def admin_main(session_token, transactions=False):
         manager = len(user_ctx.acl()["administrator"]) > 0 or len(user_ctx.get_manager_tokens()) > 0
         if user_ctx.user_info["email_address"] == "admin":
             manager = True
-        erc20_node_update = NodeUpdateEvent(db, logger=current_app.logger)
-        eth_nodes = db.list_ethereum_nodes()
-        all_events = []
-        metrics = {
-            "moving_average": {"gas_price": []},
-            "London": {"gas_price": []},
-            "Amsterdam": {"gas_price": []},
-            "Dallas": {"gas_price": []}
-        }
-
-        for node in eth_nodes:
-            metrics[node["node_identifier"]] = []
-            # erc20_node_update.get_events_since(datetime.timedelta(hours=-24))
-            node_events = erc20_node_update.get_latest_events(1000, node["id"])
-            for each in node_events:
-                if each.synchronized:
-                    if each.node_id == node["id"]:
-                        metrics[node["node_identifier"]].append(each.gas_price)
-                    all_events.append(each)
-        synchronized_events = list(filter(lambda event_obj: event_obj.synchronized, all_events))
-        sorted(synchronized_events, key=lambda event_data: event_data.latest_block_timestamp)
-        for x in range(0, (len(synchronized_events) - MOVING_AVERAGE_WINDOW)):
-            moving_average_window = synchronized_events[x:x + MOVING_AVERAGE_WINDOW]
-            gas_price_window = map(lambda event_data: event_data.gas_price, moving_average_window)
-            moving_average = float(sum(gas_price_window)) / float(MOVING_AVERAGE_WINDOW)
-            metrics["moving_average"]["gas_price"].append(moving_average)
+        block_info = BlockInfo(db, logger=current_app.logger)
+        metrics = block_info.calculate_main_graphs()
 
         graphing_metrics = {
             "moving_average": {"gas_price": json.dumps(metrics["moving_average"]["gas_price"])},
-            "London": {
-                "gas_price": json.dumps(metrics["London"]),
-            },
-            "Amsterdam": {
-                "gas_price": json.dumps(metrics["Amsterdam"]),
-            },
-            "Dallas": {
-                "gas_price": json.dumps(metrics["Dallas"])
-            }
+                "London": {
+                    "gas_price": json.dumps(metrics["London"]),
+                },
+                "Amsterdam": {
+                    "gas_price": json.dumps(metrics["Amsterdam"]),
+                },
+                "Dallas": {
+                    "gas_price": json.dumps(metrics["Dallas"])
+                }
         }
 
         return render_template("admin/admin_main.jinja2",
