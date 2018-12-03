@@ -3,7 +3,6 @@ import json
 import datetime
 import database
 import time
-import MySQLdb
 from events import NodeUpdateEvent
 
 # in minutes
@@ -119,41 +118,8 @@ class BlockInfo:
         return metrics
 
     def calculate_main_graphs(self):
-        try:
-            db = self.db.db
-            c = db.cursor()
-            c.execute("SELECT value,updated FROM charting_cache WHERE name=%s", ("",))
-            row = c.fetchone()
-            if row and row[0]:
-                cache_time = datetime.datetime.now() - datetime.timedelta(minutes=CACHE_TIME)
-                if row[1] < cache_time:
-                    lastrowid = c.lastrowid
-                    metrics = self._calculate_main_graphs()
-                    c.execute("UPDATE charting_cache SET value=%s,updated=NOW() WHERE id=%s",
-                              (metrics, lastrowid))
-                    db.commit()
-                    return metrics
-                return json.loads(row[0])
-            else:
-                metrics = self._calculate_main_graphs(self.db)
-                c.execute("INSERT INTO charting_cache (name,value) VALUES (%s,%s);",
-                    ("main_graphs", json.dumps(metrics).encode()))
-                db.commit()
-                return metrics
-        except MySQLdb.Error as e:
-            try:
-                if e.args[0] == 1062:
-                    return -1
-                if self.logger:
-                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
-                else:
-                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
-            except IndexError:
-                if self.logger:
-                    self.logger.error("MySQL Error: %s" % (str(e),))
-                else:
-                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
-        return None
+        metrics = self._calculate_main_graphs(db, logger=self.logger)
+        return metrics
 
 
 if __name__ == "__main__":

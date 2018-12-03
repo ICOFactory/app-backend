@@ -306,7 +306,7 @@ div.permissions {
 }
 
 .main_menu_anchor {
-    color: orange;
+    color: rgb(255,135,0);
     text-decoration: none;
 }
 
@@ -318,6 +318,10 @@ div.permissions {
 .main_menu_anchor:visited {
     color:rgb(124,136,198);
     text-decoration: none;
+}
+
+#home_chart {
+    margin-left:210px;
 }
 
 .admin_li:hover {

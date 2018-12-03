@@ -170,10 +170,10 @@ CREATE TABLE `event_type` (
 -- Table structure for table `external_crc20_contracts`
 --
 
-DROP TABLE IF EXISTS `external_crc20_contracts`;
+DROP TABLE IF EXISTS `external_erc20_contracts`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `external_crc20_contracts` (
+CREATE TABLE `external_erc20_contracts` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `token_name` varchar(55) DEFAULT NULL,
   `token_symbol` varchar(55) DEFAULT NULL,

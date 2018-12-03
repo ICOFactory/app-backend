@@ -5,6 +5,7 @@ from werkzeug.exceptions import abort
 import database
 import events
 import json
+from charting import Charting
 
 node_api_blueprint = Blueprint('node_api', __name__, url_prefix="/node_api")
 
@@ -42,6 +43,10 @@ def node_api_update(api_key):
                             return Response(json.dumps({"result": "OK"}))
 
                     new_event_log_id = new_event.log_event(node_id, json.dumps(event_data))
+                    # update charting database
+                    node_update_event = events.NodeUpdateEvent(db,from_event_id=new_event_log_id)
+                    Charting(db,current_app.logger)
+
                     db.update_ethereum_node_status(node_id, ip_addr, new_event_log_id,
                                                    db.ETH_NODE_STATUS_SYNCED)
                     # since the node is synchronized and not output blocked, we check for outstanding commands

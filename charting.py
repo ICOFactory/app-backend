@@ -1,7 +1,9 @@
-from events import NodeUpdateEvent
 import MySQLdb
 import json
+from events import NodeUpdateEvent
 import unittest
+import datetime
+import time
 
 MOVING_AVERAGE_WINDOW = 100
 
@@ -30,88 +32,142 @@ class Charting:
         else:
             print(event)
 
-    def get_chart_data(self, moving_average_gas_price=False,
-                       node_id=None,
-                       node_gas_price=False, block_number=False,
-                       transaction_count=False, block_size=False,
-                       gas_limit=False, gas_used=False, node_peers=False,
-                       limit=None, offset=None, before=None, since=None, latest=None):
-        args = []
-        columns = []
-        output = {}
-        sql = "SELECT "
-        if moving_average_gas_price:
-            sql += "moving_average_gas_price,"
-            columns.append("moving_average_gas_price")
-        if node_gas_price:
-            sql += "node_gas_price,"
-            columns.append("node_gas_price")
-        if block_number:
-            sql += "block_number,"
-            columns.append("block_number")
-        if transaction_count:
-            sql += "transaction_count,"
-            columns.append("transaction_count")
-        if block_size:
-            sql += "block_size,"
-            columns.append("block_size")
-        if gas_limit:
-            sql += "gas_limit,"
-            columns.append("gas_limit")
-        if gas_used:
-            sql += "gas_used,"
-            columns.append("gas_used")
-        if node_peers:
-            sql += "node_peers,"
-            columns.append("node_peers")
-        if sql == "SELECT ":
-            raise AssertionError
-        sql += "timestamp FROM charting"
-        columns.append("timestamp")
-        if node_id:
-            sql += " WHERE node_id=%s"
-            args.append(node_id)
-        if since:
-            sql += " AND timestamp > %s ORDER BY chart_data_id DESC"
-            args.append(since)
-        elif latest:
-            sql += " ORDER BY chart_data_id DESC LIMIT %s"
-            args.append(latest)
-        if limit:
-            sql += " LIMIT %s"
-            args.append(limit)
-            if offset:
-                sql += " OFFSET %s"
-                args.append(offset)
-        for each in columns:
-            output[each] = []
+    def get_distinct_blocks(self,start=None,end=None):
         try:
             c = self._db.cursor()
-            c.execute(sql, tuple(args))
+            if start and not end:
+                sql = "SELECT DISTINCT(block_number) FROM charting WHERE timestamp > %s ORDER BY block_number ASC"
+                c.execute(sql,(start,))
+            elif start and end:
+                sql = "SELECT DISTINCT(block_number) FROM charting WHERE timestamp > %s AND timestamp < %s ORDER BY block_number ASC"
+                c.execute(sql, (start,end,))
+            elif end:
+                sql = "SELECT DISTINCT(block_number) FROM charting WHERE timestamp < %s ORDER BY block_number ASC"
+                c.execute(sql, (end,))
+            else:
+                sql = "SELECT DISTINCT(block_number) FROM charting ORDER BY block_number ASC"
+                c.execute(sql)
+            output = []
             for row in c:
-                for x in range(0, len(row) - 1):
-                    output[columns[x]].append(row[x], row[len(row) - 1])
+                output.append(row[0])
             return output
         except MySQLdb.MySQLError as e:
-            self.log_string("MySQL error: " + e)
+            self.log_string("MySQL error: {0}".format(e))
             return None
+
+    def get_block_size_per_block(self,start=None,end=None):
+        distinct_blocks = self.get_distinct_blocks(start, end)
+        if distinct_blocks:
+            sql = "SELECT block_size FROM charting WHERE block_number=%s LIMIT 1"
+            output = []
+            try:
+                c = self._db.cursor()
+                for each in distinct_blocks:
+                    c.execute(sql, (each,))
+                    row = c.fetchone()
+                    if row:
+                        output.append((each, row[0]))
+                return output
+            except MySQLdb.MySQLError as e:
+                self.log_string("MySQL error: {0}".format(e))
+        else:
+            self.log_string("Could not fetch any blocks from the timeframe provided.")
+            if start:
+                self.log_string("Start: {0}".format(start))
+            if end:
+                self.log_string("End: {0}".format(end))
+        return None
+
+    def get_utilization_per_block(self,start=None,end=None):
+        distinct_blocks = self.get_distinct_blocks(start, end)
+        if distinct_blocks:
+            sql = "SELECT gas_used,gas_limit FROM charting WHERE block_number=%s LIMIT 1"
+            output = []
+            try:
+                c = self._db.cursor()
+                for each in distinct_blocks:
+                    c.execute(sql, (each,))
+                    row = c.fetchone()
+                    if row:
+                        output.append((each, row[0], row[1]))
+                return output
+            except MySQLdb.MySQLError as e:
+                self.log_string("MySQL error: {0}".format(e))
+        else:
+            self.log_string("Could not fetch any blocks from the timeframe provided.")
+            if start:
+                self.log_string("Start: {0}".format(start))
+            if end:
+                self.log_string("End: {0}".format(end))
+        return None
+
+    def get_transactions_per_block(self,start=None,end=None):
+        distinct_blocks = self.get_distinct_blocks(start, end)
+        if distinct_blocks:
+            sql = "SELECT transaction_count FROM charting WHERE block_number=%s LIMIT 1"
+            output = []
+            try:
+                c = self._db.cursor()
+                for each in distinct_blocks:
+                    c.execute(sql, (each,))
+                    row = c.fetchone()
+                    if row:
+                        output.append((each, row[0]))
+                return output
+            except MySQLdb.MySQLError as e:
+                self.log_string("MySQL error: {0}".format(e))
+        else:
+            self.log_string("Could not fetch any blocks from the timeframe provided.")
+            if start:
+                self.log_string("Start: {0}".format(start))
+            if end:
+                self.log_string("End: {0}".format(end))
+        return None
+
+    def get_gas_price_moving_average(self,start=None,end=None):
+        distinct_blocks = self.get_distinct_blocks(start,end)
+        if distinct_blocks:
+            sql = "SELECT moving_average_gas_price FROM charting WHERE block_number=%s LIMIT 1"
+            output = []
+            try:
+                c = self._db.cursor()
+                for each in distinct_blocks:
+                    c.execute(sql, (each,))
+                    row = c.fetchone()
+                    if row:
+                        output.append((each, row[0]))
+                return output
+            except MySQLdb.MySQLError as e:
+                self.log_string("MySQL error: {0}".format(e))
+        else:
+            self.log_string("Could not fetch any blocks from the timeframe provided.")
+            if start:
+                self.log_string("Start: {0}".format(start))
+            if end:
+                self.log_string("End: {0}".format(end))
+        return None
 
     def add_chart_data(self, node_update_event):
         if not isinstance(node_update_event, NodeUpdateEvent):
             raise TypeError
         if node_update_event.synchronized:
-            moving_average_window = node_update_event.get_latest_events(MOVING_AVERAGE_WINDOW)
+            moving_average_window = node_update_event.get_events_before_event_id(node_update_event.event_id,MOVING_AVERAGE_WINDOW)
+            if moving_average_window is None:
+                self.log_string("Could not get a window for moving average.")
+                return False
             gas_price_window = map(lambda event_data: event_data.gas_price, moving_average_window)
             moving_average = float(sum(gas_price_window)) / float(MOVING_AVERAGE_WINDOW)
             self.log_string("Charting module: new moving average: {0}".format(moving_average))
             try:
                 c = self._db.cursor()
-                sql = """INSERT INTO charting (moving_average_gas_price, 
-node_id, node_gas_price, block_number, transaction_count, block_size, gas_limit, gas_used,node_peers) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s);"""
+                sql = "INSERT INTO charting (moving_average_gas_price, node_id, node_gas_price, block_number,"
+                sql += " transaction_count, block_size, gas_limit, gas_used,node_peers,timestamp)"
+                sql += " VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s);"
                 result = c.execute(sql, (moving_average, node_update_event.node_id, node_update_event.gas_price,
-                                         node_update_event.latest_block_number, node_update_event.latest_block_size,
+                                         node_update_event.latest_block_number, node_update_event.transaction_count,
+                                         node_update_event.latest_block_size,
                                          node_update_event.latest_gas_limit, node_update_event.latest_gas_used,
-                                         node_update_event.node_peers))
+                                         node_update_event.peers,node_update_event.latest_block_timestamp))
                 if result:
                     self._db.commit()
                     if self.db is None:
@@ -130,18 +186,45 @@ class TestCase(unittest.TestCase):
         import database
         db = database.Database()
         charting = Charting(db)
-        test_event = NodeUpdateEvent(db).get_latest_event()
+        test_event = NodeUpdateEvent(db).get_latest_events(1)[0]
         result = charting.add_chart_data(test_event)
         self.assertTrue(result)
 
-    def test_separted_db(self):
+    def test_separate_db(self):
         charting = Charting()
         import database
         db = database.Database()
-        test_event = NodeUpdateEvent(db).get_latest_event()
+        test_event = NodeUpdateEvent(db).get_latest_events(1)[0]
         result = charting.add_chart_data(test_event)
         self.assertTrue(result)
 
+    def test_moving_average(self):
+        import database
+        db = database.Database()
+        charting = Charting(db)
+        query_start = time.time()
+        charting_data = charting.get_gas_price_moving_average()
+        query_end = time.time()
+        elapsed = query_end - query_start
+        print("Elapsed: {0} seconds".format(elapsed))
+        self.assertIsNotNone(charting_data)
+
 
 if __name__ == "__main__":
-    unittest.main()
+    # unittest.main()
+    print("Prepopulating chart table for last 24 hours...")
+    epoch = datetime.datetime.now() - datetime.timedelta(hours=24)
+    import database
+    db = database.Database()
+    charting = Charting(db)
+    events = NodeUpdateEvent(db).get_events_since(epoch)
+    ctr = 0
+    percent = int(len(events) / 100)
+    complete = 0
+    for each in events:
+        ctr += 1
+        if each.synchronized:
+            charting.add_chart_data(each)
+        if ctr % percent == 0:
+            complete += 1
+            print("{0}% complete".format(complete))

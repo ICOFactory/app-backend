@@ -1,0 +1,57 @@
+{% extends "admin/admin_base.jinja2" %}
+
+{% block header %}
+    <h1>{% block title %}Onboard new user{% endblock %}</h1>
+    <p id="back_nav">[ <a class="header_anchor" href="/admin/{{ session_token }}">back to administration</a> ]</p>
+{% endblock %}
+
+{% block content %}
+    <script src="{{ url_for('static', filename='user_form_validation.js') }}"></script>
+    <form action="/admin/users/create" method="post">
+        <input type="hidden" name="session_token" value="{{ session_token }}"/>
+        <table id="admin_create_users_form_table" cellpadding="5">
+            <tbody>
+            {% if create_user_error %}
+            <tr>
+                <td colspan="2"><p id="create_user_error">{{ create_user_error }}</p></td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td>Full Name</td>
+                <td><input size="35" name="full_name" class="login_input"/></td>
+            </tr>
+            <tr>
+                <td>E-mail Address</td>
+                <td><input size="35" name="email_address" class="login_input" type="email"/></td>
+            </tr>
+            <tr>
+                <td>Password</td>
+                <td><input size="35" name="password" class="login_input" type="password"/></td>
+            </tr>
+            <tr>
+                <td>Password (repeat)</td>
+                <td><input size="35" name="password_repeat" class="login_input" type="password"/></td>
+            </tr>
+            <tr>
+                <td><p id="onboard_user_validation"></p></td>
+            </tr>
+            <tr>
+                <td align="right" colspan="2">
+                    <table id="onboard_checkboxes">
+                        <tr>
+                            <td><input type="checkbox" disabled="disabled" name="confirm_email" id="confirm_email_checkbox">
+                                <span id="email_confirm_msg">E-mail confirmation</span></input>&nbsp;
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input disabled="disabled" type="checkbox" name="random_password" id="random_password_checkbox">
+                                <span id="random_password_msg">Random password</span></td>
+                        </tr>
+                    </table>
+                    <input id="onboard_submit" type="submit" class="blue_submit_button" value="Next Page"/>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </form>
+{% endblock %}
