@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, current_app
 from json_parser import JSONProcessor
 from database import Database
 from charting import Charting
@@ -14,7 +14,7 @@ app.register_blueprint(node_api.node_api_blueprint)
 @app.route('/')
 def homepage():
     db = Database()
-    charting = Charting(db, app.logger)
+    charting = Charting(db, current_app.logger)
     moving_average = charting.get_gas_price_moving_average()
     chart_data = []
     for each in moving_average:
@@ -27,7 +27,7 @@ def homepage():
 @app.route('/block_size')
 def homepage_block_size():
     db = Database()
-    charting = Charting(db, app.logger)
+    charting = Charting(db, current_app.logger)
     block_size_per_block = charting.get_block_size_per_block()
     chart_data = []
     for each in block_size_per_block:
@@ -40,7 +40,7 @@ def homepage_block_size():
 @app.route('/utilization')
 def homepage_utilization():
     db = Database()
-    charting = Charting(db, app.logger)
+    charting = Charting(db, current_app.logger)
     utilization = charting.get_utilization_per_block()
     chart_data = []
     for each in utilization:
@@ -53,7 +53,7 @@ def homepage_utilization():
 @app.route('/transaction_count')
 def home_page_transaction_count():
     db = Database()
-    charting = Charting(db, app.logger)
+    charting = Charting(db, current_app.logger)
     transaction_count = charting.get_transactions_per_block()
     chart_data = []
     for each in transaction_count:

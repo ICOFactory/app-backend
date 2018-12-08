@@ -44,10 +44,14 @@ def node_api_update(api_key):
 
                     new_event_log_id = new_event.log_event(node_id, json.dumps(event_data))
                     # update charting database
-                    node_update_event = events.NodeUpdateEvent(db,from_event_id=new_event_log_id)
-                    Charting(db,current_app.logger)
+                    node_update_event = events.NodeUpdateEvent(db,
+                                                               from_event_id=new_event_log_id)
+                    charting = Charting(db, current_app.logger)
+                    charting.add_chart_data(node_update_event)
 
-                    db.update_ethereum_node_status(node_id, ip_addr, new_event_log_id,
+                    db.update_ethereum_node_status(node_id,
+                                                   ip_addr,
+                                                   new_event_log_id,
                                                    db.ETH_NODE_STATUS_SYNCED)
                     # since the node is synchronized and not output blocked, we check for outstanding commands
                     pending_commands = db.get_pending_commands(node_id)
