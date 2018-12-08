@@ -28,7 +28,7 @@ class Charting:
 
     def log_string(self, event):
         if self.logger:
-            logger.info(event)
+            self.logger.info(event)
         else:
             print(event)
 
@@ -218,13 +218,8 @@ if __name__ == "__main__":
     db = database.Database()
     charting = Charting(db)
     events = NodeUpdateEvent(db).get_events_since(epoch)
-    ctr = 0
-    percent = int(len(events) / 100)
-    complete = 0
     for each in events:
-        ctr += 1
         if each.synchronized:
-            charting.add_chart_data(each)
-        if ctr % percent == 0:
-            complete += 1
-            print("{0}% complete".format(complete))
+            result = charting.add_chart_data(each)
+            if not result:
+                break
