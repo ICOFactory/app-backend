@@ -264,7 +264,7 @@ class NodeUpdateEvent(Event):
                 self.latest_block_size = node_update_event.latest_block_size
                 self.latest_gas_used = node_update_event.latest_gas_used
                 self.latest_gas_limit = node_update_event.latest_gas_limit
-                self.peers = node_update_event.node_peers
+                self.peers = node_update_event.peers
                 self.gas_price = node_update_event.gas_price
                 self.transaction_count = node_update_event.transaction_count
                 self.node_id = node_update_event.node_id
