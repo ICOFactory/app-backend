@@ -40,10 +40,10 @@ class Event:
 
         try:
             c = self.db.cursor()
-            c.execute("SELECT event_type_id FROM event_type WHERE event_type=%s;",(event_type,))
+            c.execute("SELECT event_type_id FROM event_type WHERE event_type=%s;", (event_type,))
             row = c.fetchone()
             if not row:
-                c.execute("INSERT INTO event_type (event_type) VALUES (%s)",(event_type,))
+                c.execute("INSERT INTO event_type (event_type) VALUES (%s)", (event_type,))
                 self.db.commit()
                 self.event_type_id = c.lastrowid
             else:
@@ -59,7 +59,36 @@ class Event:
             else:
                 print(error_message)
 
-    def get_event_count(self,user_id=None):
+    def get_latest_event(self, user_id=None):
+        if self.event_type_id < 1:
+            raise InvalidEventException
+        if type(limit) is not int:
+            raise TypeError
+        if user_id and type(user_id) is not int:
+            raise TypeError
+        try:
+            c = self.db.cursor()
+            if user_id:
+                sql = "SELECT event_data,created,user_id,event_id FROM event_log WHERE event_type_id=%s AND user_id=%s ORDER BY created DESC LIMIT 1;"
+                c.execute(sql, (self.event_type_id, user_id))
+            else:
+                sql = "SELECT event_data,created,user_id,event_id FROM event_log WHERE event_type_id=%s ORDER BY created DESC LIMIT 1;"
+                c.execute(sql, (self.event_type_id,))
+            row = c.fetchone()
+            return row
+        except MySQLdb.Error as e:
+            try:
+                error_message = "MySQL Error [%d]: %s" % (e.args[0], e.args[1])
+            except IndexError:
+                error_message = "MySQL Error: %s" % (str(e),)
+
+            if self.logger:
+                self.logger.error(error_message)
+            else:
+                print(error_message)
+        return None
+
+    def get_event_count(self, user_id=None):
         if self.event_type_id < 1:
             raise InvalidEventException
         if user_id and type(user_id) is not int:
@@ -71,7 +100,7 @@ class Event:
                 c.execute(sql, (self.event_type_id, user_id))
             else:
                 sql = "SELECT COUNT(*) FROM event_log WHERE event_type_id=%s;"
-                c.execute(sql, (self.event_type_id, ))
+                c.execute(sql, (self.event_type_id,))
             row = c.fetchone()
             if row:
                 return row[0]
@@ -118,7 +147,7 @@ class Event:
                 print(error_message)
         return None
 
-    def get_event_by_id(self,event_id):
+    def get_event_by_id(self, event_id):
         try:
             c = self.db.cursor()
             sql = "SELECT event_data,created,user_id,event_id FROM event_log WHERE event_id = %s;"
@@ -152,10 +181,10 @@ class Event:
             c = self.db.cursor()
             if user_id:
                 sql = "SELECT event_data,created,user_id,event_id FROM event_log WHERE event_id < %s AND event_type_id=%s AND user_id=%s ORDER BY created DESC LIMIT %s;"
-                c.execute(sql, (event_id,self.event_type_id, user_id, limit))
+                c.execute(sql, (event_id, self.event_type_id, user_id, limit))
             else:
                 sql = "SELECT event_data,created,user_id,event_id FROM event_log WHERE event_id < %s AND event_type_id=%s ORDER BY created DESC LIMIT %s;"
-                c.execute(sql, (event_id,self.event_type_id, limit))
+                c.execute(sql, (event_id, self.event_type_id, limit))
             for row in c:
                 last_events.append(row)
             return last_events
@@ -246,7 +275,7 @@ class NodeUpdateEvent(Event):
                  event_id=0,
                  logger=None):
         super().__init__("Ethereum Node Update", db, logger=logger)
-        if isinstance(db,database.Database):
+        if isinstance(db, database.Database):
             self.db = db.db
         else:
             self.db = db
@@ -320,7 +349,7 @@ class NodeUpdateEvent(Event):
         return output
 
     def log_event(self, user_id, metadata):
-        new_log_event_id = super().log_event(user_id=user_id,metadata=metadata)
+        new_log_event_id = super().log_event(user_id=user_id, metadata=metadata)
         if new_log_event_id:
             import charting
             charting_module = charting.Charting(db=self.db, logger=self.logger)
@@ -329,6 +358,14 @@ class NodeUpdateEvent(Event):
                 charting_module.add_chart_data(update_event)
                 return new_log_event_id
         return None
+
+    def get_latest_event(self, user_id=None):
+        event_tuple = super().get_latest_event()
+        events = self.deserialize_event_data([event_tuple])
+        if type(events) == list and len(events) == 1:
+            return events[0]
+        else:
+            return None
 
     def get_latest_events(self, limit, user_id=None):
         event_tuples = super().get_latest_events(limit, user_id)
@@ -339,7 +376,7 @@ class NodeUpdateEvent(Event):
         return self.deserialize_event_data(event_tuples)
 
     def get_events_before_event_id(self, event_id, limit, user_id=None):
-        event_tuples = super().get_events_before_event_id(event_id,limit,user_id)
+        event_tuples = super().get_events_before_event_id(event_id, limit, user_id)
         node_updates = self.deserialize_event_data(event_tuples)
         output = []
         # filter out update events from unsynchronized nodes
@@ -348,7 +385,7 @@ class NodeUpdateEvent(Event):
                 output.append(update)
         while len(output) < limit:
             last_event = node_updates[-1]
-            event_tuples = super().get_events_before_event_id(last_event.event_id,limit,user_id)
+            event_tuples = super().get_events_before_event_id(last_event.event_id, limit, user_id)
             node_updates = self.deserialize_event_data(event_tuples)
             for update in node_updates:
                 if update.synchronized:
