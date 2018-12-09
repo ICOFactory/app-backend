@@ -381,8 +381,8 @@ class Database:
                                          status=row[6])
                 if event_data:
                     try:
-                        decoded_data = json.loads(event_data)
-                        new_node_data["peers"] = event_data["peer_count"]
+                        decoded_data = json.loads(event_data[0])
+                        new_node_data["peers"] = decoded_data["peer_count"]
                         new_node_data["commands"] = 0
                     except json.JSONDecodeError as err:
                         self.logger.error("JSON Decoder Exception: {0}".format(err))
