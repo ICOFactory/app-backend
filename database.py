@@ -370,20 +370,22 @@ class Database:
                 last_update = row[3]
                 event_data = None
                 if last_update:
-                    last_update = last_update.isoformat()
-                    update_event = events.NodeUpdateEvent(self.db, logger=self.logger)
+                    update_event = events.Event("Ethereum Node Update", self.db, logger=self.logger)
                     event_data = update_event.get_latest_event(row[0])
                     new_node_data = dict(id=row[0],
-                                        node_identifier=row[1],
-                                        last_event_id=row[2],
-                                        last_update=last_update,
-                                        last_update_ip=row[4],
-                                        api_key=row[5],
-                                        status=row[6])
+                                         node_identifier=row[1],
+                                         last_event_id=row[2],
+                                         last_update=row[3],
+                                         last_update_ip=row[4],
+                                         api_key=row[5],
+                                         status=row[6])
                 if event_data:
-                    decoded_json = json.loads(event_data[0])
-                    new_node_data["peers"] = decoded_json["peers"]
-                    new_node_data["commands"] = 0
+                    try:
+                        decoded_data = json.loads(event_data)
+                        new_node_data["peers"] = event_data["peer_count"]
+                        new_node_data["commands"] = 0
+                    except json.JSONDecodeError as err:
+                        self.logger.error("JSON Decoder Exception: {0}".format(err))
                 nodes.append(new_node_data)
             return nodes
         except MySQLdb.Error as e:
