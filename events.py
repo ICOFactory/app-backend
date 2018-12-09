@@ -62,8 +62,6 @@ class Event:
     def get_latest_event(self, user_id=None):
         if self.event_type_id < 1:
             raise InvalidEventException
-        if type(limit) is not int:
-            raise TypeError
         if user_id and type(user_id) is not int:
             raise TypeError
         try:
