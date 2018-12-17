@@ -40,7 +40,7 @@ see config/nginx.config for an example
 
 Incomplete dependencies:
 
-`# apt-get install python3-venv gcc python3-devel libmysqlclient-dev`
+`# apt-get install python3-venv gcc python3-dev libmysqlclient-dev`
 
 ## Service user
 `# createuser service`
@@ -49,6 +49,9 @@ Incomplete dependencies:
 
 
 `~ $ git clone https://github.com/ICOFactory/app-backend.git`
+
+Change config settings to reflect master and slave database settings in
+config.json as well as config/charting.json
 
 `cd app-backend`
 

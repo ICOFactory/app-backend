@@ -12,6 +12,7 @@ import datetime
 from ledger import TransactionLedger
 from credits import Credits
 from smart_contract import SmartContract
+from charting import Charting
 import re
 
 TOKEN_NAME_REGEX = re.compile("^[A-Za-z0-9]{4,36}$")
@@ -21,7 +22,7 @@ TOKEN_COUNT_REGEX = re.compile("^[0-9]{1,16}$")
 admin_blueprint = Blueprint('admin', __name__, url_prefix="/admin")
 
 PAGE_LIMIT = 20
-MOVING_AVERAGE_WINDOW = 50
+MOVING_AVERAGE_WINDOW = 100
 
 
 @admin_blueprint.route('/')
@@ -49,21 +50,20 @@ def admin_main(session_token, transactions=False):
         manager = len(user_ctx.acl()["administrator"]) > 0 or len(user_ctx.get_manager_tokens()) > 0
         if user_ctx.user_info["email_address"] == "admin":
             manager = True
-        block_info = BlockInfo(db, logger=current_app.logger)
-        metrics = block_info.calculate_main_graphs()
+        charting = Charting(db, logger=current_app.logger)
+        eth_nodes = db.list_ethereum_nodes()
+
+        node_gas_prices = {}
+        moving_average_gas_price_data = charting.get_gas_price_moving_average()
+        for node in eth_nodes:
+            node_gas_prices[node["node_identifier"]] = charting.get_gas_price_for_node_id(node["id"])
 
         graphing_metrics = {
-            "moving_average": {"gas_price": json.dumps(metrics["moving_average"]["gas_price"])},
-                "London": {
-                    "gas_price": json.dumps(metrics["London"]),
-                },
-                "Amsterdam": {
-                    "gas_price": json.dumps(metrics["Amsterdam"]),
-                },
-                "Dallas": {
-                    "gas_price": json.dumps(metrics["Dallas"])
-                }
+            "moving_average": {"gas_price": json.dumps(moving_average_gas_price_data)},
         }
+
+        for each in node_gas_prices.keys():
+            graphing_metrics[each] = json.dumps(node_gas_prices[each])
 
         return render_template("admin/admin_main.jinja2",
                                session_token=session_token,
@@ -231,6 +231,8 @@ def eth_network_admin(session_token):
                         event_data = json.loads(each_update[0])
                         if event_data["synchronized"]:
                             peer_count = event_data["peers"]
+                            blocks_behind = {"count": 0,
+                                             "node_id": node_id}
                         else:
                             blocks_behind = {"count": event_data['blocks_behind'],
                                              "node_id": node_id}

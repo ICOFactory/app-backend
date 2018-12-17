@@ -118,7 +118,7 @@ class BlockInfo:
         return metrics
 
     def calculate_main_graphs(self):
-        metrics = self._calculate_main_graphs(db, logger=self.logger)
+        metrics = self._calculate_main_graphs(self.db, logger=self.logger)
         return metrics
 
 

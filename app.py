@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, current_app
+from flask import Flask, request, render_template, current_app, url_for, redirect
 from json_parser import JSONProcessor
 from database import Database
 from charting import Charting
@@ -36,6 +36,23 @@ def homepage_block_size():
                            metrics={"chart_data": {"block_size": chart_data}},
                            first_block=block_size_per_block[0][0])
 
+
+@app.route('/login', methods=["POST"])
+def login():
+    db = Database()
+    logged_in_user = db.login(request.form["email_address"],request.form["password"],request.access_route[-1])
+    if logged_in_user:
+        return redirect(url_for("admin.admin_main", session_token=logged_in_user[1]))
+    else:
+        charting = Charting(db, current_app.logger)
+        moving_average = charting.get_gas_price_moving_average()
+        chart_data = []
+        for each in moving_average:
+            chart_data.append(each[1])
+        return render_template("main.jinja2",
+                               metrics={"chart_data": {"gas_price": chart_data}},
+                               first_block=moving_average[0][0],
+                               login_error="Invalid e-mail address/password combination.")
 
 @app.route('/utilization')
 def homepage_utilization():

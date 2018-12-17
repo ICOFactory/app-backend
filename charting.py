@@ -5,7 +5,7 @@ import unittest
 import datetime
 import time
 
-MOVING_AVERAGE_WINDOW = 100
+MOVING_AVERAGE_WINDOW = 30
 
 
 class Charting:
@@ -54,6 +54,29 @@ class Charting:
         except MySQLdb.MySQLError as e:
             self.log_string("MySQL error: {0}".format(e))
             return None
+
+    def get_gas_price_for_node_id(self, node_id, start=None, end=None):
+        distinct_blocks = self.get_distinct_blocks(start, end)
+        if distinct_blocks:
+            sql = "SELECT node_gas_price FROM charting WHERE block_number=%s AND node_id=%s LIMIT 1"
+            output = []
+            try:
+                c = self._db.cursor()
+                for each in distinct_blocks:
+                    c.execute(sql, (each,node_id))
+                    row = c.fetchone()
+                    if row:
+                        output.append((each, row[0]))
+                return output
+            except MySQLdb.MySQLError as e:
+                self.log_string("MySQL error: {0}".format(e))
+        else:
+            self.log_string("Could not fetch any blocks from the timeframe provided.")
+            if start:
+                self.log_string("Start: {0}".format(start))
+            if end:
+                self.log_string("End: {0}".format(end))
+        return None
 
     def get_block_size_per_block(self,start=None,end=None):
         distinct_blocks = self.get_distinct_blocks(start, end)

@@ -15,13 +15,14 @@
         </ul>
         {% else %}
             <h3 class="ui_h3">Login</h3>
+        {% if login_error %}<p id="login_error">{{ login_error }}</p>{% endif %}
             <form action="/login" method="post">
             <table>
                 <tr>
-                    <td><input type="text" size="24" placeholder="E-Mail" class="dark_input" /></td>
+                    <td><input name="email_address" type="text" size="24" placeholder="E-Mail" class="dark_input" /></td>
                 </tr>
                 <tr>
-                    <td><input type="password" size="24" placeholder="Password" class="dark_input" /></td>
+                    <td><input name="password" type="password" size="24" placeholder="Password" class="dark_input" /></td>
                 </tr>
                 <tr>
                     <td align="right"><input type="submit" value="Login" class="blue_small_submit_button" /></td>
@@ -67,7 +68,8 @@
                         "Unused Gas"
                         {% elif metrics.chart_data.block_size %}
                         "Block Size"
-                        {% else %}'Gwei'{% endif %}
+                        {% else %}'Gwei'{% endif %},
+                    style: {color:"#ffffff"}
                 }
             },
             legend: {
