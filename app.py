@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, current_app, url_for, redirec
 from json_parser import JSONProcessor
 from database import Database
 from charting import Charting
+import datetime
 import json
 import node_api
 import admin
@@ -15,7 +16,8 @@ app.register_blueprint(node_api.node_api_blueprint)
 def homepage():
     db = Database()
     charting = Charting(db, current_app.logger)
-    moving_average = charting.get_gas_price_moving_average()
+    epoch = datetime.datetime.now() - datetime.timedelta(hours=24)
+    moving_average = charting.get_gas_price_moving_average(start=epoch)
     chart_data = []
     for each in moving_average:
         chart_data.append(each[1])
@@ -28,7 +30,8 @@ def homepage():
 def homepage_block_size():
     db = Database()
     charting = Charting(db, current_app.logger)
-    block_size_per_block = charting.get_block_size_per_block()
+    epoch = datetime.datetime.now() - datetime.timedelta(hours=24)
+    block_size_per_block = charting.get_block_size_per_block(start=epoch)
     chart_data = []
     for each in block_size_per_block:
         chart_data.append(each[1])
@@ -45,7 +48,8 @@ def login():
         return redirect(url_for("admin.admin_main", session_token=logged_in_user[1]))
     else:
         charting = Charting(db, current_app.logger)
-        moving_average = charting.get_gas_price_moving_average()
+        epoch = datetime.datetime.now() - datetime.timedelta(hours=24)
+        moving_average = charting.get_gas_price_moving_average(start=epoch)
         chart_data = []
         for each in moving_average:
             chart_data.append(each[1])
@@ -54,14 +58,16 @@ def login():
                                first_block=moving_average[0][0],
                                login_error="Invalid e-mail address/password combination.")
 
+
 @app.route('/utilization')
 def homepage_utilization():
     db = Database()
     charting = Charting(db, current_app.logger)
-    utilization = charting.get_utilization_per_block()
+    epoch = datetime.datetime.now() - datetime.timedelta(hours=24)
+    utilization = charting.get_utilization_per_block(start=epoch)
     chart_data = []
     for each in utilization:
-        chart_data.append(each[2] - each[1])
+        chart_data.append(each[1])
     return render_template("main.jinja2",
                            metrics={"chart_data": {"utilization": chart_data}},
                            first_block=utilization[0][0])
@@ -71,7 +77,8 @@ def homepage_utilization():
 def home_page_transaction_count():
     db = Database()
     charting = Charting(db, current_app.logger)
-    transaction_count = charting.get_transactions_per_block()
+    epoch = datetime.datetime.now() - datetime.timedelta(hours=24)
+    transaction_count = charting.get_transactions_per_block(start=epoch)
     chart_data = []
     for each in transaction_count:
         chart_data.append(each[1])

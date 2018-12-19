@@ -78,96 +78,56 @@ class Charting:
                 self.log_string("End: {0}".format(end))
         return None
 
-    def get_block_size_per_block(self,start=None,end=None):
-        distinct_blocks = self.get_distinct_blocks(start, end)
-        if distinct_blocks:
-            sql = "SELECT block_size FROM charting WHERE block_number=%s LIMIT 1"
-            output = []
-            try:
-                c = self._db.cursor()
-                for each in distinct_blocks:
-                    c.execute(sql, (each,))
-                    row = c.fetchone()
-                    if row:
-                        output.append((each, row[0]))
-                return output
-            except MySQLdb.MySQLError as e:
-                self.log_string("MySQL error: {0}".format(e))
-        else:
-            self.log_string("Could not fetch any blocks from the timeframe provided.")
-            if start:
-                self.log_string("Start: {0}".format(start))
-            if end:
-                self.log_string("End: {0}".format(end))
+    def get_block_size_per_block(self, start=None, end=None):
+        sql = "SELECT block_number,block_size FROM charting WHERE timestamp>%s"
+        output = []
+        try:
+            c = self._db.cursor()
+            c.execute(sql, (start,))
+            for row in c:
+                output.append((row[0], row[1]))
+            return output
+        except MySQLdb.MySQLError as e:
+            self.log_string("MySQL error: {0}".format(e))
         return None
 
-    def get_utilization_per_block(self,start=None,end=None):
-        distinct_blocks = self.get_distinct_blocks(start, end)
-        if distinct_blocks:
-            sql = "SELECT gas_used,gas_limit FROM charting WHERE block_number=%s LIMIT 1"
-            output = []
-            try:
-                c = self._db.cursor()
-                for each in distinct_blocks:
-                    c.execute(sql, (each,))
-                    row = c.fetchone()
-                    if row:
-                        output.append((each, row[0], row[1]))
-                return output
-            except MySQLdb.MySQLError as e:
-                self.log_string("MySQL error: {0}".format(e))
-        else:
-            self.log_string("Could not fetch any blocks from the timeframe provided.")
-            if start:
-                self.log_string("Start: {0}".format(start))
-            if end:
-                self.log_string("End: {0}".format(end))
+    def get_utilization_per_block(self, start=None, end=None):
+        sql = "SELECT block_number,gas_used,gas_limit FROM charting WHERE timestamp>%s"
+        output = []
+        try:
+            c = self._db.cursor()
+            c.execute(sql, (start,))
+            for row in c:
+                output.append((row[0], row[2] - row[1]))
+            return output
+        except MySQLdb.MySQLError as e:
+            self.log_string("MySQL error: {0}".format(e))
         return None
 
-    def get_transactions_per_block(self,start=None,end=None):
-        distinct_blocks = self.get_distinct_blocks(start, end)
-        if distinct_blocks:
-            sql = "SELECT transaction_count FROM charting WHERE block_number=%s LIMIT 1"
-            output = []
-            try:
-                c = self._db.cursor()
-                for each in distinct_blocks:
-                    c.execute(sql, (each,))
-                    row = c.fetchone()
-                    if row:
-                        output.append((each, row[0]))
-                return output
-            except MySQLdb.MySQLError as e:
-                self.log_string("MySQL error: {0}".format(e))
-        else:
-            self.log_string("Could not fetch any blocks from the timeframe provided.")
-            if start:
-                self.log_string("Start: {0}".format(start))
-            if end:
-                self.log_string("End: {0}".format(end))
+    def get_transactions_per_block(self, start=None, end=None):
+        sql = "SELECT block_number,transaction_count FROM charting WHERE timestamp>%s"
+        output = []
+        try:
+            c = self._db.cursor()
+            c.execute(sql, (start,))
+            for row in c:
+                output.append((row[0], row[1]))
+            return output
+        except MySQLdb.MySQLError as e:
+            self.log_string("MySQL error: {0}".format(e))
         return None
 
-    def get_gas_price_moving_average(self,start=None,end=None):
-        distinct_blocks = self.get_distinct_blocks(start,end)
-        if distinct_blocks:
-            sql = "SELECT moving_average_gas_price FROM charting WHERE block_number=%s LIMIT 1"
-            output = []
-            try:
-                c = self._db.cursor()
-                for each in distinct_blocks:
-                    c.execute(sql, (each,))
-                    row = c.fetchone()
-                    if row:
-                        output.append((each, row[0]))
-                return output
-            except MySQLdb.MySQLError as e:
-                self.log_string("MySQL error: {0}".format(e))
-        else:
-            self.log_string("Could not fetch any blocks from the timeframe provided.")
-            if start:
-                self.log_string("Start: {0}".format(start))
-            if end:
-                self.log_string("End: {0}".format(end))
+    def get_gas_price_moving_average(self, start=None, end=None):
+        sql = "SELECT block_number,moving_average_gas_price FROM charting WHERE timestamp>%s"
+        output = []
+        try:
+            c = self._db.cursor()
+            c.execute(sql, (start,))
+            for row in c:
+                output.append((row[0], row[1]))
+            return output
+        except MySQLdb.MySQLError as e:
+            self.log_string("MySQL error: {0}".format(e))
         return None
 
     def add_chart_data(self, node_update_event):
