@@ -10,7 +10,12 @@
         {% if user_info %}
         <h3 class="ui_h3">Main Menu</h3>
         <ul id="admin_ul" class="ui_div_background">
-            <li class="admin_li">{{ user }}</li>
+            {% if launch_ico %}
+                <li class="admin_li"><a href="/admin/tokens/{{ session_token }}">Create ERC20 Token</a></li>
+            {% endif %}
+            {% if show_eth_network %}
+                <li class="admin_li"><a href="/admin/eth_network/{{ session_token }}">Ethereum Network</a></li>
+            {% endif %}
             <li class="admin_li"><a class="main_menu_anchor" href="/logout/{{ session_token }}">Logout</a></li>
         </ul>
         {% else %}
@@ -25,7 +30,7 @@
                     <td><input name="password" type="password" size="24" placeholder="Password" class="dark_input" /></td>
                 </tr>
                 <tr>
-                    <td align="right"><input class="grey_submit_button" type="submit" value="Create Account" />&nbsp;<input type="submit" value="Login" class="blue_small_submit_button" /></td>
+                    <td align="right"><input class="grey_submit_button" name="submit_button" type="submit" value="Create Account" />&nbsp;<input type="submit" name="submit_button" value="Login" class="blue_small_submit_button" /></td>
                 </tr>
             </table>
             </form>
@@ -34,6 +39,9 @@
     <div id="admin_home" class="dark_grey_background">
         <ul id="home_chart">
             <li class="chart_li">
+            {% if error %}
+                Error (try reloading)</li>
+            {% else %}
                 {% if metrics.chart_data.gas_price %}Gas Price (moving average)
                 {% else %}<a class="main_menu_anchor" href="/">Gas Price (moving average)</a>{% endif %}</li>
             <li class="chart_li">{% if metrics.chart_data.transaction_count %}Transaction Count
@@ -42,9 +50,13 @@
                 <a class="main_menu_anchor" href="/utilization">Utilization</a>{% endif %}</li>
             <li class="chart_li">{% if metrics.chart_data.block_size %}Block Size{% else %}
                 <a class="main_menu_anchor" href="/block_size">Block Size</a>{% endif %}</li>
+            {% endif %}
         </ul>
-    <div id="admin_home_graph"></div>
-    <script language="JavaScript">
+    <div id="admin_home_graph">
+    {% if error %}
+        <p class="home_page_error">{{ error }}</p>
+    {% else %}
+        <script language="JavaScript">
         Highcharts.chart('admin_home_graph', {
             chart: {
                 backgroundColor: '#3C3F41',
@@ -109,7 +121,9 @@
 
 
 });</script>
+    {% endif %}
 
+    </div>
         <div id="home_latest_blocks"></div>
     </div>
 {% endblock %}

@@ -53,10 +53,11 @@ def admin_main(session_token, transactions=False):
         charting = Charting(db, logger=current_app.logger)
         eth_nodes = db.list_ethereum_nodes()
 
+        epoch = datetime.datetime.now() - datetime.timedelta(hours=24)
         node_gas_prices = {}
-        moving_average_gas_price_data = charting.get_gas_price_moving_average()
+        moving_average_gas_price_data = charting.get_gas_price_moving_average(start=epoch)
         for node in eth_nodes:
-            node_gas_prices[node["node_identifier"]] = charting.get_gas_price_for_node_id(node["id"])
+            node_gas_prices[node["node_identifier"]] = charting.get_gas_price_for_node_id(node["id"], start=epoch)
 
         graphing_metrics = {
             "moving_average": {"gas_price": json.dumps(moving_average_gas_price_data)},

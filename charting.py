@@ -32,15 +32,15 @@ class Charting:
         else:
             print(event)
 
-    def get_distinct_blocks(self,start=None,end=None):
+    def get_distinct_blocks(self, start=None, end=None):
         try:
             c = self._db.cursor()
             if start and not end:
                 sql = "SELECT DISTINCT(block_number) FROM charting WHERE timestamp > %s ORDER BY block_number ASC"
-                c.execute(sql,(start,))
+                c.execute(sql, (start,))
             elif start and end:
                 sql = "SELECT DISTINCT(block_number) FROM charting WHERE timestamp > %s AND timestamp < %s ORDER BY block_number ASC"
-                c.execute(sql, (start,end,))
+                c.execute(sql, (start, end,))
             elif end:
                 sql = "SELECT DISTINCT(block_number) FROM charting WHERE timestamp < %s ORDER BY block_number ASC"
                 c.execute(sql, (end,))
@@ -56,26 +56,17 @@ class Charting:
             return None
 
     def get_gas_price_for_node_id(self, node_id, start=None, end=None):
-        distinct_blocks = self.get_distinct_blocks(start, end)
-        if distinct_blocks:
-            sql = "SELECT node_gas_price FROM charting WHERE block_number=%s AND node_id=%s LIMIT 1"
-            output = []
-            try:
-                c = self._db.cursor()
-                for each in distinct_blocks:
-                    c.execute(sql, (each,node_id))
-                    row = c.fetchone()
-                    if row:
-                        output.append((each, row[0]))
-                return output
-            except MySQLdb.MySQLError as e:
-                self.log_string("MySQL error: {0}".format(e))
-        else:
-            self.log_string("Could not fetch any blocks from the timeframe provided.")
-            if start:
-                self.log_string("Start: {0}".format(start))
-            if end:
-                self.log_string("End: {0}".format(end))
+        output = []
+        try:
+            sql = "SELECT block_number, node_gas_price FROM charting WHERE node_id=%s AND timestamp>%s"
+            c = self._db.cursor()
+            epoch = datetime.datetime.now() - datetime.timedelta(hours=24)
+            c.execute(sql, (node_id, epoch))
+            for row in c:
+                output.append((row[0], row[1]))
+            return output
+        except MySQLdb.MySQLError as e:
+            self.log_string("MySQL error: {0}".format(e))
         return None
 
     def get_block_size_per_block(self, start=None, end=None):
@@ -134,7 +125,8 @@ class Charting:
         if not isinstance(node_update_event, NodeUpdateEvent):
             raise TypeError
         if node_update_event.synchronized:
-            moving_average_window = node_update_event.get_events_before_event_id(node_update_event.event_id,MOVING_AVERAGE_WINDOW)
+            moving_average_window = node_update_event.get_events_before_event_id(node_update_event.event_id,
+                                                                                 MOVING_AVERAGE_WINDOW)
             if moving_average_window is None:
                 self.log_string("Could not get a window for moving average.")
                 return False
@@ -150,7 +142,7 @@ class Charting:
                                          node_update_event.latest_block_number, node_update_event.transaction_count,
                                          node_update_event.latest_block_size,
                                          node_update_event.latest_gas_limit, node_update_event.latest_gas_used,
-                                         node_update_event.peers,node_update_event.latest_block_timestamp))
+                                         node_update_event.peers, node_update_event.latest_block_timestamp))
                 if result:
                     self._db.commit()
                     if self.db is None:
@@ -198,6 +190,7 @@ if __name__ == "__main__":
     print("Prepopulating chart table for last 24 hours...")
     epoch = datetime.datetime.now() - datetime.timedelta(hours=24)
     import database
+
     db = database.Database()
     charting = Charting(db)
     events = NodeUpdateEvent(db).get_events_since(epoch)

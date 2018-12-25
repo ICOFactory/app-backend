@@ -158,6 +158,24 @@ class Database:
                 print(error_message)
         return False
 
+    def logout(self, user_id):
+        try:
+            sql = "UPDATE users SET session_token=NULL WHERE user_id=%s"
+            c = self.db.cursor()
+            c.execute(sql, (user_id,))
+            self.db.commit()
+        except MySQLdb.Error as e:
+            try:
+                error_message = "MySQL Error [%d]: %s" % (e.args[0], e.args[1])
+            except IndexError:
+                error_message = "MySQL Error: %s" % (str(e),)
+
+            if self.logger:
+                self.logger.error(error_message)
+            else:
+                print(error_message)
+
+
     def credit_user(self, user_id, amount, event_id):
         try:
             sql = "INSERT INTO credits (user_id, amount, event_id) VALUES (%s,%s,%s);"
