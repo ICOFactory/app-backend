@@ -54,7 +54,12 @@
                 layout: 'vertical',
                 align: 'right',
                 verticalAlign: 'middle',
-                style: {color: "#ffffff"}
+                itemStyle: {
+                    color: "#ffffff"
+                },
+                itemHiddenStyle: {
+                    color: "#4c4c4c"
+                }
             },
 
             plotOptions: {
@@ -66,17 +71,17 @@
             series: [
                 {
                     name: "Gas Prices London Node",
-                    data: {{ metrics.London.gas_price }},
+                    data: {{ metrics.London }},
                     color: '#A6216B'
                 },
                 {
                     name: "Gas Prices Amsterdam Node",
-                    data: {{ metrics.Amsterdam.gas_price }},
+                    data: {{ metrics.Amsterdam }},
                     color: '#EC194B'
                 },
                 {
                     name: "Gas Price Dallas Node",
-                    data: {{ metrics.Dallas.gas_price }},
+                    data: {{ metrics.Dallas }},
                     color: '#F26A4E'
                 }, {
                     name: "Gas Price Moving Average",
