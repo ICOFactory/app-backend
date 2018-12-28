@@ -220,33 +220,49 @@ def eth_network_admin(session_token):
         authorized = db.validate_permission(user_id, "ethereum-network")
         if authorized:
             peer_data = {}
+            syncing_status = {}
             update_node_event_type = Event("Ethereum Node Update", db, logger=current_app.logger)
             epoch = datetime.datetime.today() - datetime.timedelta(hours=24)
             nodes = db.list_ethereum_nodes()
-            updates = update_node_event_type.get_latest_events(100)
+            shortest_data_set = 0
+
             for each_node in nodes:
                 peer_data[each_node["node_identifier"]] = []
+                syncing_status[each_node["node_identifier"]] = []
                 node_id = each_node["id"]
+                updates = update_node_event_type.get_events_since(epoch, node_id)
+
                 for each_update in updates:
                     if each_update[2] == node_id:
                         event_data = json.loads(each_update[0])
                         if event_data["synchronized"]:
                             peer_count = event_data["peers"]
-                            blocks_behind = {"count": 0,
-                                             "node_id": node_id}
+                            peer_data[each_node["node_identifier"]].append(peer_count)
+                            syncing_status[each_node["node_identifier"]].append({"count": 0,
+                                                                                 "node_id": node_id})
                         else:
-                            blocks_behind = {"count": event_data['blocks_behind'],
-                                             "node_id": node_id}
-            peer_strings = {}
+                            syncing_status[each_node["node_identifier"]].append({"count": event_data['blocks_behind'],
+                                                                                 "node_id": node_id})
+                # truncate the peer count data window to the shortest series to
+                # make the charts look better
+                if len(peer_data[each_node["node_identifier"]]) > 0:
+                    if shortest_data_set == 0:
+                        shortest_data_set = len(peer_data[each_node["node_identifier"]])
+                    else:
+                        if len(peer_data[each_node["node_identifier"]]) < shortest_data_set:
+                            shortest_data_set = len(peer_data[each_node["node_identifier"]])
 
+            peer_strings = {}
             for key in peer_data.keys():
-                peer_strings[key] = str(peer_data[key])
+                if len(syncing_status[key]) > 0:
+                    syncing_status[key] = syncing_status[key][-1]
+                peer_strings[key] = str(peer_data[key][:shortest_data_set])
 
             return render_template("admin/admin_eth_network.jinja2",
                                    session_token=session_token,
                                    eth_nodes=nodes,
-                                   peer_data=peer_data,
-                                   blocks_behind=blocks_behind)
+                                   peer_data=peer_strings,
+                                   blocks_behind=syncing_status)
     abort(403)
 
 

@@ -290,6 +290,20 @@ div.permissions {
     list-style: none;
 }
 
+#chart_toggle_list {
+    display:inline;
+    width:600px;
+    height:32px;
+    float:left;
+}
+
+.chart_li {
+    display:inline;
+    width:100px;
+    padding:5px;
+    list-style: none;
+}
+
 .header_anchor {
     color: orange;
     text-decoration: none;
@@ -379,6 +393,24 @@ div.permissions {
     border: 1px solid rgb(96,96,96);
     color:white;
     padding: 5px;
+}
+
+td.node_synchronized {
+    font-weight: bold;
+    background-color: rgb(48,172,80);
+    color: rgb(60,63,65);
+}
+
+td.node_syncing {
+    font-weight: bold;
+    background-color: rgb(234,194,81);
+    color: rgb(60,63,65);
+}
+
+td.node_error {
+    font-weight: bold;
+    background-color:rgb(244,40,40);
+    color:rgb(60,63,65);
 }
 
 #onboard_user_validation {

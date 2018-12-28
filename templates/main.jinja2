@@ -30,26 +30,27 @@
                     <td><input name="password" type="password" size="24" placeholder="Password" class="dark_input" /></td>
                 </tr>
                 <tr>
-                    <td align="right"><input class="grey_submit_button" name="submit_button" type="submit" value="Create Account" />&nbsp;<input type="submit" name="submit_button" value="Login" class="blue_small_submit_button" /></td>
+                    <td align="right"><input type="submit" name="submit_button" value="Login" class="blue_small_submit_button" />&nbsp;<input class="grey_submit_button" name="submit_button" type="submit" value="Create Account" /></td>
                 </tr>
             </table>
             </form>
         {% endif %}
     </div>
     <div id="admin_home" class="dark_grey_background">
-        <ul id="home_chart">
+        <ul id="chart_toggle_list">
             <li class="chart_li">
             {% if error %}
                 Error (try reloading)</li>
             {% else %}
+                [&nbsp;
                 {% if metrics.chart_data.gas_price %}Gas Price (moving average)
-                {% else %}<a class="main_menu_anchor" href="/">Gas Price (moving average)</a>{% endif %}</li>
-            <li class="chart_li">{% if metrics.chart_data.transaction_count %}Transaction Count
-            {% else %}<a class="main_menu_anchor" href="/transaction_count">Transaction Count</a>{% endif %}</li>
-            <li class="chart_li">{% if metrics.chart_data.utilization %}Utilization{% else %}
-                <a class="main_menu_anchor" href="/utilization">Utilization</a>{% endif %}</li>
-            <li class="chart_li">{% if metrics.chart_data.block_size %}Block Size{% else %}
-                <a class="main_menu_anchor" href="/block_size">Block Size</a>{% endif %}</li>
+                {% else %}<a class="main_menu_anchor" href="/">Gas Price (moving average)</a>{% endif %}&nbsp;]</li>
+            <li class="chart_li">[&nbsp;{% if metrics.chart_data.transaction_count %}Transaction Count
+            {% else %}<a class="main_menu_anchor" href="/transaction_count">Transaction Count</a>{% endif %}&nbsp;]</li>
+            <li class="chart_li">[&nbsp;{% if metrics.chart_data.utilization %}Utilization{% else %}
+                <a class="main_menu_anchor" href="/utilization">Utilization</a>{% endif %}&nbsp;]</li>
+            <li class="chart_li">[&nbsp;{% if metrics.chart_data.block_size %}Block Size{% else %}
+                <a class="main_menu_anchor" href="/block_size">Block Size</a>{% endif %}&nbsp;]</li>
             {% endif %}
         </ul>
     <div id="admin_home_graph">
@@ -88,7 +89,12 @@
                 layout: 'vertical',
                 align: 'right',
                 verticalAlign: 'middle',
-                style: {color: "#ffffff"}
+                itemStyle: {
+                    color: "#ffffff"
+                },
+                itemHiddenStyle: {
+                    color: "#4c4c4c"
+                }
             },
 
             plotOptions: {
