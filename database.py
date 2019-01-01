@@ -558,6 +558,21 @@ WHERE smart_contracts.id=%s"""
             return user_info
         return None
 
+    def get_next_undirected_command(self):
+        sql = "SELECT command_id, command FROM commands WHERE dispatch_event_id IS NULL AND node_id IS NULL"
+        sql += " ORDER BY command_id DESC LIMIT 1"
+        try:
+            c = self.db.cursor()
+            c.execute(sql)
+            row = c.fetchone()
+            return row
+        except MySQLdb.Error as e:
+            try:
+                self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                self.logger.error("MySQL Error: %s" % (str(e),))
+        return None
+
     def get_next_directed_command(self, node_id):
         sql = "SELECT command_id, command FROM commands WHERE dispatch_event_id IS NULL AND node_id=%s "
         sql += "ORDER BY created DESC LIMIT 1;"
@@ -574,11 +589,11 @@ WHERE smart_contracts.id=%s"""
                 self.logger.error("MySQL Error: %s" % (str(e),))
         return None
 
-    def dispatch_directed_command(self, command_id, new_event_id):
-        sql = "UPDATE commands SET dispatch_event_id=%s WHERE command_id=%s"
+    def dispatch_command(self, command_id, node_id, new_event_id):
+        sql = "UPDATE commands SET dispatch_event_id=%s, node_id=%s WHERE command_id=%s"
         try:
             c = self.db.cursor()
-            c.execute(sql, (new_event_id, command_id))
+            c.execute(sql, (new_event_id, node_id, command_id))
             self.db.commit()
             if c.rowcount == 1:
                 return True

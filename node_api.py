@@ -10,6 +10,39 @@ from charting import Charting
 node_api_blueprint = Blueprint('node_api', __name__, url_prefix="/node_api")
 
 
+@node_api_blueprint.route("/dispatch_undirected_command/<api_key>")
+def dispatch_undirected_command(api_key):
+    db = database.Database(current_app.logger)
+    ip_addr = request.access_route[-1]
+    node_id = db.validate_api_key(api_key)
+    if node_id:
+        next_command = db.get_next_undirected_command()
+        if next_command:
+            command_id = next_command[0]
+            command_data = next_command[1]
+
+            new_event = events.Event("Ethereum Node Command Dispatch", db, current_app.logger)
+            event_data = {"ip_address": ip_addr,
+                          "node_id": node_id,
+                          "command": command_data}
+            new_event_id = new_event.log_event(node_id,
+                                               json.dumps(event_data))
+            if db.dispatch_command(command_id,
+                                   node_id,
+                                   new_event_id):
+                return Response(json.dumps({"result": "OK",
+                                            "command_data": command_data}))
+            else:
+                return Response(json.dumps({"result": "Error",
+                                            "error_msg": "Could not dispatch command {0}".format(command_id)}))
+        else:
+            return Response(json.dumps({"result": "Error",
+                                        "error_msg": "Could not fetch next undirected command"}))
+    else:
+        return Response(json.dumps({"result": "Error",
+                                    "error_msg": "Invalid API key"}))
+
+
 @node_api_blueprint.route('/update/<api_key>', methods=["GET", "POST"])
 def node_api_update(api_key):
     db = database.Database()
