@@ -7,7 +7,6 @@ import json
 from hashlib import sha256
 from users import UserContext
 from events import Event
-from transaction_pricing import BlockInfo
 import datetime
 from ledger import TransactionLedger
 from credits import Credits
@@ -78,6 +77,28 @@ def admin_main(session_token, transactions=False):
                                metrics=graphing_metrics)
     else:
         return render_template("admin/admin_login.jinja2", error="Invalid session.")
+
+
+@admin_blueprint.route('/users/issue_credits/<user_id>/<session_token>')
+def issue_credits(user_id, session_token):
+    db = database.Database(logger=current_app.logger)
+    auth_user_id = db.validate_session(session_token)
+    if auth_user_id:
+        auth_user_ctx = UserContext(auth_user_id, db, current_app.logger)
+        if auth_user_ctx.check_acl("issue-credits"):
+            user_info = db.get_user_info(user_id)
+            return render_template("admin/admin_confirmation.jinja2",
+                                   confirmation_type="issue-credits",
+                                   confirmation_value=user_id,
+                                   title="Issue Credits",
+                                   confirmation_title="Issue Credits",
+                                   confirmation_message="Issue credits to <span class=\"sky_blue\">{0}</span>?".format(
+                                       user_info["email_address"]),
+                                   issue_credits=True,
+                                   choices=["Cancel"],
+                                   default_choice="Issue Credits",
+                                   session_token=session_token)
+    abort(403)
 
 
 @admin_blueprint.route('/users/reset-password/<user_id>/<session_token>')
@@ -413,6 +434,17 @@ def admin_confirm():
                                        session_token=session_token)
             if db.reset_password(int(confirmation_val), request.form["password"]):
                 return redirect(url_for("admin.view_users", session_token=session_token, limit=PAGE_LIMIT, offset=0))
+        elif confirmation_type == "issue-credits":
+            if choice == "Issue Credits" and user_ctx.check_acl("issue-credits"):
+                user_credits = Credits(confirmation_val, db, current_app.logger)
+                amount = int(request.form["credits"])
+                # max issued credits 10,000
+                if 0 < amount < 100000:
+                    user_credits.issue_credits(amount, {"ip_addr": request.access_route[-1], "admin": user_id})
+                    return redirect(
+                        url_for("admin.view_users", session_token=session_token, limit=PAGE_LIMIT, offset=0))
+                else:
+                    raise ValueError
 
     abort(403)
 

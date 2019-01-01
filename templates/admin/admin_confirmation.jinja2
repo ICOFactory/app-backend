@@ -29,6 +29,12 @@
                     <td><input type="password" name="current_password" class="login_input" /></td>
                 </tr>
                 {% endif %}
+                {% if issue_credits %}
+                    <tr>
+                        <td><label>Issue Credits</label></td>
+                        <td><input type="number" name="credits" value="0" class="login_input" /></td>
+                    </tr>
+                {% endif %}
                 {% if new_password %}
                     <tr>
                     <td><label>New Password</label></td>
