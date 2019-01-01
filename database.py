@@ -251,7 +251,7 @@ class Database:
     def list_permissions(self, user_id, smart_contract_id=None):
         try:
             c = self.db.cursor()
-            output = ["view-event-log"]
+            output = []
             if smart_contract_id:
                 sql = "SELECT permission,smart_contract_id FROM access_control_list"
                 sql += " WHERE user_id=%s AND smart_contract_id=%s"

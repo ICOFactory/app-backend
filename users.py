@@ -49,15 +49,15 @@ class UserContext:
         self.manager_tokens = dict()
         all_user_permissions = self.db.list_permissions(user_id)
         for each in all_user_permissions:
-            if each[0]:
-                token_id = each[0]
-                new_permission = each[1]
+            if each[1]:
+                token_id = each[1]
+                new_permission = each[0]
                 if new_permission in self.MANAGER_PERMISSIONS:
                     add_if_not_found(manager_tokens, new_permission, token_id, self.db)
                 elif new_permission in self.MEMBER_PERMISSIONS:
                     add_if_not_found(member_tokens, new_permission, token_id, self.db)
             else:
-                new_permission = each[1]
+                new_permission = each[0]
                 if new_permission not in new_acl["administrator"]:
                     new_acl["administrator"].append(new_permission)
         new_acl["membership"] = self.member_tokens

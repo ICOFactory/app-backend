@@ -104,8 +104,14 @@ def homepage_create_user():
                 create_user_event.log_event(result[0], json.dumps(metadata))
 
                 user_ctx = users.UserContext(result[0], db=db, logger=current_app.logger)
-                # TODO: add all the default permissions
-                return redirect(url_for("logged_in_homepage", session_token=session_id))
+                # default permissions
+                user_ctx.add_permission("onboard-users")
+                user_ctx.add_permission("launch-ico")
+                user_ctx.add_permission("ethereum-network")
+
+                db.update_user_permissions(result[0], user_ctx.acl())
+
+                return redirect(url_for("admin.admin_main", session_token=session_id))
         else:
             error = "Passwords did not match."
             return render_template("create_user.jinja2", error_msg=error)
