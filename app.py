@@ -8,10 +8,12 @@ import node_api
 import admin
 import users
 import events
+import whitepapers
 
 app = Flask(__name__)
 app.register_blueprint(admin.admin_blueprint)
 app.register_blueprint(node_api.node_api_blueprint)
+app.register_blueprint(whitepapers.whitepapers_blueprint)
 
 
 @app.route('/')
@@ -31,45 +33,46 @@ def homepage():
                                error=error_msg)
     return render_template("main.jinja2",
                            metrics={"chart_data": {"gas_price": chart_data}},
-                           first_block=moving_average[0][0])
+                           first_block=moving_average[0][0],
+                           whitepapers=whitepapers.whitepaper_urls)
 
 
-@app.route('/<session_token>')
-def logged_in_homepage(session_token):
-    db = Database(logger=current_app.logger)
-    user_id = db.validate_session(session_token)
-    charting = Charting(db, current_app.logger)
-    epoch = datetime.datetime.now() - datetime.timedelta(hours=24)
-    moving_average = charting.get_gas_price_moving_average(start=epoch)
-    chart_data = []
-    for each in moving_average:
-        chart_data.append(each[1])
-
-    first_block = 0
-    if len(moving_average) > 0:
-        first_block = moving_average[0][0]
-    # if user is logged in
-    if user_id:
-        user_ctx = users.UserContext(user_id,
-                                     db=db,
-                                     logger=current_app.logger)
-        user_can_create_erc20_token = user_ctx.check_acl("launch-ico")
-        user_owned_tokens = user_ctx.get_member_tokens()
-        user_managed_tokens = user_ctx.get_manager_tokens()
-
-        return render_template("main.jinja2",
-                               user_info=user_ctx.user_info,
-                               metrics={"chart_data": {"gas_price": chart_data}},
-                               launch_ico=user_can_create_erc20_token,
-                               owned_tokens=user_owned_tokens,
-                               managed_tokens=user_managed_tokens,
-                               first_block=first_block,
-                               session_token=session_token)
-    else:
-        return render_template("main.jinja2",
-                               metrics={"chart_data": {"gas_price": chart_data}},
-                               first_block=moving_average[0][0],
-                               login_error="Invalid session.")
+# @app.route('/<session_token>')
+# def logged_in_homepage(session_token):
+#     db = Database(logger=current_app.logger)
+#     user_id = db.validate_session(session_token)
+#     charting = Charting(db, current_app.logger)
+#     epoch = datetime.datetime.now() - datetime.timedelta(hours=24)
+#     moving_average = charting.get_gas_price_moving_average(start=epoch)
+#     chart_data = []
+#     for each in moving_average:
+#         chart_data.append(each[1])
+#
+#     first_block = 0
+#     if len(moving_average) > 0:
+#         first_block = moving_average[0][0]
+#     # if user is logged in
+#     if user_id:
+#         user_ctx = users.UserContext(user_id,
+#                                      db=db,
+#                                      logger=current_app.logger)
+#         user_can_create_erc20_token = user_ctx.check_acl("launch-ico")
+#         user_owned_tokens = user_ctx.get_member_tokens()
+#         user_managed_tokens = user_ctx.get_manager_tokens()
+#
+#         return render_template("main.jinja2",
+#                                user_info=user_ctx.user_info,
+#                                metrics={"chart_data": {"gas_price": chart_data}},
+#                                launch_ico=user_can_create_erc20_token,
+#                                owned_tokens=user_owned_tokens,
+#                                managed_tokens=user_managed_tokens,
+#                                first_block=first_block,
+#                                session_token=session_token)
+#     else:
+#         return render_template("main.jinja2",
+#                                metrics={"chart_data": {"gas_price": chart_data}},
+#                                first_block=moving_average[0][0],
+#                                login_error="Invalid session.")
 
 
 @app.route('/logout/<session_token>')

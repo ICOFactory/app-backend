@@ -175,7 +175,6 @@ class Database:
             else:
                 print(error_message)
 
-
     def credit_user(self, user_id, amount, event_id):
         try:
             sql = "INSERT INTO credits (user_id, amount, event_id) VALUES (%s,%s,%s);"

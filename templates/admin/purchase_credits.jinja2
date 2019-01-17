@@ -1,0 +1,10 @@
+{% extends "admin/admin_base.jinja2" %}
+
+{% block header %}
+    <h1>{% block title %}Purchase Credits{% endblock %}</h1>
+    <p id="back_nav">[ <a class="header_anchor" href="/admin/{{ session_token }}">back to administration</a> ]</p>
+{% endblock %}
+
+{% block content %}
+    <p class="whitepaper_text">To purchase credits, please contact the site operator directly: <a class="header_anchor" href="mailto:nouveau.pg@gmail.com">nouveau.pg@gmail.com</a></p>
+{% endblock %}

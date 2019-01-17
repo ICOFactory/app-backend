@@ -126,6 +126,16 @@ def reset_password(user_id, session_token):
     abort(403)
 
 
+@admin_blueprint.route('/credits/purchase/<session_token>')
+def purchase_credits(session_token):
+    db = database.Database(logger=current_app.logger)
+    user_id = db.validate_session(session_token)
+    if user_id:
+        return render_template("admin/purchase_credits.jinja2",
+                               session_token=session_token)
+    abort(403)
+
+
 @admin_blueprint.route('/login', methods=['GET', 'POST'])
 def admin_login():
     if request.method == "POST":
@@ -671,6 +681,25 @@ def change_user_acl():
             else:
                 abort(500)
     abort(403)
+
+
+@admin_blueprint.route('/users/<user_id>/<session_token>/<offset>/<limit>')
+def view_onboarded_users(user_id,session_token,offset=0,limit=20):
+    if session_token:
+        offset = int(offset)
+        limit = int(limit)
+        if offset < 0 or limit < 0:
+            raise ValueError
+
+        db = database.Database()
+        db.logger = current_app.logger
+        session_user_id = db.validate_session(session_token)
+        if session_user_id == user_id:
+            cu_event = Event("Users Create User", db, current_app.logger)
+            cu_event_count = cu_event.get_event_count()
+            all_cu_events = cu_event.get_latest_events(cu_event_count, user_id)
+        else:
+            abort(403)
 
 
 @admin_blueprint.route('/users/<session_token>/<offset>/<limit>')

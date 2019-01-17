@@ -1,3 +1,14 @@
+:root {
+    --background-dark-grey: rgb(40,40,40);
+    --background-medium-grey: rgb(60,63,65);
+    --background-grey-highlight: rgb(81,86,88);
+    --dark-theme-border: rgb(96,96,96);
+    --dallas-node-color: rgb(166,33,107);
+    --london-node-color: rgb(236,25,75);
+    --amsterdam-node-color: rgb(242,106,78);
+    --market-watch-green: rgb(0,183,79);
+    --dark-mode-red: rgb(209,103,90);
+}
 
 #header {
     width: 1024px;
@@ -28,12 +39,12 @@
 
 .credit_balance {
     font-weight: bold;
-    color: chartreuse;
+    color: var(--market-watch-green);
 }
 
 .credit_price {
     font-weight: bold;
-    color: orangered;
+    color: var(--dark-mode-red);
 }
 
 #confirmation_form_container {
@@ -98,7 +109,7 @@
 
 #create_user_error {
     font-weight: bold;
-    color:orangered;
+    color:var(--dark-mode-red);
 }
 
 
@@ -233,8 +244,6 @@ div.permissions {
 }
 
 #admin_create_users_form_table {
-    margin-left:auto;
-    margin-right:auto;
     margin-top:20px;
     padding:10px;
 }
@@ -250,6 +259,7 @@ div.permissions {
 #admin_content {
     width:1024px;
     color:white;
+    background-color: rgb(40,40,40);
 }
 
 #admin_header {
@@ -344,7 +354,8 @@ div.permissions {
 
 #login_error {
     font-weight: bold;
-    color: red;
+    color: var(--dark-mode-red);
+    padding: 15px;
 }
 
 #login_table {
@@ -409,13 +420,13 @@ td.node_syncing {
 
 td.node_error {
     font-weight: bold;
-    background-color:rgb(244,40,40);
+    background-color:var(--dark-mode-red);
     color:rgb(60,63,65);
 }
 
 #onboard_user_validation {
     font-weight: bold;
-    color:red;
+    color:var(--dark-mode-red);
 }
 
 #onboard_checkboxes {
@@ -462,4 +473,8 @@ td.node_error {
 .view_user_paging {
     text-align: center;
     color:white;
+}
+
+.whitepaper_text {
+    padding: 15px;
 }

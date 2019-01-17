@@ -1,0 +1,103 @@
+{% extends "whitepaper_base.jinja2" %}
+
+{% block header %}
+    <h1 xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">{% block title %}What is
+        ERC20?{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    <div id="admin_main_menu">
+        <h3 class="ui_h3">Login</h3>
+        {% if login_error %}<p id="login_error">{{ login_error }}</p>{% endif %}
+        <form action="/login" method="post">
+            <table>
+                <tr>
+                    <td><input name="email_address" type="text" size="24" placeholder="E-Mail" class="dark_input"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td><input name="password" type="password" size="24" placeholder="Password" class="dark_input"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="right"><input type="submit" name="submit_button" value="Login"
+                                             class="blue_small_submit_button"/>&nbsp;<input
+                            class="grey_submit_button" name="submit_button" type="submit" value="Create Account"/>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+    <div id="admin_home" class="dark_grey_background">
+        <h2>What is ERC20?</h2>
+
+        <h3>Ethereum (ETH) - The cryptocurrency</h3>
+        <p>Ethereum is such a big deal now, you can find up to the minute quotes on mainstream financial websites.</p>
+
+        <p>I find the easiest way to understand ERC20 is to think of the Ethereum blockchain as a public database
+            offering free read access to the public and charging for write access. If you want to view all the publically,
+            available data on the Ethereum blockchain, <a class="whitepaper_link" href="https://etherscan.io">etherscan.io</a>
+            is an easy way to do it from your web browser.</p>
+        <p>Any important database is at least distributed to some sort of backup, and Ethereum is no exception. One difference between Ethereum and
+            traditional, centralized, databases is that the synchronization rate is extremely slow in comparison, whereas for an
+            e-commerce database it might be desirable to sync between master and slave every transaction, with Ethereum
+            the synchronization occurs in blocks of transactions. ERC20/Ethereum/blockchain OLTP technology is not
+            particularly useful for transactions where speed is most important. It is however, easy to find situations where
+            the benefits of using a distributed, public database make up for this, such as keeping track of an item’s
+            location in the supply chain. That said, with proper prioritization against others competing for use of the blockchain,
+         Ethereum transactions may be performed quite quickly.</p>
+
+        <h3>Benefits of using Ethereum for OLTP</h3>
+        <ul>
+            <li>Public blockchain, practically impossible to lose data written</li>
+            <li>Actual blockchain infrastructure supported by a functioning economy (you can buy Ethereum to write to the
+                blockchain on Coinbase, specialized mining companies protect the integrity of the blockchain in return for
+                mining fees in Ethereum, which they can cashout to pay their bills.
+            </li>
+            <li>May be cheaper in the long run than IBM Hyperledger or Ripple</li>
+            <li>Incredible amount of open source infrastructure, for example, there are two compatible Ethereum node
+                clients in widespread use, one written in C++ and the other written in Go. This allows a great deal of
+                flexibility, resistance to catastrophic bugs in a single implementation.
+            </li>
+        </ul>
+        <h3>Drawbacks of using Ethereum for OLTP</h3>
+        <ul>
+            <li>Ethereum, like all blockchain technologies, is somewhat slower than traditional relational database
+                systems. Transactions are processed in a matter of minutes rather than fractions of a second.
+            </li>
+            <li>Long term cost is honestly unknowable due to the open market pricing system. That being said, you’d be a
+                fool to assume you could predict the price of a less open system such as IBM Hyperledger or Ripple
+            </li>
+            <li>Cost is incurred in an unfamiliar manner compared to traditional OLTP</li>
+            <li>Fluctuating cost, exchange risk</li>
+        </ul>
+        <h3>What is ERC20 exactly?</h3>
+        <p>For those that are familiar with relational, SQL database systems, it might be helpful to think of ERC20 as
+            the interface to a database program. If you read the Ethereum white paper, Ethereum is described as a ‘blank
+            canvas’, while that is technically true, the vast majority of traffic currently incurred on the Ethereum
+            blockchain conforms to the ERC20 protocol. </p>
+        <h3>Description of ERC20</h3>
+        <p>ERC20 can be thought of as a program that manages ‘tokens’ between an unlimited number of addresses.
+            ERC20Master will generate Solidity code for a basic ICO by inserting a few variables into a smart contract.
+            When the smart contract is published to the blockchain, an initial number of tokens is generated, at that
+            point, the owner of the contract (the ERC20Master Ethereum OLTP network) will be able to assign the tokens
+            generated to any Ethereum address (basically, a random 160-bit Integer).</p>
+        <h3>What does ERC20Master do?</h3>
+        <p>ERC20Master helps quickly integrate ERC20 compatible online transaction processing (OLTP) on the public
+            Ethereum blockchain to any application. One disadvantage to using a P2P distributed database is that bad
+            actors (bad peers, “hackers”) can and will disrupt Ethereum nodes, whose addresses are necessarily public.
+            For that reason, you cannot expect to process transactions in a reliable manner with a single Ethereum node.
+            ERC20Master exposes a simple API at a single endpoint (a load balancer, which provides scalability and
+            redundancy) to expedite integration into existing systems.</p>
+        <h3>Specifically ERC20Master</h3>
+        <ul>
+            <li>Generates ERC20 ‘smart contracts’ in Solidity (for free!)</li>
+            <li>Publishes smart contracts using a geographically distributed Ethereum OLTP network</li>
+            <li>Executes ERC20 commands on published smart contract using its own network</li>
+            <li>Exposes a simple REST API for quick integration with existing systems</li>
+            <li>Handles provisioning, configuration and administration of Ethereum OLTP nodes</li>
+        </ul>
+        <p>Sign up for free and generate your own smart contract. There are free tools to compile and deploy this smart
+            contract. erc20master.com provides some guidance on running your own Ethereum OLTP node.</p>
+    </div>
+{% endblock %}

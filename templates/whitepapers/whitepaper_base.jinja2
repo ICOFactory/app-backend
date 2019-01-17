@@ -1,0 +1,14 @@
+<!doctype html>
+<head>
+    <title>{% block title %}{% endblock %} - Administration</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='stylesheet.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='view_event_log.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='eth_network.css') }}">
+    <script language="JavaScript" src="https://code.jquery.com/jquery-3.3.1.js"></script>
+</head>
+<body class="dark_grey_background">
+<div id="admin_content_view">
+    <div id="admin_header" class="ui_div_highlight">{% block header %}{% endblock %}</div>
+    <div id="admin_content" class="ui_div_background">{% block content %}{% endblock %}</div>
+</div>
+</body>
