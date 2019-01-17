@@ -304,8 +304,18 @@ def admin_create_user(session_token):
     if user_id:
         authorized = db.validate_permission(user_id, "onboard-users")
         if authorized:
-            return render_template("admin/admin_create_user.jinja2",
-                                   session_token=session_token)
+            smart_contracts = db.get_smart_contracts(user_id)
+            if type(smart_contracts) is list and len(smart_contracts) > 0:
+                return render_template("admin/admin_create_user.jinja2",
+                                       session_token=session_token)
+            else:
+                return render_template("admin/admin_confirmation.jinja2",
+                                       session_token=session_token,
+                                       title="Error",
+                                       confirmation_title="No ERC20 Tokens",
+                                       confirmation_message="You must first create an ERC20 token before you can onboard users.",
+                                       confirmation_type="no_erc20_tokens",
+                                       default_choice="Create ERC20 Token")
     abort(403)
 
 
@@ -385,6 +395,8 @@ def admin_confirm():
     choice = request.form["choice"]
     if confirmation_type == "reset_email":
         return redirect(url_for('admin.admin_main', session_token=session_token))
+    elif confirmation_type == "no_erc20_tokens":
+        return redirect(url_for('admin.admin_tokens', session_token=session_token))
     elif confirmation_type == "erc20_publish" and choice == "Cancel":
         return redirect(url_for('admin.admin_tokens', session_token=session_token))
     elif confirmation_type == "create_erc20_failed" and choice == "OK":

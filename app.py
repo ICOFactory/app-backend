@@ -160,7 +160,8 @@ def homepage_utilization():
         first_block = utilization[0][0]
     return render_template("home_charts.jinja2",
                            metrics={"chart_data": {"utilization": chart_data}},
-                           first_block=first_block)
+                           first_block=first_block,
+                           whitepapers=whitepapers.whitepaper_urls)
 
 
 @app.route('/block_size')
@@ -177,7 +178,8 @@ def homepage_block_size():
         first_block = block_size_per_block[0][0]
     return render_template("home_charts.jinja2",
                            metrics={"chart_data": {"block_size": chart_data}},
-                           first_block=first_block)
+                           first_block=first_block,
+                           whitepapers=whitepapers.whitepaper_urls)
 
 
 @app.route('/transaction_count')
@@ -194,7 +196,8 @@ def home_page_transaction_count():
         first_block = transaction_count[0][0]
     return render_template("home_charts.jinja2",
                            metrics={"chart_data": {"transaction_count": chart_data}},
-                           first_block=first_block)
+                           first_block=first_block,
+                           whitepapers=whitepapers.whitepaper_urls)
 
 
 @app.route('/json', methods=['POST'])
