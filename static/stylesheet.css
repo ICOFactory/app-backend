@@ -298,6 +298,7 @@ div.permissions {
     width: 200px;
     padding:5px;
     list-style: none;
+    font-size: small;
 }
 
 #chart_toggle_list {
@@ -312,6 +313,22 @@ div.permissions {
     width:100px;
     padding:5px;
     list-style: none;
+    font-size: small;
+}
+
+.whitepaper_anchor {
+    color:rgb(124,136,198);
+    text-decoration: underline;
+}
+
+.whitepaper_anchor:hover {
+    color:var(--dark-mode-red);
+    text-decoration: none;
+}
+
+.whitepaper_anchor:visited {
+    color:var(--dark-mode-red);
+    text-decoration: underline;
 }
 
 .header_anchor {
@@ -346,6 +363,19 @@ div.permissions {
 
 #home_chart {
     margin-left:210px;
+}
+
+.menu_ul {
+    padding-left:0px;
+    margin: 12px;
+}
+
+.whitepaper_text_div {
+    border: 1px solid rgb(81,86,88);
+    background-color:black;
+    width: 760px;
+    margin-left:auto;
+    padding: 15px;
 }
 
 .admin_li:hover {

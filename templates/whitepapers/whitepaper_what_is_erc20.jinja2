@@ -1,47 +1,34 @@
-{% extends "whitepaper_base.jinja2" %}
+{% extends "main.jinja2" %}
 
 {% block header %}
     <h1 xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">{% block title %}What is
         ERC20?{% endblock %}</h1>
 {% endblock %}
 
-{% block content %}
-    <div id="admin_main_menu">
-        <h3 class="ui_h3">Login</h3>
-        {% if login_error %}<p id="login_error">{{ login_error }}</p>{% endif %}
-        <form action="/login" method="post">
-            <table>
-                <tr>
-                    <td><input name="email_address" type="text" size="24" placeholder="E-Mail" class="dark_input"/>
-                    </td>
-                </tr>
-                <tr>
-                    <td><input name="password" type="password" size="24" placeholder="Password" class="dark_input"/>
-                    </td>
-                </tr>
-                <tr>
-                    <td align="right"><input type="submit" name="submit_button" value="Login"
-                                             class="blue_small_submit_button"/>&nbsp;<input
-                            class="grey_submit_button" name="submit_button" type="submit" value="Create Account"/>
-                    </td>
-                </tr>
-            </table>
-        </form>
-    </div>
-    <div id="admin_home" class="dark_grey_background">
-        <h2>What is ERC20?</h2>
+{% block main_content %}
+    <div id="whitepaper_body" class="whitepaper_text_div">
 
         <h3>Ethereum (ETH) - The cryptocurrency</h3>
-        <p>Ethereum is such a big deal now, you can find up to the minute quotes on mainstream financial websites.</p>
+        <p>Ethereum is such a big deal now, you can find up to the minute quotes on mainstream financial websites, such as
+        <a class="whitepaper_anchor" href="https://marketwatch.com">MarketWatch</a>, as well as more specialized outlets
+        such as <a class="whitepaper_anchor" href="https://coindesk.com">CoinDesk</a>. There are undoubtedly more people
+        that can describe the price trends in Ethereum than those that can tell you what it actually does.</p>
 
+        <p>Unlike Bitcoin, which is only useful as a store of value, and only depleted by people losing track of their private keys, Ethereum is
+        <em>consumed</em> by smart contracts being published and executed on the Ethereum blockchain. Currently, the vast majority of Ethereum being
+        consumed is on a type of contract known as ERC20. This type of contract is what has fueled the ICO mania over the years. The benefit of "renting"
+        Ethereum's blockchain for your own cryptocurrency is that, now especially, in the "crypto-winter", you benefit from an enormous network of miners
+        who defend the integrity of your alt-coin in return for the chance to earn Ethereum which can be traded into Bitcoin or sold.
+        </p>
+        <h3>The Ethereum Blockchain</h3>
         <p>I find the easiest way to understand ERC20 is to think of the Ethereum blockchain as a public database
-            offering free read access to the public and charging for write access. If you want to view all the publically,
-            available data on the Ethereum blockchain, <a class="whitepaper_link" href="https://etherscan.io">etherscan.io</a>
-            is an easy way to do it from your web browser.</p>
+            offering free read access to the public and charging for write access. If you want to view all the publicly,
+            available data on the Ethereum blockchain, <a class="whitepaper_anchor" href="https://etherscan.io">Etherscan.io</a>
+            is an easy way to do this from your web browser.</p>
         <p>Any important database is at least distributed to some sort of backup, and Ethereum is no exception. One difference between Ethereum and
             traditional, centralized, databases is that the synchronization rate is extremely slow in comparison, whereas for an
             e-commerce database it might be desirable to sync between master and slave every transaction, with Ethereum
-            the synchronization occurs in blocks of transactions. ERC20/Ethereum/blockchain OLTP technology is not
+            the synchronization occurs in blocks of transactions. ERC20/Ethereum/blockchain <a class="whitepaper_anchor" href="https://en.wikipedia.org/wiki/Online_transaction_processing">OLTP</a> technology is not
             particularly useful for transactions where speed is most important. It is however, easy to find situations where
             the benefits of using a distributed, public database make up for this, such as keeping track of an item’s
             location in the supply chain. That said, with proper prioritization against others competing for use of the blockchain,
@@ -76,7 +63,7 @@
             the interface to a database program. If you read the Ethereum white paper, Ethereum is described as a ‘blank
             canvas’, while that is technically true, the vast majority of traffic currently incurred on the Ethereum
             blockchain conforms to the ERC20 protocol. </p>
-        <h3>Description of ERC20</h3>
+        <h3>ERC20 Functionality</h3>
         <p>ERC20 can be thought of as a program that manages ‘tokens’ between an unlimited number of addresses.
             ERC20Master will generate Solidity code for a basic ICO by inserting a few variables into a smart contract.
             When the smart contract is published to the blockchain, an initial number of tokens is generated, at that
@@ -89,15 +76,14 @@
             For that reason, you cannot expect to process transactions in a reliable manner with a single Ethereum node.
             ERC20Master exposes a simple API at a single endpoint (a load balancer, which provides scalability and
             redundancy) to expedite integration into existing systems.</p>
-        <h3>Specifically ERC20Master</h3>
+        <h3>Specifically</h3>
         <ul>
-            <li>Generates ERC20 ‘smart contracts’ in Solidity (for free!)</li>
+            <li>Generates ERC20 ‘smart contracts’ in Solidity</li>
             <li>Publishes smart contracts using a geographically distributed Ethereum OLTP network</li>
             <li>Executes ERC20 commands on published smart contract using its own network</li>
-            <li>Exposes a simple REST API for quick integration with existing systems</li>
             <li>Handles provisioning, configuration and administration of Ethereum OLTP nodes</li>
         </ul>
-        <p>Sign up for free and generate your own smart contract. There are free tools to compile and deploy this smart
-            contract. erc20master.com provides some guidance on running your own Ethereum OLTP node.</p>
+        <p><a class="whitepaper_anchor" href="/create_user">Sign up for free</a> and generate your own smart contract. There are free tools to compile and deploy this smart
+            contract in a matter of minutes.</p>
     </div>
 {% endblock %}

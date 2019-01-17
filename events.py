@@ -23,10 +23,10 @@ class Event:
                         "Users Purchased Credits",
                         "ERC20 Token Created",
                         "ERC20 Token Mined",
-                        "ERC20 Token Premined",
                         "ERC20 Token Burned",
-                        "ERC20 Token Issue",
-                        "ERC20 Token External Transfer"]
+                        "ERC20 Token Issued",
+                        "ERC20 Token External Transfer",
+                        "Whitepaper Viewed"]
 
     def __init__(self, event_type, db, logger=None):
         if event_type not in self.AVAILABLE_EVENTS:

@@ -7,18 +7,6 @@
 
 {% block content %}
     <div id="admin_main_menu">
-        {% if user_info %}
-        <h3 class="ui_h3">Main Menu</h3>
-        <ul id="admin_ul" class="ui_div_background">
-            {% if launch_ico %}
-                <li class="admin_li"><a href="/admin/tokens/{{ session_token }}">Create ERC20 Token</a></li>
-            {% endif %}
-            {% if show_eth_network %}
-                <li class="admin_li"><a href="/admin/eth_network/{{ session_token }}">Ethereum Network</a></li>
-            {% endif %}
-            <li class="admin_li"><a class="main_menu_anchor" href="/logout/{{ session_token }}">Logout</a></li>
-        </ul>
-        {% else %}
             <h3 class="ui_h3">Login</h3>
         {% if login_error %}<p id="login_error">{{ login_error }}</p>{% endif %}
             <form action="/login" method="post">
@@ -34,102 +22,17 @@
                 </tr>
             </table>
             </form>
-        {% endif %}
-    </div>
-    <div id="admin_home" class="dark_grey_background">
-        <ul id="chart_toggle_list">
-            <li class="chart_li">
-            {% if error %}
-                Error (try reloading)</li>
+        <ul class="menu_ul">
+        {% if first_block %}
+            <li class="admin_li">Ethereum Network Charts</li>
             {% else %}
-                [&nbsp;
-                {% if metrics.chart_data.gas_price %}Gas Price (moving average)
-                {% else %}<a class="main_menu_anchor" href="/">Gas Price (moving average)</a>{% endif %}&nbsp;]</li>
-            <li class="chart_li">[&nbsp;{% if metrics.chart_data.transaction_count %}Transaction Count
-            {% else %}<a class="main_menu_anchor" href="/transaction_count">Transaction Count</a>{% endif %}&nbsp;]</li>
-            <li class="chart_li">[&nbsp;{% if metrics.chart_data.utilization %}Utilization{% else %}
-                <a class="main_menu_anchor" href="/utilization">Utilization</a>{% endif %}&nbsp;]</li>
-            <li class="chart_li">[&nbsp;{% if metrics.chart_data.block_size %}Block Size{% else %}
-                <a class="main_menu_anchor" href="/block_size">Block Size</a>{% endif %}&nbsp;]</li>
-            {% endif %}
+            <li class="admin_li"><a class="main_menu_anchor" href="/">Ethereum Network Charts</a></li>
+        {% endif %}
+        {% for each in whitepapers %}
+            <li class="admin_li"><a class="main_menu_anchor" href="{{ each.url }}">{{ each.title }}</a></li>
+        {% endfor %}
         </ul>
-    <div id="admin_home_graph">
-    {% if error %}
-        <p class="home_page_error">{{ error }}</p>
-    {% else %}
-        <script language="JavaScript">
-        Highcharts.chart('admin_home_graph', {
-            chart: {
-                backgroundColor: '#3C3F41',
-
-            },
-            title: {
-                text: {% if metrics.chart_data.transaction_count %}
-                    "Transactions per Block (Last 24 hours)"
-                    {% elif metrics.chart_data.utilization %}
-                    "Ethereum Network Utilization (Last 24 hours)"
-                    {% elif metrics.chart_data.block_size %}
-                    "Block Size (Last 24 hours)"
-                    {% else %}"Gas Price (Last 24 hours)"{% endif %},
-                style: {color: "#ffffff"}
-            },
-
-            yAxis: {
-                title: {
-                    text: {% if metrics.chart_data.transaction_count %}"Transactions"
-                        {% elif metrics.chart_data.utilization %}
-                        "Unused Gas"
-                        {% elif metrics.chart_data.block_size %}
-                        "Block Size"
-                        {% else %}'Gwei'{% endif %},
-                    style: {color:"#ffffff"}
-                }
-            },
-            legend: {
-                layout: 'vertical',
-                align: 'right',
-                verticalAlign: 'middle',
-                itemStyle: {
-                    color: "#ffffff"
-                },
-                itemHiddenStyle: {
-                    color: "#4c4c4c"
-                }
-            },
-
-            plotOptions: {
-                series: {
-                    pointStart: {{ first_block }}
-                }
-            },
-
-            series: [{
-
-                     {% if metrics.chart_data.transaction_count %}
-                         name: "Transactions per Block",
-                         data:{{ metrics.chart_data.transaction_count }},
-                         color: '#FF0000'
-                     {% elif metrics.chart_data.utilization %}
-                         name: "Unused Gas per Block",
-                         data:{{ metrics.chart_data.utilization }},
-                         color: '#FF00FF'
-                     {% elif metrics.chart_data.block_size %}
-                        name: "Block Size",
-                        data:{{ metrics.chart_data.block_size }},
-                        color: '#F0FFE0'
-                    {% else %}
-                         name: "Gas Price Moving Average",
-                         data:{{ metrics.chart_data.gas_price }},
-                         color: '#00FF00'
-                     {% endif %}
-
-                }]
-
-
-});</script>
-    {% endif %}
-
     </div>
-        <div id="home_latest_blocks"></div>
-    </div>
+    {% block main_content %}
+    {% endblock %}
 {% endblock %}

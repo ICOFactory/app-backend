@@ -29,9 +29,9 @@ def homepage():
     error_msg = "No charting data for period {0}-{1}".format(epoch.isoformat(),
                                                              datetime.datetime.now().isoformat())
     if len(moving_average) == 0:
-        return render_template("main.jinja2",
+        return render_template("home_charts.jinja2",
                                error=error_msg)
-    return render_template("main.jinja2",
+    return render_template("home_charts.jinja2",
                            metrics={"chart_data": {"gas_price": chart_data}},
                            first_block=moving_average[0][0],
                            whitepapers=whitepapers.whitepaper_urls)
@@ -140,7 +140,7 @@ def login():
             first_block = moving_average[0][0]
         for each in moving_average:
             chart_data.append(each[1])
-        return render_template("main.jinja2",
+        return render_template("home_charts.jinja2",
                                metrics={"chart_data": {"gas_price": chart_data}},
                                first_block=first_block,
                                login_error="Invalid e-mail address/password combination.")
@@ -158,7 +158,7 @@ def homepage_utilization():
     first_block = 0
     if len(utilization) > 0:
         first_block = utilization[0][0]
-    return render_template("main.jinja2",
+    return render_template("home_charts.jinja2",
                            metrics={"chart_data": {"utilization": chart_data}},
                            first_block=first_block)
 
@@ -175,7 +175,7 @@ def homepage_block_size():
     first_block = 0
     if len(block_size_per_block) > 0:
         first_block = block_size_per_block[0][0]
-    return render_template("main.jinja2",
+    return render_template("home_charts.jinja2",
                            metrics={"chart_data": {"block_size": chart_data}},
                            first_block=first_block)
 
@@ -192,7 +192,7 @@ def home_page_transaction_count():
     first_block = 0
     if len(transaction_count) > 0:
         first_block = transaction_count[0][0]
-    return render_template("main.jinja2",
+    return render_template("home_charts.jinja2",
                            metrics={"chart_data": {"transaction_count": chart_data}},
                            first_block=first_block)
 
