@@ -12,6 +12,7 @@ from ledger import TransactionLedger
 from credits import Credits
 from smart_contract import SmartContract
 from charting import Charting
+from mailer import Mailer
 import re
 
 TOKEN_NAME_REGEX = re.compile("^[A-Za-z0-9]{4,36}$")
@@ -320,18 +321,12 @@ def admin_create_user(session_token):
 
 
 def get_owned_tokens(user_id, db, logger=None):
-    erc20_publish_event = Event("ERC20 Token Created", db, logger)
-    event_count = erc20_publish_event.get_event_count()
-    # get all ERC20 publish events for now...
-    publish_events = erc20_publish_event.get_latest_events(event_count)
     smart_contracts = db.get_smart_contracts(user_id)
     owned_tokens = []
     for each in smart_contracts:
         pending = False
-        for every_event in publish_events:
-            event_data = json.loads(every_event[0])
-            if event_data["token_id"] == each["token_id"]:
-                pending = True
+        if each["published"] is not None and each["eth_address"] is None:
+            pending = True
         token_data = {"token_id": each["token_id"],
                       "token_name": each["token_name"],
                       "ico_tokens": each["tokens"],
@@ -342,7 +337,7 @@ def get_owned_tokens(user_id, db, logger=None):
                       "pending": pending,
                       "max_priority": each["max_priority"]}
         if not pending:
-            sc = SmartContract(each["token_id"])
+            sc = SmartContract(each["token_id"], logger=logger)
             token_data["issued_tokens"] = sc.get_issued_token_count()
             token_data["issued_not_confirmed"] = 0
             token_data["confirmed_not_assigned"] = 0
@@ -358,10 +353,7 @@ def admin_tokens(session_token):
         user_id = db.validate_session(session_token)
         ctx = UserContext(user_id, db=db, logger=db.logger)
         can_launch_ico = ctx.check_acl("launch-ico")
-        erc20_publish_event = Event("ERC20 Token Created", db, current_app.logger)
-        event_count = erc20_publish_event.get_event_count()
-        # get all ERC20 publish events for now...
-        publish_events = erc20_publish_event.get_latest_events(event_count)
+
         if can_launch_ico or len(ctx.acl()["management"]) > 0:
             owned_tokens = []
             for key in ctx.acl()["management"].keys():
@@ -393,8 +385,16 @@ def admin_confirm():
     confirmation_type = request.form["confirmation_type"]
     confirmation_val = request.form["confirmation_value"]
     choice = request.form["choice"]
-    if confirmation_type == "reset_email":
-        return redirect(url_for('admin.admin_main', session_token=session_token))
+    if confirmation_type == "recover_email":
+        if choice == "Send E-mail":
+            email_address = request.form['email_address']
+            mailer = Mailer(email_address, request.access_route[-1], current_app.logger)
+            mailer.recover_password()
+            return render_template("admin/admin_login.jinja2", error="""
+            If the e-mail address is in the database, instructions have been sent on how to recover 
+            your password. Please check your spam/junk mail folder.
+            """)
+        return redirect(url_for('homepage'))
     elif confirmation_type == "no_erc20_tokens":
         return redirect(url_for('admin.admin_tokens', session_token=session_token))
     elif confirmation_type == "erc20_publish" and choice == "Cancel":
@@ -424,11 +424,12 @@ def admin_confirm():
                 event_data = {"token_name": sc.token_name,
                               "token_symbol": sc.token_symbol,
                               "token_count": sc.tokens,
-                              "token_id": sc.smart_contract_id}
+                              "token_id": sc.smart_contract_id,
+                              "ip_address": request.access_route[-1]}
                 if user_ctx.check_acl("launch-ico"):
                     credits_balance = credits.get_credit_balance()
                     if credits_balance >= credits.erc20_publish_price:
-                        new_event = Event("ERC20 Token Created", db, logger=current_app.logger)
+                        new_event = Event("ERC20 Token Mined", db, logger=current_app.logger)
                         event_id = new_event.log_event(user_id, event_data)
                         event_data["event_id"] = event_id
                         credits.debit(credits.erc20_publish_price, event_data)
@@ -533,6 +534,7 @@ def erc20_publish():
                 message += "<p>[ <a class=\"login_anchor\" href=\"/admin/credits/purchase/"
                 message += session_token + "\">purchase credits</a> ]</p>"
                 return render_template("admin/admin_confirmation.jinja2",
+                                       title="Unable to publice ERC20 contract",
                                        session_token=session_token,
                                        confirmation_value=token_id,
                                        confirmation_title="Insufficient Credits",
@@ -543,6 +545,7 @@ def erc20_publish():
             message += "blockchain, costing <span class=\"credit_price\">"
             message += str(credits.erc20_publish_price) + "</span> credits?"
             return render_template("admin/admin_confirmation.jinja2",
+                                   title="Confirm",
                                    session_token=session_token,
                                    confirmation_value=token_id,
                                    confirmation_title="Publish ERC20 contract?",
@@ -597,6 +600,12 @@ def create_tokens_form():
                                logger=current_app.logger,
                                owner_id=user_id)
             if sc.smart_contract_id > 0:
+                new_event = Event("ERC20 Token Created", db, current_app.logger)
+                new_event.log_event(user_id, {"ip_address": request.access_route[-1],
+                                              "token_name": token_name,
+                                              "token_symbol": token_symbol,
+                                              "token_count": token_count,
+                                              "token_id": sc.smart_contract_id})
                 return redirect(url_for("admin.admin_tokens", session_token=session_token))
             abort(500)
     abort(403)
@@ -696,7 +705,7 @@ def change_user_acl():
 
 
 @admin_blueprint.route('/users/<user_id>/<session_token>/<offset>/<limit>')
-def view_onboarded_users(user_id,session_token,offset=0,limit=20):
+def view_onboarded_users(user_id, session_token, offset=0, limit=20):
     if session_token:
         offset = int(offset)
         limit = int(limit)

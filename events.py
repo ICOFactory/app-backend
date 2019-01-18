@@ -26,6 +26,9 @@ class Event:
                         "ERC20 Token Burned",
                         "ERC20 Token Issued",
                         "ERC20 Token External Transfer",
+                        "Mailer Password Reset",
+                        "Mailer Account Confirmation",
+                        "Mailer Notify Deposit",
                         "Whitepaper Viewed"]
 
     def __init__(self, event_type, db, logger=None):

@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, current_app, url_for, redirec
 from json_parser import JSONProcessor
 from database import Database
 from charting import Charting
+from credits import Credits
 import datetime
 import json
 import node_api
@@ -88,12 +89,14 @@ def logout_user(session_token):
 def homepage_create_user():
     if request.method == "POST":
         if request.form["passwd"] == request.form["passwd_repeat"]:
+            ip_addr = request.access_route[-1]
             user_passwd = request.form["passwd"]
+            full_name = request.form["full_name"]
             db = Database()
-            result = db.create_user("",
+            result = db.create_user(full_name,
                                     request.form['email_address'],
                                     user_passwd,
-                                    request.access_route[-1])
+                                    ip_addr)
             if result:
                 if result[0] == -1:
                     error = "User with this e-mail address already exists."
@@ -103,7 +106,7 @@ def homepage_create_user():
                 create_user_event = events.Event("Users Create User",
                                                  db,
                                                  logger=current_app.logger)
-                metadata = {"ip_addr":request.access_route[-1]}
+                metadata = {"ip_addr": ip_addr, "created_by": "self"}
                 create_user_event.log_event(result[0], json.dumps(metadata))
 
                 user_ctx = users.UserContext(result[0], db=db, logger=current_app.logger)
@@ -114,6 +117,13 @@ def homepage_create_user():
 
                 db.update_user_permissions(result[0], user_ctx.acl())
 
+                config_stream = open("config.json","r")
+                config_data = json.load(config_stream)
+                config_stream.close()
+                if config_data["new_user_tokens"] > 0:
+                    cr = Credits(result[0], db, current_app.logger)
+                    cr.issue_credits(config_data["new_user_tokens"],
+                                     {"ip_addr": ip_addr, "reason": "New User Bonus"})
                 return redirect(url_for("admin.admin_main", session_token=session_id))
         else:
             error = "Passwords did not match."

@@ -37,7 +37,7 @@
                         </tr>
                         <tr class="ui_div_highlight">
                             <td>Contract address</td>
-                            <td align="right">{% if each.published %}{{ each.eth_address }}
+                            <td align="right">{% if each.eth_address %}{{ each.eth_address }}
                             {% elif each.pending %}
                                 <em>Pending Ethereum blockchain confirmation...</em>
                             {% else %}
@@ -46,7 +46,7 @@
                                     <input type="hidden" name="token_id" value="{{ each.token_id }}"/>
                                     <input type="hidden" name="confirmation" value="true"/>
                                     <input class="blue_submit_button" type="submit" name="action"
-                                           value="Publish to Ethereum Blockchain"/><span class="credit_price">&nbsp;(1000 credits)</span>
+                                           value="Publish to Ethereum Blockchain"/><span class="credit_price">&nbsp;(125 credits)</span>
                                 </form>{% endif %}</td>
                         </tr>
                         <tr class="dark_grey_background">
@@ -60,7 +60,7 @@
                             <td>Generated</td>
                             <td align="right">{{ each.created }} UTC</td>
                         </tr>
-                        {% if each.published %}
+                        {% if each.eth_address %}
                             <tr class="dark_grey_background">
                                 <td>Published to blockchain</td>
                                 <td align="right">{{ each.published }}</td>
@@ -121,7 +121,7 @@
                                 <td align="right">{{ each.remaining_tokens }}</td>
                             </tr>
                             <tr class="dark_grey_background">
-                                <td>Set max priority (credits per token created)</td>
+                                <td>Set Max Gwei (credits per token created/burned/transferred)</td>
                                 <td align="right">
                                     <form action="/admin/tokens/set_max_priority" method="post">
                                         <input type="hidden" name="session_token" value="{{ session_token }}"/>

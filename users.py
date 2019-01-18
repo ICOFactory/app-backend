@@ -17,13 +17,12 @@ def add_if_not_found(tokens, new_permission, token_id, db):
 
 
 class UserContext:
-    MEMBER_PERMISSIONS = ["view-tokens",
-                          "external-transfer-tokens"]
+    MEMBER_PERMISSIONS = ["view-tokens"],
     MANAGER_PERMISSIONS = ["change-priority",
                            "issue-tokens",
                            "assign-tokens",
                            "remove-tokens",
-                           "premine-tokens",
+                           "external-address-withdrawal",
                            "burn-tokens"]
     ADMIN_PERMISSIONS = ["onboard-users",
                          "change-permissions",

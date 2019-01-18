@@ -1,8 +1,9 @@
 {"wallet_address":"0xc0ffee254729296a45a3885639AC7E10F9d54979",
 "mysql_host":"localhost",
-"mysql_user":"appuser",
+"mysql_user":"root",
 "mysql_password":"beligerent8136",
 "mysql_database":"service",
 "eth_address_pool_min":1000,
 "eth_address_pool_max":5000,
-"erc20_publish_price":1000}
+"erc20_publish_price":125,
+"new_user_tokens":250}

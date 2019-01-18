@@ -10,6 +10,34 @@ from charting import Charting
 node_api_blueprint = Blueprint('node_api', __name__, url_prefix="/node_api")
 
 
+@node_api_blueprint.route('/command_output/<api_key>', methods=["POST"])
+def command_output(api_key):
+    db = database.Database(current_app.logger)
+    ip_addr = request.access_route[-1]
+    node_id = db.validate_api_key(api_key)
+    if node_id:
+        json_data = request.get_json(force=True)
+        if json_data:
+            new_event = events.Event("Ethereum Node Command Output", db, current_app.logger)
+            event_data = {}
+            if json_data["success"] is True:
+                event_data["error"] = False
+                event_data["command_id"] = json_data["command_id"]
+                event_data["input"] = json_data["input"]
+                event_data["ip_address"] = ip_addr
+            else:
+                event_data["error"] = True
+                event_data["command_id"] = json_data["command_id"]
+                event_data["input"] = json_data["input"]
+                event_data["error_message"] = json_data["error_message"]
+                # mark command undispatched
+                db.clear_dispatch_event_id(event_data["input"]["command_id"])
+            new_event.log_event(node_id, event_data)
+            return Response(json.dumps({"success": event_data["error"]}))
+        abort(500)
+    abort(403)
+
+
 @node_api_blueprint.route("/dispatch_undirected_command/<api_key>")
 def dispatch_undirected_command(api_key):
     db = database.Database(current_app.logger)
@@ -19,14 +47,18 @@ def dispatch_undirected_command(api_key):
         next_command = db.get_next_undirected_command()
         if next_command:
             command_id = next_command[0]
-            command_data = next_command[1]
+            command_data = json.loads(next_command[1])
 
             new_event = events.Event("Ethereum Node Command Dispatch", db, current_app.logger)
             event_data = {"ip_address": ip_addr,
                           "node_id": node_id,
-                          "command": command_data}
+                          "command": json.dumps(command_data),
+                          "command_id": command_id}
             new_event_id = new_event.log_event(node_id,
                                                json.dumps(event_data))
+            command_data["command_id"] = command_id
+            command_data["event_id"] = new_event_id
+            command_data["directed"] = False
             if db.dispatch_command(command_id,
                                    node_id,
                                    new_event_id):

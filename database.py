@@ -273,6 +273,26 @@ class Database:
                 print(error_message)
         return None
 
+    def validate_email(self, email_address):
+        sql = "SELECT user_id FORM users WHERE email_address=%s"
+        try:
+            c = self.db.cursor()
+            c.execute(sql, (email_address,))
+            row = c.fetchone()
+            if row:
+                return row[0]
+        except MySQLdb.Error as e:
+            try:
+                error_message = "MySQL Error [%d]: %s" % (e.args[0], e.args[1])
+            except IndexError:
+                error_message = "MySQL Error: %s" % (str(e),)
+
+            if self.logger:
+                self.logger.error(error_message)
+            else:
+                print(error_message)
+        return None
+
     def get_latest_events(self, event_type_id, limit):
         try:
             c = self.db.cursor()
@@ -587,6 +607,24 @@ WHERE smart_contracts.id=%s"""
             except IndexError:
                 self.logger.error("MySQL Error: %s" % (str(e),))
         return None
+
+    def clear_dispatch_event_id(self, command_id, clear_node_id=True):
+        if clear_node_id:
+            sql = "UPDATE commands SET dispatch_event_id=NULL WHERE command_id=%s"
+        else:
+            sql = "UPDATE commands SET dispatch_event_id=NULL, node_id=NULL WHERE command_id=%s"
+        try:
+            c = self.db.cursor()
+            c.execute(sql, (command_id,))
+            self.db.commit()
+            if c.rowcount == 1:
+                return True
+        except MySQLdb.Error as e:
+            try:
+                self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                self.logger.error("MySQL Error: %s" % (str(e),))
+        return False
 
     def dispatch_command(self, command_id, node_id, new_event_id):
         sql = "UPDATE commands SET dispatch_event_id=%s, node_id=%s WHERE command_id=%s"

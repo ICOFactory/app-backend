@@ -39,19 +39,17 @@ class SmartContract:
         if token_name and token_count > 0 and token_symbol:
             try:
                 c = self.db.cursor()
-                new_eth_address = self.eth_node.assign_new_ethereum_address()
                 token_count_string = "{0}".format(token_count)
                 new_smart_contract = render_template("erc20_token.sol",
                                                      ico_name=token_name,
                                                      ico_symbol=token_symbol_decorator(token_symbol),
                                                      total_supply=token_count_string,
                                                      owner_id=None)
-                sql = "INSERT INTO smart_contracts (token_name,tokens,max_priority,eth_address,"
-                sql += "solidity_source,token_symbol,owner_id) VALUES (%s,%s,%s,%s,%s,%s,%s)"
+                sql = "INSERT INTO smart_contracts (token_name,tokens,max_priority,"
+                sql += "solidity_source,token_symbol,owner_id) VALUES (%s,%s,%s,%s,%s,%s)"
                 c.execute(sql,(self.token_name,
                                self.tokens,
                                self.max_priority,
-                               new_eth_address[0],
                                new_smart_contract,
                                token_symbol,
                                owner_id))
@@ -307,6 +305,28 @@ class SmartContract:
                 else:
                     print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
         return 0
+
+    def publish_smart_contract(self):
+        if self.smart_contract_id > 0:
+            sql = "UPDATE smart_contracts SET published=NOW() WHERE id=%s"
+            try:
+                c = self.db.cursor()
+                c.execute(sql,(self.smart_contract_id,))
+                self.db.commit()
+                c.close()
+                return True
+            except MySQLdb.Error as e:
+                try:
+                    if self.logger:
+                        self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                    else:
+                        print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                except IndexError:
+                    if self.logger:
+                        self.logger.error("MySQL Error: %s" % (str(e),))
+                    else:
+                        print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+        return False
 
     def get_unassigned_token_count(self):
         try:
