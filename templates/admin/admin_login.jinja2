@@ -8,17 +8,15 @@
 </head>
 <body class="dark_grey_background">
 <div id="all_content">
-<div id="admin_header" style="width:410px;" class="ui_div_highlight">
+<div id="admin_header" style="width:470px;" class="ui_div_highlight">
     <h3>Administrator Login</h3>
 </div>
     <div id="login_box" class="ui_div_background">
+                        {% if error %}<p id="login_error">{{ error }}</p>
+                {% endif %}
         <form action="/admin/login" method="post" id="form_login">
             <table id="login_table" cellpadding="5">
-                {% if error %}
-                    <tr>
-                        <td colspan="2"><p id="login_error">{{ error }}</p></td>
-                    </tr>
-                {% endif %}
+
                 <tr>
                     <td><label class="login_label">E-Mail Address</label></td>
                     <td><input size="35" name="username" class="login_input"/></td>
@@ -28,7 +26,9 @@
                     <td><input size="35" name="password" type="password" class="login_input"/></td>
                 </tr>
                 <tr>
-                    <td>[&nbsp;<a class="login_anchor" href="/admin/users/recover_account">recover password</a>&nbsp;]
+                    <td>
+                        [&nbsp;<a class="login_anchor" href="/admin/users/recover_account">recover password</a>&nbsp;]<br />
+        [ <a class="login_anchor" href="/">home page</a> ]
                     </td>
                     <td align="right">
                         <input class="blue_submit_button" type="Submit" value="Login"/>
@@ -36,6 +36,7 @@
                 </tr>
             </table>
         </form>
+    <p></p>
     </div>
 </div>
 </body>

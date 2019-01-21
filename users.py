@@ -30,7 +30,9 @@ class UserContext:
                          "launch-ico",
                          "ethereum-network",
                          "view-event-log",
-                         "issue-credits"]
+                         "issue-credits",
+                         "own-any-token",
+                         "transfer-owned-token"]
 
     def __init__(self, user_id, db=None, logger=None):
         if db:

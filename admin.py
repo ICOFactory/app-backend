@@ -18,6 +18,7 @@ import re
 TOKEN_NAME_REGEX = re.compile("^[A-Za-z0-9]{4,36}$")
 TOKEN_SYMBOL_REGEX = re.compile("^[A-Z0-9]{1,5}$")
 TOKEN_COUNT_REGEX = re.compile("^[0-9]{1,16}$")
+EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$")
 
 admin_blueprint = Blueprint('admin', __name__, url_prefix="/admin")
 
@@ -66,7 +67,13 @@ def admin_main(session_token, transactions=False):
         for each in node_gas_prices.keys():
             graphing_metrics[each] = json.dumps(node_gas_prices[each])
 
+        cr = Credits(user_id, db, current_app.logger)
+
         return render_template("admin/admin_main.jinja2",
+                               full_name=user_ctx.user_info['full_name'],
+                               email_address=user_ctx.user_info['email_address'],
+                               last_logged_in=user_ctx.user_info['last_logged_in'],
+                               credits=cr.get_credit_balance(),
                                session_token=session_token,
                                launch_ico=launch_ico,
                                onboard_users=onboard_users,
@@ -607,7 +614,16 @@ def create_tokens_form():
                                               "token_count": token_count,
                                               "token_id": sc.smart_contract_id})
                 return redirect(url_for("admin.admin_tokens", session_token=session_token))
-            abort(500)
+            else:
+                create_token_error = "Token with this name already managed by ERC20Master, to make things less "
+                create_token_error += "confusing, please use a unique token name."
+                return render_template("admin/admin_confirmation.jinja2",
+                                       session_token=session_token,
+                                       title="Error",
+                                       confirmation_title="Token Name Exists",
+                                       confirmation_message=create_token_error,
+                                       confirmation_type="create_erc20_failed",
+                                       default_choice="OK")
     abort(403)
 
 
@@ -632,6 +648,14 @@ def admin_create_user_acl():
     email_address = request.form["email_address"]
     password = request.form["password"]
     password_repeat = request.form["password_repeat"]
+    if EMAIL_REGEX.match(email_address) is None:
+        return render_template("admin/admin_create_user.jinja2",
+                               session_token=session_token,
+                               create_user_error="Invalid e-mail address.")
+    if len(password) < 8:
+        return render_template("admin/admin_create_user.jinja2",
+                               session_token=session_token,
+                               create_user_error="Password must be at least 8 characters in length.")
     if password == password_repeat:
         data = email_address + password
         pw_hash = sha256(data.encode("utf-8")).hexdigest()
@@ -639,17 +663,42 @@ def admin_create_user_acl():
         return render_template("admin/admin_create_user.jinja2",
                                session_token=session_token,
                                create_user_error="Password must match both times.")
-    db = database.Database()
+    db = database.Database(current_app.logger)
     user_id = db.validate_session(session_token)
+    ctx = UserContext(user_id, db, current_app.logger)
     if user_id:
         authorized = db.validate_permission(user_id, "onboard-users")
         if authorized:
-            return render_template("admin/admin_create_user_acl.jinja2",
-                                   session_token=session_token,
-                                   full_name=full_name,
-                                   email_address=email_address,
-                                   password_hash=pw_hash,
-                                   new_user=True)
+            ip_addr = request.access_route[-1]
+            result = db.create_user(full_name,
+                                    email_address,
+                                    password,
+                                    ip_addr)
+            if result:
+                if result[0] == -1:
+                    return render_template("admin/admin_create_user.jinja2",
+                                           session_token=session_token,
+                                           create_user_error="E-mail address already exists in the database.")
+                else:
+                    user_ctx = UserContext(result[0], db, current_app.logger)
+                    # default permissions
+                    user_ctx.add_permission("own-any-token")
+                    user_ctx.add_permission("transfer-owned-token")
+
+                    db.update_user_permissions(result[0], user_ctx.acl())
+
+                    create_user_event = Event("Users Create User",
+                                              db,
+                                              logger=current_app.logger)
+                    metadata = {"ip_addr": ip_addr,
+                                "created_by": ctx.user_info['email_address'],
+                                "new_user_email_address": email_address,
+                                "new_user_id": result[0]}
+                    create_user_event.log_event(user_id, json.dumps(metadata))
+
+                    return render_template("admin/admin_create_user.jinja2",
+                                           session_token=session_token,
+                                           create_user_error="User created successfully.")
     abort(403)
 
 
@@ -717,7 +766,7 @@ def view_onboarded_users(user_id, session_token, offset=0, limit=20):
         session_user_id = db.validate_session(session_token)
         if session_user_id == user_id:
             cu_event = Event("Users Create User", db, current_app.logger)
-            cu_event_count = cu_event.get_event_count()
+            cu_event_count = cu_event.get_event_count(user_id)
             all_cu_events = cu_event.get_latest_events(cu_event_count, user_id)
         else:
             abort(403)
@@ -749,10 +798,6 @@ def view_users(session_token, offset=0, limit=20):
                 user_credits = Credits(each_user['user_id'], db, current_app.logger)
                 new_obj['transactions'] = ledger.get_transaction_count()
                 new_obj['credits_balance'] = user_credits.get_credit_balance()
-                new_obj['member_tokens'] = user_ctx.get_member_tokens()
-                new_obj['manager_tokens'] = user_ctx.get_manager_tokens()
-                issue_token_event = Event("ERC20 Token Issue", db, current_app.logger)
-                new_obj['issued_tokens'] = issue_token_event.get_event_count(each_user['user_id'])
                 new_obj['owned_tokens'] = ledger.get_owned_token_count()
                 augmented_user_data.append(new_obj)
             return render_template("admin/admin_users.jinja2",

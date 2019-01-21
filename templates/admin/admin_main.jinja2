@@ -3,12 +3,24 @@
 {% block header %}
     <script src="{{ url_for('static', filename='code/highcharts.js') }}"></script>
 <h1 xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">{% block title %}ERC20 Master{% endblock %}</h1>
+    <div id="admin_header_info_bar">
+    <ul id="admin_header_ul">
+    {% if full_name %}
+                <li class="admin_header_li">{{ full_name }}</li>
+            {% else %}
+                <li class="admin_header_li">{{ email_address }}</li>
+            {% endif %}
+                <li class="admin_header_li">Last logged in: {{ last_logged_in }}</li>
+                <li class="admin_header_li">Credits: <span class="credit_balance">{{ credits }}</span></li>
+    </ul>
+    </div>
 {% endblock %}
 
 {% block content %}
     <div id="admin_main_menu">
         <h3 class="ui_h3">Main Menu</h3>
         <ul id="admin_ul" class="ui_div_background">
+
             {% if manager %}
                 <li class="admin_li"><a class="main_menu_anchor" href="/admin/users/{{ session_token }}/0/20">Users</a></li>
             {% else %}

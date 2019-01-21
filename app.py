@@ -1,5 +1,4 @@
 from flask import Flask, request, render_template, current_app, url_for, redirect
-from json_parser import JSONProcessor
 from database import Database
 from charting import Charting
 from credits import Credits
@@ -10,6 +9,10 @@ import admin
 import users
 import events
 import whitepapers
+import re
+
+EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$")
+
 
 app = Flask(__name__)
 app.register_blueprint(admin.admin_blueprint)
@@ -38,44 +41,6 @@ def homepage():
                            whitepapers=whitepapers.whitepaper_urls)
 
 
-# @app.route('/<session_token>')
-# def logged_in_homepage(session_token):
-#     db = Database(logger=current_app.logger)
-#     user_id = db.validate_session(session_token)
-#     charting = Charting(db, current_app.logger)
-#     epoch = datetime.datetime.now() - datetime.timedelta(hours=24)
-#     moving_average = charting.get_gas_price_moving_average(start=epoch)
-#     chart_data = []
-#     for each in moving_average:
-#         chart_data.append(each[1])
-#
-#     first_block = 0
-#     if len(moving_average) > 0:
-#         first_block = moving_average[0][0]
-#     # if user is logged in
-#     if user_id:
-#         user_ctx = users.UserContext(user_id,
-#                                      db=db,
-#                                      logger=current_app.logger)
-#         user_can_create_erc20_token = user_ctx.check_acl("launch-ico")
-#         user_owned_tokens = user_ctx.get_member_tokens()
-#         user_managed_tokens = user_ctx.get_manager_tokens()
-#
-#         return render_template("main.jinja2",
-#                                user_info=user_ctx.user_info,
-#                                metrics={"chart_data": {"gas_price": chart_data}},
-#                                launch_ico=user_can_create_erc20_token,
-#                                owned_tokens=user_owned_tokens,
-#                                managed_tokens=user_managed_tokens,
-#                                first_block=first_block,
-#                                session_token=session_token)
-#     else:
-#         return render_template("main.jinja2",
-#                                metrics={"chart_data": {"gas_price": chart_data}},
-#                                first_block=moving_average[0][0],
-#                                login_error="Invalid session.")
-
-
 @app.route('/logout/<session_token>')
 def logout_user(session_token):
     db = Database(logger=current_app.logger)
@@ -88,6 +53,12 @@ def logout_user(session_token):
 @app.route('/create_user', methods=["GET", "POST"])
 def homepage_create_user():
     if request.method == "POST":
+        if EMAIL_REGEX.match(request.form['email_address']) is None:
+            error = "Invalid e-mail address."
+            return render_template("create_user.jinja2", error_msg=error)
+        if len(request.form['passwd']) < 8:
+            error = "Passwords must consist of at least 8 characters."
+            return render_template("create_user.jinja2", error_msg=error)
         if request.form["passwd"] == request.form["passwd_repeat"]:
             ip_addr = request.access_route[-1]
             user_passwd = request.form["passwd"]
@@ -117,7 +88,7 @@ def homepage_create_user():
 
                 db.update_user_permissions(result[0], user_ctx.acl())
 
-                config_stream = open("config.json","r")
+                config_stream = open("config.json", "r")
                 config_data = json.load(config_stream)
                 config_stream.close()
                 if config_data["new_user_tokens"] > 0:
@@ -208,24 +179,3 @@ def home_page_transaction_count():
                            metrics={"chart_data": {"transaction_count": chart_data}},
                            first_block=first_block,
                            whitepapers=whitepapers.whitepaper_urls)
-
-
-@app.route('/json', methods=['POST'])
-def json_endpoint():
-    json_data = request.get_json(force=True)
-    request_data = {"ip_address": request.access_route[-1]}
-    jp = JSONProcessor(json_data, request_data)
-    jp.logger = app.logger
-    if jp.response:
-        return json.dumps(jp.response)
-    elif jp.error:
-        if "errorCode" in jp.error:
-            app.logger.error("Error Code: {0} ({1})".format(jp.error["errorCode"], jp.error["error"]))
-        else:
-            app.logger.error(jp.error.error)
-        return json.dumps(jp.error)
-    else:
-        error_obj = {"success": False,
-                     "errorCode": 0,
-                     "error": "Unknown error."}
-        json.dumps(error_obj)
