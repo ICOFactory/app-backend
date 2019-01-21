@@ -20,6 +20,7 @@ CREATE UNIQUE INDEX block_data_block_number_uindex ON block_data (block_number D
 
 ALTER TABLE external_transaction_ledger DROP block_number;
 ALTER TABLE external_transaction_ledger DROP block_timestamp;
+ALTER TABLE external_transaction_ledger MODIFY usd_price smallint unsigned;
 ALTER TABLE external_transaction_ledger ADD block_data_id bigint(20) unsigned NULL;
 ALTER TABLE external_transaction_ledger CHANGE external_erc20_contract_id contract_id bigint(20) unsigned;
 ALTER TABLE external_transaction_ledger
