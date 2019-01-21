@@ -12,6 +12,20 @@ as mysql-master in /etc/hosts
 
 datadir=/var/lib/mysql
 
+### For ZFS datadir (recommended by the manual)
+
+`# zfs create pool/mysql_db`
+
+`# chown mysql /pool/mysql_db`
+
+`# chgrp mysql /pool/mysql_db`
+
+`# chmod 700 /pool/mysql_db`
+
+#### Configure AppArmor to allow this in Ubuntu
+
+`# mysqld --initalize --user=mysql --datadir=/pool/mysql_db`
+
 bind-address=<private_ip>
 
 symbolic-links=0
@@ -23,6 +37,10 @@ server-id=1
 innodb_flush_log_at_trx_commit=1
 
 sync_binlog=1
+
+gtid_mode=ON
+
+enforce_gtid_consistency=true
 
 ### For a slave database, use unique server id greater than 1
 
