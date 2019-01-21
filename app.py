@@ -124,7 +124,8 @@ def login():
         return render_template("home_charts.jinja2",
                                metrics={"chart_data": {"gas_price": chart_data}},
                                first_block=first_block,
-                               login_error="Invalid e-mail address/password combination.")
+                               login_error="Invalid e-mail address/password combination.",
+                               whitepapers=whitepapers.whitepaper_urls)
 
 
 @app.route('/utilization')
