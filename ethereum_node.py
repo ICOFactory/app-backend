@@ -10,7 +10,6 @@
 
 import MySQLdb
 import json
-import binascii
 import database
 import os
 import sys
@@ -25,20 +24,9 @@ def get_new_addresses(count):
     for x in range(0, count):
         new_address = "0x"
         rng_out = os.urandom(20)
-        new_address += binascii.hexlify(rng_out).decode()
+        new_address += rng_out.hex()
         output.append(new_address)
     return output
-
-
-def create_erc20_smart_contract(token_name, token_symbol, token_count,owner_id):
-    smart_token = {"action": "create_erc2_token",
-                   "token_info": {"token_name": token_name,
-                                  "token_symbol": token_symbol,
-                                  "token_count": token_count,
-                                  "owner_id": owner_id}}
-    token_data = json.dumps(smart_token)
-    db = database.Database()
-    return db.post_command(None, token_data)
 
 
 class EthereumNode:
@@ -99,12 +87,13 @@ class EthereumNode:
             return None
         return output
 
-    def add_new_ethereum_address(self,new_address):
+    def add_new_ethereum_address(self, new_address):
         if not ETH_ADDRESS_REGEX.match(new_address):
             raise TypeError
         try:
             c = self.db.cursor()
-            c.execute("INSERT INTO ethereum_address_pool (ethereum_address) VALUES (%s);",(new_address,))
+            c.execute("INSERT INTO ethereum_address_pool (ethereum_address,assigned) VALUES (%s,NOW());",
+                      (new_address,))
             self.db.commit()
             return c.lastrowid
         except MySQLdb.Error as e:
@@ -123,7 +112,9 @@ class EthereumNode:
     def assign_new_ethereum_address(self):
         try:
             c = self.db.cursor()
-            c.execute("SELECT id, ethereum_address FROM ethereum_address_pool WHERE assigned IS NULL ORDER BY id DESC LIMIT 1 ")
+            sql = "SELECT id, ethereum_address FROM ethereum_address_pool"
+            sql += " WHERE assigned IS NULL ORDER BY id DESC LIMIT 1;"
+            c.execute(sql)
             row = c.fetchone()
             if row:
                 c.execute("UPDATE ethereum_address_pool SET assigned=NOW() WHERE id=%s", (row[0],))
