@@ -139,6 +139,100 @@ class Database:
                 print(error_message)
         return None
 
+    def put_block(self, block_data):
+        try:
+            sql = "INSERT INTO block_data (block_number, block_hash, block_timestamp, gas_used, gas_limit, block_size,"
+            sql += "tx_count) VALUES (%s,%s,%s,%s,%s,%s,%s)"
+            c = self.db.cursor()
+            c.execute(sql, (block_data["block_number"], block_data["block_hash"], block_data["block_timestamp"],
+                            block_data["gas_used"], block_data["gas_limit"],
+                            block_data["block_size"], block_data["tx_count"]))
+            self.db.commit()
+            block_data_id = c.lastrowid
+            for each_tx in block_data["transactions"]:
+                sql = "INSERT INTO external_transaction_ledger (sender_address_id, received_address_id,"
+                sql += "amount, transaction_hash, block_data_id, gas_used, priority) "
+                sql += "VALUES (%s,%s,%s,%s,%s,%s,%s)"
+                c.execute(sql, (each_tx["from"], each_tx["to"], each_tx["amount"], each_tx["hash"],
+                                block_data_id, each_tx["gas_used"], each_tx["priority"]))
+            self.db.commit()
+            return True
+        except MySQLdb.Error as e:
+            try:
+                error_message = "MySQL Error [%d]: %s" % (e.args[0], e.args[1])
+            except IndexError:
+                error_message = "MySQL Error: %s" % (str(e),)
+
+            if self.logger:
+                self.logger.error(error_message)
+            else:
+                print(error_message)
+        return False
+
+    def get_block(self, block_number, no_txns=False):
+        try:
+            sql = "SELECT block_data_id, block_hash, block_timestamp, gas_used, gas_limit, block_size, tx_count "
+            sql += "FROM block_data WHERE block_number=%s"
+            c = self.db.cursor()
+            c.execute(sql, (block_number,))
+            row = c.fetchone()
+            if row:
+                block_data_id = row[0]
+                block_data = {"block_number": block_number,
+                              "block_hash": row[1],
+                              "block_timestamp": row[2],
+                              "gas_used": row[3],
+                              "gas_limit": row[4],
+                              "block_size": row[5],
+                              "tx_count": row[6],
+                              "transactions": []}
+                if no_txns:
+                    return block_data
+                txns = []
+                sql = "SELECT sender_address_id, received_address_id, external_erc20_contract_id,amount,"
+                sql += "transaction_hash,gas_used,priority,usd_price"
+                sql += " FROM external_transaction_ledger WHERE block_data_id=%s"
+                c.execute(sql, (block_data_id,))
+                for row in c:
+                    new_tx = {"from": row[0],
+                              "to": row[1],
+                              "external_contract_id": row[2],
+                              "amount": row[3],
+                              "hash": row[4],
+                              "gas_used": row[5],
+                              "priority": row[6],
+                              "usd_price": row[7]}
+                    txns.append(new_tx)
+
+                for each_tx in txns:
+                    sql = "SELECT ethereum_address FROM ethereum_address_pool WHERE id=%s"
+                    c.execute(sql, (each_tx["from"],))
+                    row = c.fetchone()
+                    if row:
+                        each_tx["from"] = row[0]
+                    else:
+                        each_tx["from"] = None
+                    c.execute(sql, (each_tx["to"],))
+                    row = c.fetchone()
+                    if row:
+                        each_tx["to"] = row[0]
+                    else:
+                        each_tx["to"] = None
+
+                block_data["transactions"] = txns
+                return block_data
+        except MySQLdb.Error as e:
+            try:
+                error_message = "MySQL Error [%d]: %s" % (e.args[0], e.args[1])
+            except IndexError:
+                error_message = "MySQL Error: %s" % (str(e),)
+
+            if self.logger:
+                self.logger.error(error_message)
+            else:
+                print(error_message)
+        return None
+
     def debit_user(self, user_id, amount, event_id):
         try:
             sql = "INSERT INTO debits (user_id, amount, event_id) VALUES (%s,%s,%s)"

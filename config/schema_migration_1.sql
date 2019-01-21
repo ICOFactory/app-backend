@@ -16,7 +16,7 @@ CREATE TABLE block_data
 );
 
 CREATE UNIQUE INDEX block_data_block_hash_uindex ON block_data (block_hash);
-CREATE UNIQUE INDEX block_data_block_number_uindex ON block_data (block_number DESC);
+CREATE UNIQUE INDEX block_data_block_number_uindex ON block_data (block_number);
 
 ALTER TABLE external_transaction_ledger DROP block_number;
 ALTER TABLE external_transaction_ledger DROP block_timestamp;

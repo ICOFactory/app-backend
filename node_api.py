@@ -6,6 +6,7 @@ import database
 import events
 import json
 from charting import Charting
+from block_data import BlockDataManager
 
 node_api_blueprint = Blueprint('node_api', __name__, url_prefix="/node_api")
 
@@ -106,6 +107,10 @@ def node_api_update(api_key):
                                                            db.ETH_NODE_STATUS_ERROR)
                             db.close()
                             return Response(json.dumps({"result": "OK"}))
+
+                    # update block data
+                    manager = BlockDataManager(db, current_app.logger)
+                    manager.get_block(events["latest_block_number"])
 
                     new_event_log_id = new_event.log_event(node_id, json.dumps(event_data))
                     # update charting database
