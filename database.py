@@ -455,7 +455,7 @@ class Database:
                 print(error_message)
         return None
 
-    def get_pending_commands(self, node_id):
+    def get_pending_commands(self, node_id=None):
         try:
             c = self.db.cursor()
             c.execute("SELECT COUNT(*) FROM commands WHERE dispatch_event_id IS NULL AND node_id is NULL")
@@ -463,11 +463,13 @@ class Database:
             undirected_commands = -1
             if row:
                 undirected_commands = row[0]
-            c.execute("SELECT COUNT(*) FROM commands WHERE dispatch_event_id IS NULL AND node_id=%s",
-                      (node_id,))
             directed_commands = -1
-            if row:
-                directed_commands = row[0]
+            if node_id:
+                c.execute("SELECT COUNT(*) FROM commands WHERE dispatch_event_id IS NULL AND node_id=%s",
+                          (node_id,))
+                row = c.fetchone()
+                if row:
+                    directed_commands = row[0]
             return undirected_commands, directed_commands
         except MySQLdb.Error as e:
             try:
