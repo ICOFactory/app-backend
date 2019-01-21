@@ -110,7 +110,7 @@ def node_api_update(api_key):
 
                     # update block data
                     manager = BlockDataManager(db, current_app.logger)
-                    manager.get_block(events["latest_block_number"])
+                    manager.get_block(event_data["latest_block_number"])
 
                     new_event_log_id = new_event.log_event(node_id, json.dumps(event_data))
                     # update charting database
