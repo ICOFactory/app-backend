@@ -109,5 +109,5 @@ class BlockDataManager:
             command_data = {"get_block_data": each}
             if self.logger:
                 self.logger.info("Posting command to get_block_data for {0}".format(each))
-            self.db.post_command(command_data)
+            self.db.post_command(json.dumps(command_data))
         return block_data
