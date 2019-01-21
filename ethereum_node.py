@@ -30,14 +30,24 @@ def get_new_addresses(count):
 
 
 class EthereumNode:
-    def __init__(self, ip_addr=None, logger=None):
+    def __init__(self, ip_addr=None, logger=None, db=None):
         self.ip_addr = ip_addr
         self.logger = logger
-        config_data = json.load(open("config.json", "r"))
-        self.db = MySQLdb.connect(config_data["mysql_host"],
-                                  config_data["mysql_user"],
-                                  config_data["mysql_password"],
-                                  config_data["mysql_database"])
+        if db:
+            if db.db:
+                self.db = db.db
+            else:
+                self.db = db
+        else:
+            config_stream = open("config.json", "r")
+            config_data = json.load(config_stream)
+            config_stream.close()
+
+            self.db = MySQLdb.connect(config_data["mysql_host"],
+                                      config_data["mysql_user"],
+                                      config_data["mysql_password"],
+                                      config_data["mysql_database"])
+
         self.wallet_address = config_data["wallet_address"]
         self.address_pool_min = config_data["eth_address_pool_min"]
         self.address_pool_max = config_data["eth_address_pool_max"]
