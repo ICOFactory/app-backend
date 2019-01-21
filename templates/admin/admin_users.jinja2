@@ -18,70 +18,64 @@
     <div id="users">
     {% for user in users %}
         <div class="user_record">
-            <table>
+            <table class="view_user_table" style="width:100%" cellspacing="0" cellpadding="10" border="0">
                 <tbody>
-                <tr>
+                <tr class="ui_div_highlight">
+                    <td>Full name</td>
+                    <td align="right">{{ user.full_name }}</td>
+                </tr>
+                <tr class="dark_grey_background">
                     <td>E-mail address</td>
-                    <td>{{ user.email }}</td>
+                    <td align="right">{{ user.email }}</td>
                 </tr>
                 {% if reset_password %}
-                    <tr>
+                    <tr class="ui_div_highlight">
                         <td>Password</td>
-                        <td>[&nbsp;<a class="header_anchor" href="/admin/users/reset-password/{{ user.user_id }}/{{ session_token }}">reset password</a>&nbsp;]</td>
+                        <td align="right">[&nbsp;<a class="header_anchor" href="/admin/users/reset-password/{{ user.user_id }}/{{ session_token }}">reset password</a>&nbsp;]</td>
                     </tr>
                 {% endif %}
                 {% if change_permissions %}
-                    <tr>
+                    <tr class="dark_grey_background">
                         <td>Access Control List</td>
-                        <td>[&nbsp;<a class="header_anchor" href="/admin/users/change-permissions/{{ user.user_id }}/{{ session_token }}">change permissions</a>&nbsp;]</td>
+                        <td align="right">[&nbsp;<a class="header_anchor" href="/admin/users/change-permissions/{{ user.user_id }}/{{ session_token }}">change permissions</a>&nbsp;]</td>
                     </tr>
                 {% endif %}
-                <tr>
+                <tr class="ui_div_highlight">
                     <td>Last logged in</td>
-                    <td>{{ user.last_logged_in }}</td>
+                    <td align="right">{{ user.last_logged_in }}</td>
                 </tr>
-                <tr>
+                <tr class="dark_grey_background">
                     <td>Last IP address</td>
-                    <td>{{ user.last_logged_in_ip }}</td>
+                    <td align="right">{{ user.last_logged_in_ip }}</td>
                 </tr>
-                <tr>
+                <tr class="ui_div_highlight">
                     <td>Created</td>
-                    <td>{{ user.created }}</td>
+                    <td align="right">{{ user.created }}</td>
                 </tr>
-                <tr>
+                <tr class="dark_grey_background">
                     <td>Created IP address</td>
-                    <td>{{ user.created_ip }}</td>
+                    <td align="right">{{ user.created_ip }}</td>
                 </tr>
                 {% if issue_credits %}
-                <tr>
+                <tr class="ui_div_highlight">
                     <td>Credits balance</td>
-                    <td>{{ user.credits_balance }}&nbsp;[&nbsp;<a class="header_anchor" href="/admin/users/issue_credits/{{ user.user_id }}/{{ session_token }}">issue credits</a>&nbsp;]</td>
+                    <td align="right">{{ user.credits_balance }}&nbsp;[&nbsp;<a class="header_anchor" href="/admin/users/issue_credits/{{ user.user_id }}/{{ session_token }}">issue credits</a>&nbsp;]</td>
                 </tr>
                 {% endif %}
-                <tr>
-                    <td>ERC20 memberships</td>
-                    <td>{{ user.member_tokens }}</td>
+                <tr class="ui_div_highlight">
+                    <td>ERC20 tokens</td>
+                    <td align="right">{{ user.owned_tokens }}&nbsp;[&nbsp;<a class="header_anchor" href="/admin/tokens/view_wallet/{{ user.user_id }}/{{ session_token }}">view wallet</a>&nbsp;]</td>
                 </tr>
-                <tr>
-                    <td>ERC20 managements</td>
-                    <td>{{ user.manager_tokens }}</td>
-                </tr>
-                <tr>
-                    <td>Issued ERC20 tokens</td>
-                    <td>{{ user.issued_tokens }}</td>
-                </tr>
-                <tr>
-                    <td>Owned ERC20 tokens</td>
-                    <td>{{ user.owned_tokens }}&nbsp;[&nbsp;<a class="header_anchor" href="/admin/tokens/view_wallet/{{ user.user_id }}/{{ session_token }}">view wallet</a>&nbsp;]</td>
-                </tr>
-                <tr>
+                <tr class="dark_grey_background">
                     <td>Transactions</td>
-                    <td>{{ user.transactions }}&nbsp;[&nbsp;<a class="header_anchor" href="/admin/tokens/view_ledger/{{ user.user_id }}/{{ session_token }}">view ledger</a>&nbsp;]</td>
+                    <td align="right">{{ user.transactions }}&nbsp;[&nbsp;<a class="header_anchor" href="/admin/tokens/view_ledger/{{ user.user_id }}/{{ session_token }}">view ledger</a>&nbsp;]</td>
                 </tr>
                 </tbody>
             </table>
         </div>
     {% endfor %}
+     </div>
+    <div id="users_footer">
         <p class="view_user_paging">{% if offset > 0 %}[&nbsp;
             <a class="header_anchor" href="/admin/users/{{ session_token }}/{{ offset-limit }}/{{ limit }}">Previous
                 page</a>&nbsp;]&nbsp;{% endif %}{{ user_count }} total users. Showing
@@ -90,4 +84,5 @@
                         <a class="header_anchor" href="/admin/users/{{ session_token }}/{{ offset+limit }}/{{ limit }}">Next
                             page</a>&nbsp;]{% endif %}</p>
     </div>
+
 {% endblock %}
