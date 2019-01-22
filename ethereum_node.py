@@ -33,16 +33,15 @@ class EthereumNode:
     def __init__(self, ip_addr=None, logger=None, db=None):
         self.ip_addr = ip_addr
         self.logger = logger
+        config_stream = open("config.json", "r")
+        config_data = json.load(config_stream)
+        config_stream.close()
         if db:
             if db.db:
                 self.db = db.db
             else:
                 self.db = db
         else:
-            config_stream = open("config.json", "r")
-            config_data = json.load(config_stream)
-            config_stream.close()
-
             self.db = MySQLdb.connect(config_data["mysql_host"],
                                       config_data["mysql_user"],
                                       config_data["mysql_password"],
