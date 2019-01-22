@@ -145,7 +145,8 @@ class Database:
             sql = "INSERT INTO block_data (block_number, block_hash, block_timestamp, gas_used, gas_limit, block_size,"
             sql += "tx_count) VALUES (%s,%s,%s,%s,%s,%s,%s)"
             c = self.db.cursor()
-            c.execute(sql, (block_data.block_number, block_data.block_hash, block_data.block_timestamp,
+            c.execute(sql, (block_data.block_number, block_data.block_hash,
+                            datetime.datetime.fromtimestamp(block_data.block_timestamp),
                             block_data.gas_used, block_data.gas_limit,
                             block_data.block_size, block_data.tx_count))
             self.db.commit()
