@@ -155,7 +155,7 @@ class Database:
                 sql = "INSERT INTO external_transaction_ledger (sender_address_id, received_address_id,"
                 sql += "amount, transaction_hash, block_data_id, gas_used, priority) "
                 sql += "VALUES (%s,%s,%s,%s,%s,%s,%s)"
-                c.execute(sql, (each_tx.from_address, each_tx.to_address, each_tx.wei_value, each_tx.hash,
+                c.execute(sql, (each_tx.from_address, each_tx.to_address, each_tx.wei_value, each_tx.tx_hash,
                                 block_data_id, each_tx.gas, each_tx.gas_price))
             self.db.commit()
             return True
