@@ -96,6 +96,7 @@ class BlockDataManager:
             remaining = MAX_PENDING_COMMANDS - undirected_commands
             if remaining > GROWTH_RATE:
                 remaining = GROWTH_RATE
+        remaining = 0
 
         target_list = []
 
