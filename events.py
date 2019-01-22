@@ -117,6 +117,36 @@ class Event:
                 print(error_message)
         return None
 
+    def get_event_count_since(self, epoch, user_id=None):
+        if self.event_type_id < 1:
+            raise InvalidEventException
+        if user_id and type(user_id) is not int:
+            raise TypeError
+        try:
+            c = self.db.cursor()
+            if user_id:
+                sql = "SELECT COUNT(*) FROM event_log "
+                sql += "WHERE event_type_id=%s AND user_id=%s AND created > %s;"
+                c.execute(sql, (self.event_type_id, user_id, epoch))
+            else:
+                sql = "SELECT COUNT(*) FROM event_log "
+                sql += "WHERE event_type_id=%s AND created > %s;"
+                c.execute(sql, (self.event_type_id, epoch))
+            row = c.fetchone()
+            if row:
+                return row[0]
+        except MySQLdb.Error as e:
+            try:
+                error_message = "MySQL Error [%d]: %s" % (e.args[0], e.args[1])
+            except IndexError:
+                error_message = "MySQL Error: %s" % (str(e),)
+
+            if self.logger:
+                self.logger.error(error_message)
+            else:
+                print(error_message)
+        return 0
+
     def get_events_since(self, epoch, user_id=None):
         if self.event_type_id < 1:
             raise InvalidEventException

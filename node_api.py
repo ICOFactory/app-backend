@@ -29,7 +29,8 @@ def command_output(api_key):
                 command_output = json.loads(event_data["input"])
                 if "block_number" in command_output:
                     block_data = BlockData(json=event_data["input"])
-
+                    manager = BlockDataManager(db, current_app.logger)
+                    manager.put_block(block_data)
             else:
                 event_data["error"] = True
                 event_data["command_id"] = json_data["command_id"]

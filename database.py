@@ -10,6 +10,7 @@ import json
 import binascii
 import os
 import getpass
+import datetime
 import events
 
 UUID_REGEX = re.compile("[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}")
@@ -514,9 +515,13 @@ class Database:
                                          status=row[6])
                 if event_data:
                     try:
+                        epoch = datetime.datetime.now() - datetime.timedelta(hours=24)
                         decoded_data = json.loads(event_data[0])
                         new_node_data["peers"] = decoded_data["peers"]
-                        new_node_data["commands"] = 0
+                        new_node_data["commands"] = events.Event("Ethereum Node Command Dispatch",
+                                                                 self.db,
+                                                                 logger=self.logger).get_event_count_since(epoch,
+                                                                                                           new_node_data["id"])
                     except json.JSONDecodeError as err:
                         self.logger.error("JSON Decoder Exception: {0}".format(err))
                 nodes.append(new_node_data)
