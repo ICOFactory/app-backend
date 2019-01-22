@@ -28,7 +28,7 @@ def command_output(api_key):
                 event_data["ip_address"] = ip_addr
                 command_output = json.loads(event_data["input"])
                 if "block_number" in command_output:
-                    block_data = BlockData(json=event_data["input"])
+                    block_data = BlockData(json_data=event_data["input"])
                     manager = BlockDataManager(db, current_app.logger)
                     manager.put_block(block_data)
             else:
