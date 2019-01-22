@@ -82,6 +82,13 @@ class BlockDataManager:
         self.db = db
         self.logger = logger
 
+    def put_block(self, block_data):
+        eth_node = EthereumNode(None, self.logger, self.db)
+        for each_tx in block_data.transactions:
+            each_tx["from"] = eth_node.add_new_ethereum_address(each_tx["from"])
+            each_tx["to"] = eth_node.add_new_ethereum_address(each_tx["to"])
+        return self.db.put_block(block_data)
+
     def get_block(self, block_number):
         found = False
         self.logger.info("Attempting to fetch block data for block {0} from db...".format(block_number))

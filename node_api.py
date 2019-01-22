@@ -6,7 +6,7 @@ import database
 import events
 import json
 from charting import Charting
-from block_data import BlockDataManager
+from block_data import BlockDataManager, BlockData
 
 node_api_blueprint = Blueprint('node_api', __name__, url_prefix="/node_api")
 
@@ -26,6 +26,10 @@ def command_output(api_key):
                 event_data["command_id"] = json_data["command_id"]
                 event_data["input"] = json_data["input"]
                 event_data["ip_address"] = ip_addr
+                command_output = json.loads(event_data["input"])
+                if "block_number" in command_output:
+                    block_data = BlockData(json=event_data["input"])
+
             else:
                 event_data["error"] = True
                 event_data["command_id"] = json_data["command_id"]
