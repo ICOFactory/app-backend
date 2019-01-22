@@ -10,11 +10,12 @@
 
 import MySQLdb
 import json
-import database
+import datetime
 import os
 import sys
 import pprint
 import re
+import events
 
 ETH_ADDRESS_REGEX = re.compile("^0x[0-9a-fA-F]{40}$")
 
@@ -27,6 +28,11 @@ def get_new_addresses(count):
         new_address += rng_out.hex()
         output.append(new_address)
     return output
+
+
+def generate_api_key():
+    new_api_key = os.urandom(16).hex()
+    return new_api_key
 
 
 class EthereumNode:
@@ -74,13 +80,50 @@ class EthereumNode:
                 else:
                     print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
 
+    def get_id_for_ethereum_address(self, ethereum_address):
+        try:
+            c = self.db.cursor()
+            c.execute("SELECT ethereum_address FROM ethereum_address_pool WHERE ethereum_address=%s;",
+                      (ethereum_address,))
+            row = c.fetchone()
+            if row:
+                return row[0]
+        except MySQLdb.Error as e:
+            try:
+                if self.logger:
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                if self.logger:
+                    self.logger.error("MySQL Error: %s" % (str(e),))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+        return None
+
+    def add_ethereum_node(self, node_identifier):
+        c = self.db.cursor()
+        sql = "INSERT INTO ethereum_network (node_identifier,api_key) VALUES (%s,%s)"
+        try:
+            new_api_key = generate_api_key()
+            result = c.execute(sql, (node_identifier, new_api_key))
+            self.db.commit()
+            if result == 1:
+                return new_api_key
+        except MySQLdb.Error as e:
+            try:
+                self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                self.logger.error("MySQL Error: %s" % (str(e),))
+        return None
+
     def get_address_pool(self):
         output = []
         try:
             c = self.db.cursor()
             c.execute("SELECT id, ethereum_address FROM ethereum_address_pool WHERE assigned IS NULL")
             for row in c:
-                output.append((row[0],row[1]))
+                output.append((row[0], row[1]))
             c.close()
         except MySQLdb.Error as e:
             try:
@@ -135,7 +178,7 @@ class EthereumNode:
                 row = c.fetchone()
                 if row[0] < self.address_pool_min:
                     new_address_count = self.address_pool_max - row[0]
-                    new_eth_addresses = self.get_new_addresses(new_address_count)
+                    new_eth_addresses = get_new_addresses(new_address_count)
                     for each in new_eth_addresses:
                         c.execute("INSERT INTO ethereum_address_pool (ethereum_address) VALUES (%s);", (each,))
                     self.db.commit()
@@ -153,6 +196,69 @@ class EthereumNode:
                     print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
         return None
 
+    def remove_ethereum_node(self, node_id):
+        try:
+            c = self.db.cursor()
+            c.execute("DELETE FROM ethereum_network WHERE id=%s", (node_id,))
+            self.db.commit()
+            if c.rowcount == 1:
+                return True
+        except MySQLdb.Error as e:
+            try:
+                self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                self.logger.error("MySQL Error: %s" % (str(e),))
+        return False
+
+    def list_ethereum_nodes(self):
+        try:
+            c = self.db.cursor()
+            sql = "SELECT id,node_identifier,last_event_id,last_update,last_update_ip,api_key,status"
+            sql += " FROM ethereum_network;"
+            c.execute(sql)
+            nodes = []
+            for row in c:
+                last_update = row[3]
+                event_data = None
+                if last_update:
+                    update_event = events.Event("Ethereum Node Update", self.db, logger=self.logger)
+                    event_data = update_event.get_latest_event(row[0])
+                    new_node_data = dict(id=row[0],
+                                         node_identifier=row[1],
+                                         last_event_id=row[2],
+                                         last_update=row[3],
+                                         last_update_ip=row[4],
+                                         api_key=row[5],
+                                         status=row[6])
+                if event_data:
+                    try:
+                        epoch = datetime.datetime.now() - datetime.timedelta(hours=24)
+                        decoded_data = json.loads(event_data[0])
+                        new_node_data["peers"] = decoded_data["peers"]
+                        new_node_data["commands"] = events.Event("Ethereum Node Command Dispatch",
+                                                                 self.db,
+                                                                 logger=self.logger).get_event_count_since(epoch,
+                                                                                                           new_node_data[
+                                                                                                               "id"])
+                    except json.JSONDecodeError as err:
+                        self.logger.error("JSON Decoder Exception: {0}".format(err))
+                nodes.append(new_node_data)
+            return nodes
+        except MySQLdb.Error as e:
+            try:
+                msg = "MySQL Error [{0}]: {1}".format(e.args[0], e.args[1])
+                if self.logger:
+                    self.logger.error(msg)
+                else:
+                    print(msg)
+            except IndexError:
+                msg = "MySQL Error: " + str(e)
+                if self.logger:
+                    self.logger.error(msg)
+                else:
+                    print(msg)
+        return None
+
 
 if __name__ == "__main__":
     HELP = """python ethereum_node.py command argument
@@ -168,20 +274,20 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(HELP)
     else:
-        db = database.Database()
+        eth_node_manager = EthereumNode()
         command = sys.argv[1]
         if command == "add":
-            api_key = db.add_ethereum_node(sys.argv[2])
+            api_key = eth_node_manager.add_ethereum_node(sys.argv[2])
             if api_key:
                 print("API key of new node: " + api_key.decode())
         elif command == "remove":
-            success = db.remove_ethereum_node(int(sys.argv[2]))
+            success = eth_node_manager.remove_ethereum_node(int(sys.argv[2]))
             if success:
                 print("Successfully removed API key.")
             else:
                 print("db.remove_ethereum_node reported failure, check config.json")
         elif command == "list-nodes":
-            nodes = db.list_ethereum_nodes()
+            nodes = eth_node_manager.list_ethereum_nodes()
             pprint.pprint(nodes)
         else:
             print("Unknown command.\n\n")
