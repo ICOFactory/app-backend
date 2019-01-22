@@ -151,7 +151,7 @@ class Database:
                             block_data.block_size, block_data.tx_count))
             self.db.commit()
             block_data_id = c.lastrowid
-            for each_tx in block_data["transactions"]:
+            for each_tx in block_data.transactions:
                 sql = "INSERT INTO external_transaction_ledger (sender_address_id, received_address_id,"
                 sql += "amount, transaction_hash, block_data_id, gas_used, priority) "
                 sql += "VALUES (%s,%s,%s,%s,%s,%s,%s)"
