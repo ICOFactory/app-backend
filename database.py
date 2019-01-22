@@ -15,6 +15,12 @@ import events
 
 UUID_REGEX = re.compile("[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}")
 
+def wei_to_ether(wei):
+    return 1.0 * wei / 10**18
+
+
+def ether_to_wei(ether):
+    return ether * 10**18
 
 class ReadOnlyException(Exception):
     """Raised when the database is in readonly mode. (like during a deployment)"""
@@ -155,7 +161,7 @@ class Database:
                 sql = "INSERT INTO external_transaction_ledger (sender_address_id, received_address_id,"
                 sql += "amount, transaction_hash, block_data_id, gas_used, priority) "
                 sql += "VALUES (%s,%s,%s,%s,%s,%s,%s)"
-                c.execute(sql, (each_tx.from_address, each_tx.to_address, each_tx.wei_value, each_tx.tx_hash,
+                c.execute(sql, (each_tx.from_address, each_tx.to_address, wei_to_ether(each_tx.wei_value), each_tx.tx_hash,
                                 block_data_id, each_tx.gas, each_tx.gas_price))
             self.db.commit()
             return True
@@ -199,7 +205,7 @@ class Database:
                     new_tx = {"from": row[0],
                               "to": row[1],
                               "external_contract_id": row[2],
-                              "amount": row[3],
+                              "amount": ether_to_wei(row[3]),
                               "hash": row[4],
                               "gas_used": row[5],
                               "priority": row[6],
