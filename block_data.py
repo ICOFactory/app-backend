@@ -85,8 +85,10 @@ class BlockDataManager:
     def put_block(self, block_data):
         eth_node = EthereumNode(None, self.logger, self.db)
         for each_tx in block_data.transactions:
-            each_tx.from_address = eth_node.add_new_ethereum_address(each_tx.from_address)
-            each_tx.to_address = eth_node.add_new_ethereum_address(each_tx.to_address)
+            if each_tx.from_address:
+                each_tx.from_address = eth_node.add_new_ethereum_address(each_tx.from_address)
+            if each_tx.to_address:
+                each_tx.to_address = eth_node.add_new_ethereum_address(each_tx.to_address)
         return self.db.put_block(block_data)
 
     def get_block(self, block_number):

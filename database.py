@@ -145,17 +145,17 @@ class Database:
             sql = "INSERT INTO block_data (block_number, block_hash, block_timestamp, gas_used, gas_limit, block_size,"
             sql += "tx_count) VALUES (%s,%s,%s,%s,%s,%s,%s)"
             c = self.db.cursor()
-            c.execute(sql, (block_data["block_number"], block_data["block_hash"], block_data["block_timestamp"],
-                            block_data["gas_used"], block_data["gas_limit"],
-                            block_data["block_size"], block_data["tx_count"]))
+            c.execute(sql, (block_data.block_number, block_data.block_hash, block_data.block_timestamp,
+                            block_data.gas_used, block_data.gas_limit,
+                            block_data.block_size, block_data.tx_count))
             self.db.commit()
             block_data_id = c.lastrowid
             for each_tx in block_data["transactions"]:
                 sql = "INSERT INTO external_transaction_ledger (sender_address_id, received_address_id,"
                 sql += "amount, transaction_hash, block_data_id, gas_used, priority) "
                 sql += "VALUES (%s,%s,%s,%s,%s,%s,%s)"
-                c.execute(sql, (each_tx["from"], each_tx["to"], each_tx["amount"], each_tx["hash"],
-                                block_data_id, each_tx["gas_used"], each_tx["priority"]))
+                c.execute(sql, (each_tx.from_address, each_tx.to_address, each_tx.wei_value, each_tx.hash,
+                                block_data_id, each_tx.gas, each_tx.gas_price))
             self.db.commit()
             return True
         except MySQLdb.Error as e:
