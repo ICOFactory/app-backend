@@ -13,7 +13,10 @@ import getpass
 import datetime
 import events
 
+MAX_NODES = 9
+
 UUID_REGEX = re.compile("[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}")
+
 
 def wei_to_ether(wei):
     return 1.0 * wei / 10**18
@@ -21,6 +24,7 @@ def wei_to_ether(wei):
 
 def ether_to_wei(ether):
     return ether * 10**18
+
 
 class ReadOnlyException(Exception):
     """Raised when the database is in readonly mode. (like during a deployment)"""
@@ -478,6 +482,11 @@ class Database:
                 row = c.fetchone()
                 if row:
                     directed_commands = row[0]
+                c.execute("SELECT COUNT(*) FROM commands WHERE dispatch_event_id IS NULL AND node_id > {0};".format(
+                    MAX_NODES))
+                row = c.fetchone()
+                if row:
+                    directed_commands += row[0]
             return undirected_commands, directed_commands
         except MySQLdb.Error as e:
             try:
@@ -567,6 +576,7 @@ class Database:
         return False
 
     def add_ethereum_node(self, node_identifier):
+        # deprecated: update/use ethereum_node module in new code
         c = self.db.cursor()
         sql = "INSERT INTO ethereum_network (node_identifier,api_key) VALUES (%s,%s)"
         try:
@@ -705,10 +715,19 @@ WHERE smart_contracts.id=%s"""
         sql += "ORDER BY created DESC LIMIT 1;"
         # no table lock since we're only looking for one node's command
         try:
+            # first we look for commands specifically for the node_id (top priority)
             c = self.db.cursor()
             c.execute(sql, (node_id,))
             row = c.fetchone()
-            return row
+            if row:
+                return row
+            # now we look for node_id values higher than 9 which indicate priority
+            sql = "SELECT command_id, command FROM commands WHERE dispatch_event_id IS NULL AND node_id > {0}".format(
+                MAX_NODES)
+            sql += " ORDER BY node_id DESC LIMIT 1;"
+            c.execute(sql)
+            if row:
+                return row
         except MySQLdb.Error as e:
             try:
                 self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
