@@ -8,6 +8,9 @@
 # to list all registered nodes
 #   python ethereum_node.py list-nodes
 
+# TODO: eventually split these functions between ethereum_address_pool.py and ethereum_node.py
+# in an effort to reduce the size of the database module
+
 import MySQLdb
 import json
 import datetime

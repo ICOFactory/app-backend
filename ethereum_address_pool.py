@@ -1,5 +1,25 @@
+# ethereum_address_pool.py
+#
+# module to marshall ethereum address in and out of the address pool
+# may change to a more suitable database in the long run,
+# in the short run trying to reduce the size of the database module
+
 import MySQLdb
 import json
+import re
+import os
+
+ETH_ADDRESS_REGEX = re.compile("^0x[0-9a-fA-F]{40}$")
+
+
+def get_new_addresses(count):
+    output = []
+    for x in range(0, count):
+        new_address = "0x"
+        rng_out = os.urandom(20)
+        new_address += rng_out.hex()
+        output.append(new_address)
+    return output
 
 
 class EthAddressPoolStats:
@@ -9,8 +29,8 @@ class EthAddressPoolStats:
         self.duplicates = duplicates
 
     def __str__(self):
-        usage = float(self.assigned)/float(self.total)*100.0
-        duplicate_percent = (float(self.duplicates)/float(self.assigned))*100.0
+        usage = float(self.assigned) / float(self.total) * 100.0
+        duplicate_percent = (float(self.duplicates) / float(self.assigned)) * 100.0
         return "{0} assigned out of {1} total in pool. ({2}%%) {3} duplicates. ({4}%%)".format(self.assigned,
                                                                                                self.total,
                                                                                                usage,
@@ -161,4 +181,3 @@ class EthereumAddressPool:
                 else:
                     print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
         return None
-
