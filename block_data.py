@@ -100,12 +100,11 @@ class BlockDataManager:
 
         pending_commands = self.db.get_pending_commands()
         undirected_commands = pending_commands[0]
-
+        remaining = 0
         if undirected_commands < MAX_PENDING_COMMANDS:
             remaining = MAX_PENDING_COMMANDS - undirected_commands
             if remaining > GROWTH_RATE:
                 remaining = GROWTH_RATE
-        remaining = 0
 
         target_list = []
 
