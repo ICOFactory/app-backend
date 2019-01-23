@@ -260,7 +260,9 @@ if __name__ == "__main__":
     # add the handlers to the logger
     stream_logger.addHandler(ch)
     stream_logger.info("Testing get_block on block number 7110893")
-    manager = BlockDataManager(logger=stream_logger)
+    import database
+    db = database.Database()
+    manager = BlockDataManager(db, logger=stream_logger)
     block = manager.get_block(7110893)
     import pprint
     pprint.pprint(block)
