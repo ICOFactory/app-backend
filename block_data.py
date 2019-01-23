@@ -1,6 +1,5 @@
-from ethereum_node import EthereumNode
+from ethereum_address_pool import EthereumAddressPool
 import MySQLdb
-from database import Database
 import json
 import logging
 
@@ -99,12 +98,12 @@ class BlockDataManager:
         self.logger = logger
 
     def put_block(self, block_data):
-        eth_node = EthereumNode(None, self.logger, self.db)
+        eth_pool = EthereumAddressPool(db, logger)
         for each_tx in block_data.transactions:
             if each_tx.from_address:
-                each_tx.from_address = eth_node.add_new_ethereum_address(each_tx.from_address)
+                each_tx.from_address = eth_pool.add_new_ethereum_address(each_tx.from_address)
             if each_tx.to_address:
-                each_tx.to_address = eth_node.add_new_ethereum_address(each_tx.to_address)
+                each_tx.to_address = eth_pool.add_new_ethereum_address(each_tx.to_address)
         return self.db.put_block(block_data)
 
     def target_new_blocks(self, latest_block, window_size=WINDOW_SIZE, max_targets=MAX_PENDING_COMMANDS):
@@ -159,16 +158,72 @@ class BlockDataManager:
 
         return targets_for_addition, targets_for_removal
 
-    def get_block(self, block_number):
-        found = False
-        self.logger.info("Attempting to fetch block data for block {0} from db...".format(block_number))
-        block_data = self.db.get_block(block_number)
-        if block_data:
-            found = True
+    def get_block(self, block_number, no_txns=False):
+        try:
+            sql = "SELECT block_data_id, block_hash, block_timestamp, gas_used, gas_limit, block_size, tx_count "
+            sql += "FROM block_data WHERE block_number=%s"
+            c = self.db_conn.cursor()
+            c.execute(sql, (block_number,))
+            row = c.fetchone()
+            if row:
+                block_data_id = row[0]
+                block_data = {"block_number": block_number,
+                              "block_hash": row[1],
+                              "block_timestamp": row[2],
+                              "gas_used": row[3],
+                              "gas_limit": row[4],
+                              "block_size": row[5],
+                              "tx_count": row[6],
+                              "transactions": []}
+                if no_txns:
+                    return block_data
+                txns = []
+                sql = "SELECT sender_address_id, received_address_id, external_erc20_contract_id,amount,"
+                sql += "transaction_hash,gas_used,priority,usd_price"
+                sql += " FROM external_transaction_ledger WHERE block_data_id=%s"
+                c.execute(sql, (block_data_id,))
+                for row in c:
+                    new_tx = {"from": row[0],
+                              "to": row[1],
+                              "external_contract_id": row[2],
+                              "amount": ether_to_wei(row[3]),
+                              "hash": row[4],
+                              "gas_used": row[5],
+                              "priority": row[6],
+                              "usd_price": row[7]}
+                    txns.append(new_tx)
 
-        # maybe use numpy for this part
-        window = [0] * WINDOW_SIZE
-        latest_block = block_number
+                for each_tx in txns:
+                    sql = "SELECT ethereum_address FROM ethereum_address_pool WHERE id=%s"
+                    c.execute(sql, (each_tx["from"],))
+                    row = c.fetchone()
+                    if row:
+                        each_tx["from"] = row[0]
+                    else:
+                        each_tx["from"] = None
+                    c.execute(sql, (each_tx["to"],))
+                    row = c.fetchone()
+                    if row:
+                        each_tx["to"] = row[0]
+                    else:
+                        each_tx["to"] = None
+
+                block_data["transactions"] = txns
+                return block_data
+        except MySQLdb.Error as e:
+            try:
+                error_message = "MySQL Error [%d]: %s" % (e.args[0], e.args[1])
+            except IndexError:
+                error_message = "MySQL Error: %s" % (str(e),)
+
+            if self.logger:
+                self.logger.error(error_message)
+            else:
+                print(error_message)
+        return None
+
+    def get_block(self, block_number):
+        block_data = self.get_block(block_number)
 
         pending_commands = self.db.get_pending_commands()
         undirected_commands = pending_commands[0]
@@ -178,19 +233,15 @@ class BlockDataManager:
             if remaining > GROWTH_RATE:
                 remaining = GROWTH_RATE
 
-        target_list = []
+        result = self.target_new_blocks(block_number, max_targets=remaining)
+        target_list = result[0]
 
-        while remaining > 0:
-            if not found:
-                target_list.append(block_number)
-                remaining -= 1
-            block_number -= 1
-            found = self.db.get_block(block_number)
         for each in target_list:
             command_data = {"get_block_data": each}
             if self.logger:
                 self.logger.info("Posting command to get_block_data for {0}".format(each))
             self.db.post_command(json.dumps(command_data))
+
         return block_data
 
 
