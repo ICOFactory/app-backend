@@ -95,4 +95,43 @@
     {% endif %}
 
     </div>
+<div id="home_latest_blocks">
+    <div id="block_data_container">
+            {% for each_block in block_data %}
+                <div class="block_data" id="block_{{ each_block.block_number }}">
+                    <table class="block_data_table" cellspacing="0" cellpadding="0">
+                        <tr class="ui_div_highlight">
+                            <td><span class="block_data_label">Block Number</span></td>
+                            <td align="right"><span id="latest_block_number">{{ each_block.block_number }}</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="block_data_label">Hash</span></td>
+                            <td align="right"><span id="latest_block_hash">{{ each_block.block_hash }}</span></td>
+                        </tr>
+                        <tr class="ui_div_highlight">
+                            <td><span class="block_data_label">Age</span></td>
+                            <td align="right"><span id="latest_block_timestamp">{{ each_block.block_timestamp }}</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="block_data_label">Gas Usage</span></td>
+                            <td align="right">
+                                <span id="latest_block_gas_usage">{{ each_block.gas_used }}</span>
+                                <div class="gas_container"><div style="width:{{ (each_block.gas_used/each_block.gas_limit)*200 }}px;" class="gas_usage"></div></div>
+
+                            </td>
+                        </tr>
+                        <tr class="ui_div_highlight">
+                            <td><span class="block_data_label">Block Size</span></td>
+                            <td align="right"><span id="latest_block_size">{{ each_block.block_size }}</span></td>
+                        </tr>
+                        <tr>
+                            <td><span class="block_data_label">Transaction Count</span></td>
+                            <td align="right"><span id="latest_block_tx_count">{{ each_block.tx_count }}</span></td>
+                        </tr>
+                    </table>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
 {% endblock %}

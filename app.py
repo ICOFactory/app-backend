@@ -2,6 +2,7 @@ from flask import Flask, request, render_template, current_app, url_for, redirec
 from database import Database
 from charting import Charting
 from credits import Credits
+from block_data import BlockDataManager, BlockData, TransactionData
 import datetime
 import json
 import node_api
@@ -32,13 +33,31 @@ def homepage():
 
     error_msg = "No charting data for period {0}-{1}".format(epoch.isoformat(),
                                                              datetime.datetime.now().isoformat())
+
+    block_manager = BlockDataManager(db,current_app.logger)
+    latest_blocks = block_manager.get_lastest_block_numbers(10)
+    block_data = []
+    for block_number in latest_blocks:
+        block = block_manager.get_block(block_number, True)
+        if block:
+            block_data.append({"block_number": block.block_number,
+                               "block_hash": block.block_hash,
+                               "block_timestamp": block.age,
+                               "gas_used": block.gas_used,
+                               "gas_limit": block.gas_limit,
+                               "block_size": block.block_size,
+                               "tx_count": block.tx_count})
     if len(moving_average) == 0:
         return render_template("home_charts.jinja2",
-                               error=error_msg)
-    return render_template("home_charts.jinja2",
-                           metrics={"chart_data": {"gas_price": chart_data}},
-                           first_block=moving_average[0][0],
-                           whitepapers=whitepapers.whitepaper_urls)
+                               error=error_msg,
+                               whitepapers=whitepapers.whitepaper_urls,
+                               block_data=block_data)
+    else:
+        return render_template("home_charts.jinja2",
+                               metrics={"chart_data": {"gas_price": chart_data}},
+                               first_block=moving_average[0][0],
+                               whitepapers=whitepapers.whitepaper_urls,
+                               block_data=block_data)
 
 
 @app.route('/logout/<session_token>')

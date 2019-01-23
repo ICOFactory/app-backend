@@ -36,6 +36,68 @@
     background-color: rgb(242,106,78);
 }
 
+span#latest_block_hash {
+    font-size:small;
+    padding:5px;
+}
+span#latest_block_timestamp {
+    font-size: small;
+    padding:5px;
+}
+span#latest_block_tx_count {
+    font-size:small;
+    padding:5px;
+}
+span#latest_block_gas_usage {
+    font-size: small;
+    padding:5px;
+}
+span#latest_block_size {
+    font-size: small;
+    padding:5px;
+}
+
+div#home_latest_blocks {
+    width:1024px;
+}
+
+.gas_container {
+    margin: 3px;
+    width: 200px;
+    height: 12px;
+    border: 1px solid var(--dark-theme-border);
+    float:right;
+}
+
+.gas_usage {
+    background-color: var(--market-watch-green);
+    height: 12px;
+    width: 140px;
+    margin-right: auto;
+}
+
+div#block_data_container {
+    height:140px;
+    width:555px;
+    white-space: nowrap;
+    overflow-y: scroll;
+}
+
+div.block_data {
+    height:140px;
+    width:540px;
+}
+
+.block_data_label {
+    font-size:small;
+    padding:5px;
+}
+
+table.block_data_table {
+    width:540px;
+    border: 1px solid var(--dark-theme-border);
+}
+
 .user_record {
     margin-bottom:20px;
     padding: 15px;

@@ -2,6 +2,7 @@ from ethereum_address_pool import EthereumAddressPool
 import MySQLdb
 import json
 import logging
+import datetime
 
 MAX_PENDING_COMMANDS = 25
 WINDOW_SIZE = 100
@@ -63,6 +64,30 @@ class BlockData:
             self.tx_count = tx_count
             self.transactions = []
 
+    @property
+    def age(self):
+        age = datetime.datetime.utcnow() - self.block_timestamp
+        remainder = age.seconds % 3600
+        hours = int((age.seconds - remainder) / 3600)
+        remainder = age.seconds % 60
+        minutes = int((age.seconds - (remainder + (hours * 3600))) / 60)
+        seconds = remainder
+        if age.days > 0:
+            return "{0} days, {1} hours, {2} minutes, {3} seconds".format(age.days,
+                                                                          hours,
+                                                                          minutes,
+                                                                          seconds)
+        elif hours > 0:
+            return "{0} hours, {1} minutes, {2} seconds".format(
+                hours,
+                minutes,
+                seconds)
+        elif minutes > 0:
+            return "{0} minutes, {1} seconds".format(minutes,
+                seconds)
+        else:
+            return "{0} seconds".format(seconds)
+
     def __str__(self):
         tr_strings = []
         for each_tx in self.transactions:
@@ -96,6 +121,27 @@ class BlockDataManager:
                                            self.config["block_data"]["mysql_password"],
                                            self.config["block_data"]["mysql_database"])
         self.logger = logger
+
+    def get_lastest_block_numbers(self, count):
+        sql = "SELECT block_number, block_data_id FROM block_data ORDER BY block_number DESC LIMIT %s;"
+        c = self.db_conn.cursor()
+        latest_blocks = []
+
+        try:
+            c.execute(sql, (count,))
+            for row in c:
+                latest_blocks.append(row[0])
+
+        except MySQLdb.Error as e:
+            try:
+                error_message = "MySQL Error [%d]: %s" % (e.args[0], e.args[1])
+            except IndexError:
+                error_message = "MySQL Error: %s" % (str(e),)
+            if self.logger:
+                self.logger.error(error_message)
+            else:
+                print(error_message)
+        return latest_blocks
 
     def put_block(self, block_data):
         eth_pool = EthereumAddressPool(self.db, self.logger)
@@ -226,8 +272,15 @@ class BlockDataManager:
                 print(error_message)
         return None
 
-    def get_block(self, block_number):
-        block_data = self.get_block_from_db(block_number)
+    def get_block(self, block_number: int, no_txns=True) -> BlockData:
+        block_dict = self.get_block_from_db(block_number, no_txns=no_txns)
+        block_data = BlockData(block_dict["block_number"],
+                               block_dict["block_hash"],
+                               block_dict["block_timestamp"],
+                               block_dict["gas_used"],
+                               block_dict["gas_limit"],
+                               block_dict["block_size"],
+                               block_dict["tx_count"])
 
         pending_commands = self.db.get_pending_commands()
         undirected_commands = pending_commands[0]
