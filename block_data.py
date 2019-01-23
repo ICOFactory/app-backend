@@ -148,9 +148,10 @@ class BlockDataManager:
                     print(error_message)
 
             for x in range(window_size):
-                if x == 0 and len(targets_for_addition) < max_targets:
+                value = frame[x]
+                if value == 0 and len(targets_for_addition) < max_targets:
                     targets_for_addition.append(x+reference)
-                elif x > 1:
+                elif value > 1:
                     targets_for_removal.append(x+reference)
 
             reference -= window_size
@@ -205,4 +206,6 @@ if __name__ == "__main__":
     logger.addHandler(ch)
     logger.info("Testing target_new_blocks on block number 7110893")
     manager = BlockDataManager(logger=logger)
-    manager.target_new_blocks(7110893)
+    targets = manager.target_new_blocks(7110893)
+    print(targets[0])
+    print(targets[1])
