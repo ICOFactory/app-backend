@@ -98,7 +98,7 @@ class BlockDataManager:
         self.logger = logger
 
     def put_block(self, block_data):
-        eth_pool = EthereumAddressPool(db, logger)
+        eth_pool = EthereumAddressPool(self.db, self.logger)
         for each_tx in block_data.transactions:
             if each_tx.from_address:
                 each_tx.from_address = eth_pool.add_new_ethereum_address(each_tx.from_address)
@@ -111,7 +111,7 @@ class BlockDataManager:
         Target new blocks for addition and removal (duplicates)
 
         :param latest_block: latest_block_number
-        :param window: search window size
+        :param window_size: search window size
         :param max_targets: max target to add, no limit on removal of duplicates
         :return: [block_numbers_to_add],[block_numbers_to_remove]
         """
@@ -142,7 +142,7 @@ class BlockDataManager:
                 except IndexError:
                     error_message = "MySQL Error: %s" % (str(e),)
                 if self.logger:
-                    logger.error(error_message)
+                    self.logger.error(error_message)
                 else:
                     print(error_message)
 
@@ -158,7 +158,11 @@ class BlockDataManager:
 
         return targets_for_addition, targets_for_removal
 
-    def get_block(self, block_number, no_txns=False):
+    def get_block_from_db(self, block_number, no_txns=False):
+        # converts to something that will not overflow the database column
+        def ether_to_wei(ether):
+            return ether * 10 ** 18
+
         try:
             sql = "SELECT block_data_id, block_hash, block_timestamp, gas_used, gas_limit, block_size, tx_count "
             sql += "FROM block_data WHERE block_number=%s"
@@ -223,7 +227,7 @@ class BlockDataManager:
         return None
 
     def get_block(self, block_number):
-        block_data = self.get_block(block_number)
+        block_data = self.get_block_from_db(block_number)
 
         pending_commands = self.db.get_pending_commands()
         undirected_commands = pending_commands[0]
@@ -246,17 +250,17 @@ class BlockDataManager:
 
 
 if __name__ == "__main__":
-    logger = logging.getLogger("Block Data Module")
-    logger.setLevel(logging.INFO)
+    stream_logger = logging.getLogger("Block Data Module")
+    stream_logger.setLevel(logging.INFO)
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO)
     # create formatter and add it to the handlers
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     ch.setFormatter(formatter)
     # add the handlers to the logger
-    logger.addHandler(ch)
-    logger.info("Testing get_block on block number 7110893")
-    manager = BlockDataManager(logger=logger)
-    block_data = manager.get_block(7110893)
+    stream_logger.addHandler(ch)
+    stream_logger.info("Testing get_block on block number 7110893")
+    manager = BlockDataManager(logger=stream_logger)
+    block = manager.get_block(7110893)
     import pprint
-    pprint.pprint(block_data)
+    pprint.pprint(block)
