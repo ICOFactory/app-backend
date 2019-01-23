@@ -81,8 +81,8 @@ class BlockData:
 
 
 class BlockDataManager:
-    def __init__(self, db, logger=None):
-        config_stream = open("config.json","r")
+    def __init__(self, db=None, logger=None):
+        config_stream = open("config.json", "r")
         self.config = json.load(config_stream)
         config_stream.close()
         self.MAX_PENDING_COMMANDS = self.config["block_data"]["max_pending_commands"]
@@ -92,10 +92,10 @@ class BlockDataManager:
             self.db = db
             self.db_conn = db.db
         else:
-            self.db_conn = MySQLdb.connect(config_data["block_data"]["mysql_host"],
-                                        config_data["block_data"]["mysql_user"],
-                                        config_data["block_data"]["mysql_password"],
-                                        config_data["block_data"]["mysql_database"])
+            self.db_conn = MySQLdb.connect(self.config["block_data"]["mysql_host"],
+                                           self.config["block_data"]["mysql_user"],
+                                           self.config["block_data"]["mysql_password"],
+                                           self.config["block_data"]["mysql_database"])
         self.logger = logger
 
     def put_block(self, block_data):
