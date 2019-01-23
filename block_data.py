@@ -1,8 +1,11 @@
 from ethereum_node import EthereumNode
+import MySQLdb
 from database import Database
 import json
+import logging
 
 MAX_PENDING_COMMANDS = 25
+WINDOW_SIZE = 100
 GROWTH_RATE = 15
 
 
@@ -79,7 +82,20 @@ class BlockData:
 
 class BlockDataManager:
     def __init__(self, db, logger=None):
-        self.db = db
+        config_stream = open("config.json","r")
+        self.config = json.load(config_stream)
+        config_stream.close()
+        self.MAX_PENDING_COMMANDS = self.config["block_data"]["max_pending_commands"]
+        self.WINDOW_SIZE = self.config["block_data"]["window_size"]
+
+        if db:
+            self.db = db
+            self.db_conn = db.db
+        else:
+            self.db_conn = MySQLdb.connect(config_data["block_data"]["mysql_host"],
+                                        config_data["block_data"]["mysql_user"],
+                                        config_data["block_data"]["mysql_password"],
+                                        config_data["block_data"]["mysql_database"])
         self.logger = logger
 
     def put_block(self, block_data):
@@ -91,12 +107,67 @@ class BlockDataManager:
                 each_tx.to_address = eth_node.add_new_ethereum_address(each_tx.to_address)
         return self.db.put_block(block_data)
 
+    def target_new_blocks(self, latest_block, window_size=WINDOW_SIZE, max_targets=MAX_PENDING_COMMANDS):
+        """
+        Target new blocks for addition and removal (duplicates)
+
+        :param latest_block: latest_block_number
+        :param window: search window size
+        :param max_targets: max target to add, no limit on removal of duplicates
+        :return: [block_numbers_to_add],[block_numbers_to_remove]
+        """
+
+        # maybe use numpy here...
+        self.logger.info("Searching for missing/duplicate blocks...")
+
+        targets_for_addition = []
+        targets_for_removal = []
+
+        frame = [0] * window_size
+        reference = latest_block
+        offset = 0
+
+        sql = "SELECT block_number, block_data_id FROM block_data ORDER BY block_number DESC LIMIT %s OFFSET %s;"
+        c = self.db_conn.cursor()
+
+        while len(targets_for_addition) < max_targets:
+            try:
+                c.execute(sql, (window_size, offset,))
+                for row in c:
+                    x = reference - row[0]
+                    if x < window_size:
+                        frame[x] += 1
+            except MySQLdb.Error as e:
+                try:
+                    error_message = "MySQL Error [%d]: %s" % (e.args[0], e.args[1])
+                except IndexError:
+                    error_message = "MySQL Error: %s" % (str(e),)
+                if self.logger:
+                    logger.error(error_message)
+                else:
+                    print(error_message)
+
+            for x in range(window_size):
+                if x == 0 and len(targets_for_addition) < max_targets:
+                    targets_for_addition.append(x+reference)
+                elif x > 1:
+                    targets_for_removal.append(x+reference)
+
+            reference -= window_size
+            offset += window_size
+
+        return targets_for_addition, targets_for_removal
+
     def get_block(self, block_number):
         found = False
         self.logger.info("Attempting to fetch block data for block {0} from db...".format(block_number))
         block_data = self.db.get_block(block_number)
         if block_data:
             found = True
+
+        # maybe use numpy for this part
+        window = [0] * WINDOW_SIZE
+        latest_block = block_number
 
         pending_commands = self.db.get_pending_commands()
         undirected_commands = pending_commands[0]
@@ -120,3 +191,18 @@ class BlockDataManager:
                 self.logger.info("Posting command to get_block_data for {0}".format(each))
             self.db.post_command(json.dumps(command_data))
         return block_data
+
+
+if __name__ == "__main__":
+    logger = logging.getLogger("Block Data Module")
+    logger.setLevel(logging.INFO)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    # add the handlers to the logger
+    logger.addHandler(ch)
+    logger.info("Testing target_new_blocks on block number 7110893")
+    manager = BlockDataManager(logger=logger)
+    manager.target_new_blocks(7110893)
