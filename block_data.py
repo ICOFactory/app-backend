@@ -182,7 +182,7 @@ class BlockDataManager:
                 if no_txns:
                     return block_data
                 txns = []
-                sql = "SELECT sender_address_id, received_address_id, external_erc20_contract_id,amount,"
+                sql = "SELECT sender_address_id, received_address_id, contract_id,amount,"
                 sql += "transaction_hash,gas_used,priority,usd_price"
                 sql += " FROM external_transaction_ledger WHERE block_data_id=%s"
                 c.execute(sql, (block_data_id,))
