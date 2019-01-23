@@ -35,7 +35,7 @@ def homepage():
                                                              datetime.datetime.now().isoformat())
 
     block_manager = BlockDataManager(db,current_app.logger)
-    latest_blocks = block_manager.get_lastest_block_numbers(10)
+    latest_blocks = block_manager.get_latest_block_numbers(10)
     block_data = []
     for block_number in latest_blocks:
         block = block_manager.get_block(block_number, True)

@@ -122,7 +122,28 @@ class BlockDataManager:
                                            self.config["block_data"]["mysql_database"])
         self.logger = logger
 
-    def get_lastest_block_numbers(self, count):
+    def get_block_numbers_since(self, block_number):
+        sql = "SELECT block_number, block_data_id FROM block_data WHERE block_number > %s ORDER BY block_number DESC;"
+        c = self.db_conn.cursor()
+        latest_blocks = []
+
+        try:
+            c.execute(sql, (block_number,))
+            for row in c:
+                latest_blocks.append(row[0])
+
+        except MySQLdb.Error as e:
+            try:
+                error_message = "MySQL Error [%d]: %s" % (e.args[0], e.args[1])
+            except IndexError:
+                error_message = "MySQL Error: %s" % (str(e),)
+            if self.logger:
+                self.logger.error(error_message)
+            else:
+                print(error_message)
+        return latest_blocks
+
+    def get_latest_block_numbers(self, count):
         sql = "SELECT block_number, block_data_id FROM block_data ORDER BY block_number DESC LIMIT %s;"
         c = self.db_conn.cursor()
         latest_blocks = []

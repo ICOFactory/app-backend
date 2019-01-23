@@ -29,7 +29,8 @@ class Event:
                         "Mailer Password Reset",
                         "Mailer Account Confirmation",
                         "Mailer Notify Deposit",
-                        "Whitepaper Viewed"]
+                        "Whitepaper Viewed",
+                        "Block Data Transactions"]
 
     def __init__(self, event_type, db, logger=None):
         if event_type not in self.AVAILABLE_EVENTS:
