@@ -255,8 +255,8 @@ if __name__ == "__main__":
     ch.setFormatter(formatter)
     # add the handlers to the logger
     logger.addHandler(ch)
-    logger.info("Testing target_new_blocks on block number 7110893")
+    logger.info("Testing get_block on block number 7110893")
     manager = BlockDataManager(logger=logger)
-    targets = manager.target_new_blocks(7110893)
-    print(targets[0])
-    print(targets[1])
+    block_data = manager.get_block(7110893)
+    import pprint
+    pprint.pprint(block_data)
