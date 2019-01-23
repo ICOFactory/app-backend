@@ -10,7 +10,7 @@
     "mysql_password": "beligerent8136",
     "mysql_database": "service",
     "eth_address_pool_min": 1000,
-    "eth_address_pool_max": 5000,
+    "eth_address_pool_max": 5000
   },
   "block_data": {
     "mysql_host": "localhost",
@@ -18,7 +18,7 @@
     "mysql_password": "beligerent8136",
     "mysql_database": "service",
     "max_pending_commands": 25,
-    "window_size": 100,
+    "window_size": 100
   },
   "eth_address_pool_min": 1000,
   "eth_address_pool_max": 5000,
