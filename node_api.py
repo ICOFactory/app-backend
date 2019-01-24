@@ -35,8 +35,9 @@ def command_output(api_key):
                 event_data["error"] = True
                 event_data["command_id"] = json_data["command_id"]
                 event_data["error_message"] = json_data["error_message"]
+                event_data["ip_address"] = ip_addr
                 # mark command undispatched
-                db.clear_dispatch_event_id(event_data["command_id"])
+                # db.clear_dispatch_event_id(event_data["command_id"])
             new_event.log_event(node_id, event_data)
             return Response(json.dumps({"success": event_data["error"]}))
         abort(500)
