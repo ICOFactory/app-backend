@@ -82,7 +82,7 @@ div#home_latest_blocks {
 }
 
 div#block_data_container {
-    height:140px;
+    height:420px;
     width:555px;
     white-space: nowrap;
     overflow-y: scroll;
