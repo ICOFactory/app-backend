@@ -23,6 +23,10 @@ def get_new_addresses(count):
 
 
 class EthAddressPoolStats:
+    assigned: int
+    duplicates: int
+    total: int
+
     def __init__(self, total, assigned, duplicates):
         self.total = total
         self.assigned = assigned
