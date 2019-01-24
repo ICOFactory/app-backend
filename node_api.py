@@ -34,7 +34,7 @@ def command_output(api_key):
             else:
                 event_data["error"] = True
                 event_data["command_id"] = json_data["command_id"]
-                event_data["input"] = json_data["input"]
+                event_data["input"] = json.loads(json_data["input"])
                 event_data["error_message"] = json_data["error_message"]
                 # mark command undispatched
                 db.clear_dispatch_event_id(event_data["input"]["command_id"])
