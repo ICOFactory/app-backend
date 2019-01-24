@@ -295,13 +295,16 @@ class BlockDataManager:
 
     def get_block(self, block_number: int, no_txns=True) -> BlockData:
         block_dict = self.get_block_from_db(block_number, no_txns=no_txns)
-        block_data = BlockData(block_dict["block_number"],
-                               block_dict["block_hash"],
-                               block_dict["block_timestamp"],
-                               block_dict["gas_used"],
-                               block_dict["gas_limit"],
-                               block_dict["block_size"],
-                               block_dict["tx_count"])
+        if block_dict:
+            block_data = BlockData(block_dict["block_number"],
+                                   block_dict["block_hash"],
+                                   block_dict["block_timestamp"],
+                                   block_dict["gas_used"],
+                                   block_dict["gas_limit"],
+                                   block_dict["block_size"],
+                                   block_dict["tx_count"])
+        else:
+            block_data = None
 
         pending_commands = self.db.get_pending_commands()
         undirected_commands = pending_commands[0]
