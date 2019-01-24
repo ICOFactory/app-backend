@@ -5,7 +5,7 @@
         <ul id="chart_toggle_list">
             <li class="chart_li">
             {% if error %}
-                Error (try reloading)</li>
+                Charting Error (try reloading)</li>
             {% else %}
                 [&nbsp;
                 {% if metrics.chart_data.gas_price %}Gas Price (moving average)
@@ -20,7 +20,7 @@
         </ul>
     <div id="admin_home_graph">
     {% if error %}
-        <p class="home_page_error">{{ error }}</p>
+        <div id="home_graph_error">{{ error }}</div>
     {% else %}
         <script language="JavaScript">
         Highcharts.chart('admin_home_graph', {

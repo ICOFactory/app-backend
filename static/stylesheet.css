@@ -182,6 +182,12 @@ table.block_data_table {
     color:var(--dark-mode-red);
 }
 
+#home_graph_error {
+    width:640px;
+    height:480px;
+    text-alignment:center;
+    color: var(--dark-mode-red);
+}
 
 #form_login {
     padding: 5px;
