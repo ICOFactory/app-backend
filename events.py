@@ -13,6 +13,7 @@ class Event:
     AVAILABLE_EVENTS = ["Ethereum Node Update",
                         "Ethereum Node Command Dispatch",
                         "Ethereum Node Command Output",
+                        "Ethereum Node Command Failed",
                         "Users Create User",
                         "Users Reset Password",
                         "Users Changed Permissions",
