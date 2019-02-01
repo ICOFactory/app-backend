@@ -450,5 +450,7 @@ if __name__ == "__main__":
                                          "timestamp": each_event.latest_block_timestamp,
                                          "tx_count": each_event.transaction_count,
                                          "gas_price": each_event.gas_price}
+    import pprint
+    pprint.pprint(blocks)
     print("Total node update events: {0}".format(event_count))
-    print("Events in last 24 days: {0}".format(len(todays_events)))
+    print("Events in last 24 hours: {0}".format(len(todays_events)))
