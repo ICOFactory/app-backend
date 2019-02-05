@@ -24,17 +24,9 @@ def update_block_data(latest_block):
 @ajax_api_blueprint.route("/block_data/<block_number>")
 def block_data(block_number):
     manager = BlockDataManager(logger=current_app.logger)
-    block_data = manager.get_block_from_db(block_number)
-    success = False
-    if block_data:
-        success = True
-    event_data = {"block_number": block_number,
-                  "result": success,
-                  "ip_address": request.access_route[-1]}
-    event = Event("Block Data Transactions", manager.db, current_app.logger)
-    event.log_event(1, event_data)
-    if block_data:
-        return Response(json.dumps(block_data), content_type="application/json")
+    data = manager.get_block_from_db(block_number)
+    if data:
+        return Response(json.dumps(data), content_type="application/json")
     else:
         return Response(json.dumps({"result": False, "error": "Block data not found."}),
                         content_type="application/json")

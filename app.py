@@ -10,6 +10,7 @@ import admin
 import users
 import events
 import whitepapers
+import ajax
 import re
 
 EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$")
@@ -19,6 +20,7 @@ app = Flask(__name__)
 app.register_blueprint(admin.admin_blueprint)
 app.register_blueprint(node_api.node_api_blueprint)
 app.register_blueprint(whitepapers.whitepapers_blueprint)
+app.register_blueprint(ajax.ajax_api_blueprint)
 
 
 @app.route('/')

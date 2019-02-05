@@ -64,6 +64,15 @@ class Event:
             else:
                 print(error_message)
 
+        def serialized(self):
+            return json.dumps({"block_size": self.latest_block_size,
+                           "block_number": self.latest_block_number,
+                           "gas_used": self.latest_gas_used,
+                           "gas_limit": self.latest_gas_limit,
+                           "timestamp": self.latest_block_timestamp,
+                           "tx_count": self.transaction_count,
+                           "gas_price": self.gas_price})
+
     def get_latest_event(self, user_id=None):
         if self.event_type_id < 1:
             raise InvalidEventException
@@ -443,13 +452,8 @@ if __name__ == "__main__":
     for each_event in todays_events:
         latest_block_hash = each_event.latest_block_hash
         if latest_block_hash not in blocks:
-            blocks[latest_block_hash] = {"block_size": each_event.latest_block_size,
-                                         "block_number": each_event.latest_block_number,
-                                         "gas_used": each_event.latest_gas_used,
-                                         "gas_limit": each_event.latest_gas_limit,
-                                         "timestamp": each_event.latest_block_timestamp,
-                                         "tx_count": each_event.transaction_count,
-                                         "gas_price": each_event.gas_price}
+            blocks[latest_block_hash] = each_event.deserialize()
+
     import pprint
     pprint.pprint(blocks)
     print("Total node update events: {0}".format(event_count))

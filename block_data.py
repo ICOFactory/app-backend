@@ -4,7 +4,7 @@ import json
 import logging
 import datetime
 
-MAX_PENDING_COMMANDS = 25
+MAX_PENDING_COMMANDS = 100
 WINDOW_SIZE = 100
 GROWTH_RATE = 15
 
@@ -180,14 +180,12 @@ class BlockDataManager:
         :param latest_block: latest_block_number
         :param window_size: search window size
         :param max_targets: max target to add, no limit on removal of duplicates
-        :return: [block_numbers_to_add],[block_numbers_to_remove]
+        :return: [block_numbers_to_add]
         """
 
-        # maybe use numpy here...
         self.logger.info("Searching for missing/duplicate blocks...")
 
         targets_for_addition = []
-        targets_for_removal = []
 
         frame = [0] * window_size
         reference = latest_block
@@ -217,13 +215,12 @@ class BlockDataManager:
                 value = frame[x]
                 if value == 0 and len(targets_for_addition) < max_targets:
                     targets_for_addition.append(x+reference)
-                elif value > 1:
-                    targets_for_removal.append(x+reference)
 
             reference -= window_size
             offset += window_size
+            targets_for_addition.sort()
 
-        return targets_for_addition, targets_for_removal
+        return targets_for_addition
 
     def get_block_from_db(self, block_number, no_txns=False):
         # converts to something that will not overflow the database column
@@ -314,8 +311,7 @@ class BlockDataManager:
             if remaining > GROWTH_RATE:
                 remaining = GROWTH_RATE
 
-        result = self.target_new_blocks(block_number, max_targets=remaining)
-        target_list = result[0]
+        target_list = self.target_new_blocks(block_number, max_targets=GROWTH_RATE)
 
         for each in target_list:
             command_data = {"get_block_data": each}

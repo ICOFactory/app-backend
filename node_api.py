@@ -19,7 +19,6 @@ def command_output(api_key):
     if node_id:
         json_data = request.get_json(force=True)
         if json_data:
-            new_event = events.Event("Ethereum Node Command Output", db, current_app.logger)
             event_data = {}
             if json_data["success"] is True:
                 event_data["error"] = False
@@ -31,6 +30,8 @@ def command_output(api_key):
                     block_data = BlockData(json_data=event_data["input"])
                     manager = BlockDataManager(db, current_app.logger)
                     manager.put_block(block_data)
+                new_event = events.Event("Ethereum Node Command Output", db, current_app.logger)
+                new_event.log_event(node_id, event_data)
             else:
                 event_data["error"] = True
                 event_data["command_id"] = json_data["command_id"]
@@ -38,10 +39,49 @@ def command_output(api_key):
                 event_data["ip_address"] = ip_addr
                 # mark command undispatched
                 # db.clear_dispatch_event_id(event_data["command_id"])
-            new_event.log_event(node_id, event_data)
+                # log error event
+                new_event = events.Event("Ethereum Node Command Failed", db, current_app.logger)
+                new_event.log_event(node_id, event_data)
             return Response(json.dumps({"success": event_data["error"]}))
         abort(500)
     abort(403)
+
+
+@node_api_blueprint.route("/dispatch_directed_command/<api_key>")
+def dispatch_directed_command(api_key):
+    db = database.Database(current_app.logger)
+    ip_addr = request.access_route[-1]
+    node_id = db.validate_api_key(api_key)
+    if node_id:
+        next_command = db.get_next_directed_command(node_id)
+        if next_command:
+            command_id = next_command[0]
+            command_data = json.loads(next_command[1])
+
+            new_event = events.Event("Ethereum Node Command Dispatch", db, current_app.logger)
+            event_data = {"ip_address": ip_addr,
+                          "node_id": node_id,
+                          "command": json.dumps(command_data),
+                          "command_id": command_id}
+            new_event_id = new_event.log_event(node_id,
+                                               json.dumps(event_data))
+            command_data["command_id"] = command_id
+            command_data["event_id"] = new_event_id
+            command_data["directed"] = True
+            if db.dispatch_command(command_id,
+                                   node_id,
+                                   new_event_id):
+                return Response(json.dumps({"result": "OK",
+                                            "command_data": command_data}))
+            else:
+                return Response(json.dumps({"result": "Error",
+                                            "error_msg": "Could not dispatch command {0}".format(command_id)}))
+        else:
+            return Response(json.dumps({"result": "Error",
+                                        "error_msg": "Could not fetch next directed command"}))
+    else:
+        return Response(json.dumps({"result": "Error",
+                                    "error_msg": "Invalid API key"}))
 
 
 @node_api_blueprint.route("/dispatch_undirected_command/<api_key>")
