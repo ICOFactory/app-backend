@@ -8,6 +8,7 @@ $(document).ready(function () {
                 transactions = result.transactions;
                 const txn_viewer = $("#txn_viewer");
                 txn_viewer.empty();
+                txn_viewer.append("<h2>Transactions for block number " + result.block_number +"</h2>");
                 var max_gas_used = 0;
                 var max_priority = 0;
                 for (let each in transactions) {
@@ -19,10 +20,10 @@ $(document).ready(function () {
                     }
                 }
                 for (let tx in transactions) {
-                    var $table = $('<table class="transaction"/>');
+                    var $table = $('<table class="transaction" cellpadding="0" cellspacing="0"/>');
                     txn_viewer.append($table);
 
-                    $table.append("<tr class=\"ui_div_highlight\"><td><span class=\"tx_details_label\">Hash</span></td><td align='right'><span class=\"tx_details_value\">" + transactions[tx].hash + "</span></td></tr>");
+                    $table.append("<tr class=\"ui_div_highlight\"><td><span class=\"tx_details_label\">TX</span></td><td align='right'><span class=\"tx_details_value\">" + transactions[tx].hash + "</span></td></tr>");
                     $table.append("<tr><td><span class=\"tx_details_label\">From</span></td><td align='right'><span class=\"tx_details_value\">" + transactions[tx].from + "</span></td></tr>");
                     $table.append("<tr class=\"ui_div_highlight\"><td><span class=\"tx_details_label\">To</span></td><td align='right'><span class=\"tx_details_value\">" + transactions[tx].to + "</span></td></tr>");
                     $table.append("<tr><td><span class=\"tx_details_label\">Amount</span></td><td align='right'><span class=\"tx_details_value\">" + transactions[tx].amount + "</span></td></tr>");

@@ -89,7 +89,11 @@ div#home_latest_blocks {
     float:right;
 }
 
+table.transaction {
+    margin-bottom: 10px;
 
+    border: 1px solid var(--dark-theme-border);
+}
 
 .tx_details_label {
     font-size: smaller;
@@ -113,6 +117,11 @@ div#home_latest_blocks {
     height: 12px;
     width: 140px;
     margin-right: auto;
+}
+
+table.transaction {
+    margin-bottom: 10px;
+    border: 1px solid var(--dark-theme-border);
 }
 
 div#block_data_container {
@@ -415,8 +424,13 @@ div.permissions {
     margin-left: 230px;
 }
 
+#home_login_form {
+    padding-left: 10px;
+    padding-top: 8px;
+}
+
 .admin_li {
-    width: 200px;
+    width: 160px;
     padding:5px;
     list-style: none;
     font-size: small;
