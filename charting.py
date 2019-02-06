@@ -5,7 +5,7 @@ import unittest
 import datetime
 import time
 
-MOVING_AVERAGE_WINDOW = 30
+MOVING_AVERAGE_WINDOW = 100
 
 
 class Charting:

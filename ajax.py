@@ -3,6 +3,7 @@ from flask import (
 )
 import json
 from block_data import BlockDataManager
+import database
 
 ajax_api_blueprint = Blueprint('ajax', __name__, url_prefix="/ajax")
 
@@ -24,7 +25,8 @@ def update_block_data(latest_block):
 
 @ajax_api_blueprint.route("/block_data/<block_number>")
 def block_data(block_number):
-    manager = BlockDataManager(logger=current_app.logger)
+    db = Database()
+    manager = BlockDataManager(db, logger=current_app.logger)
     data = manager.get_block_from_db(block_number)
     moving_average = manager.get_moving_average_for_block_number(block_number)
     # convert to JSON serializable/JavaScript format
