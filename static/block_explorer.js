@@ -22,12 +22,12 @@ $(document).ready(function () {
                 for (let tx in transactions) {
                     var $table = $('<table class="transaction" cellpadding="0" cellspacing="0"/>');
                     txn_viewer.append($table);
-
-                    $table.append("<tr class=\"ui_div_highlight\"><td><span class=\"tx_details_label\">TX</span></td><td align='right'><span class=\"tx_details_value\">" + transactions[tx].hash + "</span></td></tr>");
+                    let gwei = transactions[tx].priority / 1000000000;
+                    $table.append("<tr class=\"ui_div_highlight\"><td colspan='2'><span class=\"tx_details_label\">" + transactions[tx].hash + "</span></td></tr>");
                     $table.append("<tr><td><span class=\"tx_details_label\">From</span></td><td align='right'><span class=\"tx_details_value\">" + transactions[tx].from + "</span></td></tr>");
                     $table.append("<tr class=\"ui_div_highlight\"><td><span class=\"tx_details_label\">To</span></td><td align='right'><span class=\"tx_details_value\">" + transactions[tx].to + "</span></td></tr>");
                     $table.append("<tr><td><span class=\"tx_details_label\">Amount</span></td><td align='right'><span class=\"tx_details_value\">" + transactions[tx].amount + "</span></td></tr>");
-                    $table.append("<tr class=\"ui_div_highlight\"><td><span class=\"tx_details_label\">Priority</span></td><td align='right'><span class=\"tx_details_value\">" + transactions[tx].priority + "</span></td></tr>");
+                    $table.append("<tr class=\"ui_div_highlight\"><td><span class=\"tx_details_label\">Priority</span></td><td align='right'><span class=\"tx_details_value\">" + gwei + " Gwei </span></td></tr>");
                     $table.append("<tr><td><span class=\"tx_details_label\">Gas Used</span></td><td align='right'><span class=\"tx_details_value\">" + transactions[tx].gas_used + "</span></td></tr>");
                 }
 

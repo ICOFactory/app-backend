@@ -3,8 +3,9 @@ import MySQLdb
 import json
 import logging
 import datetime
+import random
 
-MAX_PENDING_COMMANDS = 100
+MAX_PENDING_COMMANDS = 25
 WINDOW_SIZE = 100
 GROWTH_RATE = 15
 
@@ -218,7 +219,7 @@ class BlockDataManager:
 
             reference -= window_size
             offset += window_size
-            targets_for_addition.sort()
+            random.shuffle(targets_for_addition)
 
         return targets_for_addition
 

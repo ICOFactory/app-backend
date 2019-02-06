@@ -15,6 +15,11 @@
     width:1024px;
 }
 
+#footer_view {
+    width:1024px;
+    margin-top:24px;
+    color:silver;
+}
 
 #header {
     width: 1024px;
@@ -81,15 +86,16 @@ div#home_latest_blocks {
     font-size: small;
 }
 
-#txn_viewer {     height: 420px;
-    width: 400px;
-    padding:5px;
+#txn_viewer {         height: 420px;
+    width: 460px;
+    /* padding: 5px; */
     white-space: nowrap;
     overflow-y: scroll;
-    float:right;
+    float: right;
 }
 
 table.transaction {
+    width:100%;
     margin-bottom: 10px;
 
     border: 1px solid var(--dark-theme-border);
@@ -361,9 +367,10 @@ div.permissions {
 
 
 #admin_main_menu {
-    padding-top:5px;
-    width: 220px;
-    float:left;
+        padding-top: 5px;
+    width: 200px;
+    float: left;
+    padding-left: 20px;
 }
 
 #admin_content_view {
