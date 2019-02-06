@@ -223,6 +223,15 @@ class BlockDataManager:
 
         return targets_for_addition
 
+    def get_moving_average_for_block_number(self, block_number):
+        c = self.db.cursor()
+        sql = "SELECT moving_average_gas_price FROM charting WHERE block_number=%s"
+        c.execute(sql, (block_number,))
+        row = c.fetchone()
+        if row:
+            return row[0]
+        return 0
+
     def get_block_from_db(self, block_number, no_txns=False):
         # converts to something that will not overflow the database column
         def ether_to_wei(ether):

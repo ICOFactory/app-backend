@@ -23,11 +23,18 @@ $(document).ready(function () {
                     var $table = $('<table class="transaction" cellpadding="0" cellspacing="0"/>');
                     txn_viewer.append($table);
                     let gwei = transactions[tx].priority / 1000000000;
+                    var difference = null
+                    if (result["moving_average_gas_price"] < transactions[tx].priority) {
+                        difference = "<span style=\"color:rgb(0,183,79)\">(-" + (result["moving_average_gas_price"] - transactions[tx].priority) / 1000000000 + " Gwei)</span>"
+                    }
+                    else {
+                        differnece = "<span style=\"color:rgb(209,103,90)\">" + (transactions[tx].priority - result["moving_average_gas_price"])/ 1000000000 + " Gwei)</span>"
+                    }
                     $table.append("<tr class=\"ui_div_highlight\"><td colspan='2'><span class=\"tx_details_label\">" + transactions[tx].hash + "</span></td></tr>");
                     $table.append("<tr><td><span class=\"tx_details_label\">From</span></td><td align='right'><span class=\"tx_details_value\">" + transactions[tx].from + "</span></td></tr>");
                     $table.append("<tr class=\"ui_div_highlight\"><td><span class=\"tx_details_label\">To</span></td><td align='right'><span class=\"tx_details_value\">" + transactions[tx].to + "</span></td></tr>");
                     $table.append("<tr><td><span class=\"tx_details_label\">Amount</span></td><td align='right'><span class=\"tx_details_value\">" + transactions[tx].amount + "</span></td></tr>");
-                    $table.append("<tr class=\"ui_div_highlight\"><td><span class=\"tx_details_label\">Priority</span></td><td align='right'><span class=\"tx_details_value\">" + gwei + " Gwei </span></td></tr>");
+                    $table.append("<tr class=\"ui_div_highlight\"><td><span class=\"tx_details_label\">Priority</span></td><td align='right'><span class=\"tx_details_value\">" + gwei + " Gwei " + difference + "</span></td></tr>");
                     $table.append("<tr><td><span class=\"tx_details_label\">Gas Used</span></td><td align='right'><span class=\"tx_details_value\">" + transactions[tx].gas_used + "</span></td></tr>");
                 }
 
