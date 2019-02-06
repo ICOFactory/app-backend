@@ -224,7 +224,7 @@ class BlockDataManager:
         return targets_for_addition
 
     def get_moving_average_for_block_number(self, block_number):
-        c = self.db.cursor()
+        c = self.db_conn.cursor()
         sql = "SELECT moving_average_gas_price FROM charting WHERE block_number=%s"
         c.execute(sql, (block_number,))
         row = c.fetchone()
