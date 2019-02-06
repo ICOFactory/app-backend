@@ -96,7 +96,10 @@
 
     </div>
 <div id="home_latest_blocks">
+<div id="txn_viewer"></div>
+    </div>
     <div id="block_data_container">
+        <script src="{{ url_for('static', filename='block_explorer.js') }}"></script>
             {% for each_block in block_data %}
                 <div class="block_data" id="block_{{ each_block.block_number }}">
                     <table class="block_data_table" cellspacing="0" cellpadding="0">
@@ -126,12 +129,13 @@
                         </tr>
                         <tr>
                             <td><span class="block_data_label">Transaction Count</span></td>
-                            <td align="right"><span id="latest_block_tx_count">{{ each_block.tx_count }}</span></td>
+                            <td align="right">[&nbsp;<a href="javascript:void(0);" class="block_txns" id="block_txns_{{ each_block.block_number }}">view</a>&nbsp;]
+                                &nbsp;<span id="latest_block_tx_count">{{ each_block.tx_count }}</span></td>
                         </tr>
                     </table>
                 </div>
             {% endfor %}
         </div>
-    </div>
+
 </div>
 {% endblock %}
