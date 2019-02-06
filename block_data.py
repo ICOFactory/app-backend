@@ -287,6 +287,14 @@ class BlockDataManager:
                         each_tx["to"] = None
 
                 block_data["transactions"] = txns
+
+                sql = "SELECT moving_average_gas_price FROM charting WHERE block_number=%s"
+                c.execute(sql, (block_number,))
+                row = c.fetchone()
+                if row:
+                    block_data["moving_average_gas_price"] = row[0]
+                else:
+                    block_data["moving_average_gas_price"] = None
                 return block_data
         except MySQLdb.Error as e:
             try:
