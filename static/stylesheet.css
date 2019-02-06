@@ -82,7 +82,7 @@ div#home_latest_blocks {
 }
 
 #txn_viewer {     height: 420px;
-    width: 502px;
+    width: 400px;
     padding:5px;
     white-space: nowrap;
     overflow-y: scroll;
@@ -126,7 +126,7 @@ table.transaction {
 
 div#block_data_container {
     height:420px;
-    width:502px;
+    width:540px;
     padding:5px;
     white-space: nowrap;
     overflow-y: scroll;
@@ -268,7 +268,6 @@ table.block_data_table {
 }
 
 .ui_h3 {
-    padding-left:5px;
     margin: 5px;
     color:whitesmoke;
 }
