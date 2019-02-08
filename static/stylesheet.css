@@ -349,7 +349,7 @@ li.acl_type {
     width:320px;
     margin-left:auto;
     margin-right:auto;
-    padding:20px;
+    padding: 6px;
     border: 1px solid whitesmoke;
 }
 
@@ -412,7 +412,7 @@ div.permissions {
 #admin_ul {
     margin-top: 0px;
     padding: 5px;
-    width: 120px;
+    width: 160px;
 }
 
 #hash_data {
@@ -436,7 +436,7 @@ div.permissions {
 }
 
 .admin_li {
-    width: 100px;
+    width: 170px;
     padding:5px;
     list-style: none;
     font-size: small;
