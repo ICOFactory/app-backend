@@ -160,7 +160,7 @@ table.block_data_table {
 
 .user_record {
     margin-bottom:20px;
-    padding: 15px;
+    padding: 0px;
     width:485px;
     color:white;
     border: 1px solid silver;
@@ -410,9 +410,9 @@ div.permissions {
 }
 
 #admin_ul {
-    margin-top:0px;
-    width: 210px;
-    padding:5px;
+    margin-top: 0px;
+    padding: 5px;
+    width: 120px;
 }
 
 #hash_data {
@@ -436,7 +436,7 @@ div.permissions {
 }
 
 .admin_li {
-    width: 160px;
+    width: 100px;
     padding:5px;
     list-style: none;
     font-size: small;

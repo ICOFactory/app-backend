@@ -2,7 +2,7 @@ from flask import Flask, request, render_template, current_app, url_for, redirec
 from database import Database
 from charting import Charting
 from credits import Credits
-from block_data import BlockDataManager, BlockData, TransactionData
+from block_data import BlockDataManager
 import datetime
 import json
 import node_api
@@ -121,7 +121,7 @@ def homepage_create_user():
             error = "Passwords did not match."
             return render_template("create_user.jinja2", error_msg=error)
 
-    return render_template("create_user.jinja2")
+    return render_template("create_user.jinja2",error_msg="Unspecified error.")
 
 
 @app.route('/login', methods=["POST"])
