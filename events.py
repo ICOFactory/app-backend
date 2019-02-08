@@ -24,6 +24,7 @@ class Event:
                         "Users Purchased Credits",
                         "ERC20 Token Created",
                         "ERC20 Token Mined",
+                        "ERC20 Token Published",
                         "ERC20 Token Burned",
                         "ERC20 Token Issued",
                         "ERC20 Token External Transfer",

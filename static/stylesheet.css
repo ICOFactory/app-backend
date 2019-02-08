@@ -562,11 +562,11 @@ div.permissions {
 }
 
 .login_anchor:hover {
-    color: orangered;
+    color: var(--dark-mode-red);
 }
 
 .login_anchor:visited {
-    color: orangered;
+    color: var(--dark-mode-red);
     text-decoration: none;
 }
 

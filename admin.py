@@ -361,6 +361,28 @@ def admin_tokens(session_token):
         ctx = UserContext(user_id, db=db, logger=db.logger)
         can_launch_ico = ctx.check_acl("launch-ico")
 
+        erc20_mined = Event("ERC20 Token Mined", db, logger=current_app.logger)
+        mined_count = erc20_mined.get_event_count(user_id)
+        mined_erc20_events = erc20_mined.get_latest_events(mined_count,user_id)
+        mined_ids = []
+
+        erc20_published = Event("ERC20 Token Published", db, logger=current_app.logger)
+        published_count = erc20_published.get_event_count(user_id)
+        published_erc20_events = erc20_published.get_latest_events(published_count, user_id)
+        published_ids = []
+
+        for each in mined_erc20_events:
+            json_data = json.loads(each[0])
+            token_id = json_data["token_id"]
+            if token_id not in mined_ids:
+                mined_ids.append(token_id)
+
+        for each in published_erc20_events:
+            json_data = json.loads(each[0])
+            contract_address = json_data["contract_id"]
+            if contract_address not in published_ids:
+                published_ids.append(contract_id)
+
         if can_launch_ico or len(ctx.acl()["management"]) > 0:
             owned_tokens = []
             for key in ctx.acl()["management"].keys():
@@ -375,6 +397,13 @@ def admin_tokens(session_token):
             last_logged_in_ip = ctx.user_info["last_logged_in_ip"]
             credit_ctx = Credits(user_id, db, current_app.logger)
             credit_balance = credit_ctx.get_credit_balance()
+            for each in owned_tokens:
+                if each["token_id"] in published_ids:
+                    each["published"] = True
+                    each["pending"] = False
+                elif each["token_id"] in mined_ids:
+                    each["published"] = True
+                    each["pending"] = True
             return render_template("admin/admin_tokens.jinja2",
                                    session_token=session_token,
                                    owned_tokens=owned_tokens,
@@ -612,7 +641,8 @@ def create_tokens_form():
                                               "token_name": token_name,
                                               "token_symbol": token_symbol,
                                               "token_count": token_count,
-                                              "token_id": sc.smart_contract_id})
+                                              "token_id": sc.smart_contract_id,
+                                              })
                 return redirect(url_for("admin.admin_tokens", session_token=session_token))
             else:
                 create_token_error = "Token with this name already managed by ERC20Master, to make things less "
