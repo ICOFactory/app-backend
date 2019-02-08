@@ -539,12 +539,12 @@ div.permissions {
 
 .admin_li:hover {
     border: 2px solid orangered;
+    width: 140px;
 }
 
 #login_error {
     color: var(--dark-mode-red);
     padding: 12px;
-    font-size:small;
 }
 
 #login_table {
@@ -558,12 +558,11 @@ div.permissions {
 .login_anchor {
     color: rgb(124,136,198);
     text-decoration: none;
-    font-size:smaller;
+    width: 148px;
 }
 
 .login_anchor:hover {
     color: orangered;
-    text-decoration: underline;
 }
 
 .login_anchor:visited {
