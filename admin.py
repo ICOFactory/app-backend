@@ -399,13 +399,14 @@ def admin_tokens(session_token):
             last_logged_in_ip = ctx.user_info["last_logged_in_ip"]
             credit_ctx = Credits(user_id, db, current_app.logger)
             credit_balance = credit_ctx.get_credit_balance()
-            for each in owned_tokens:
-                if each["token_id"] in published_ids:
-                    each["published"] = True
-                    each["pending"] = False
-                elif each["token_id"] in mined_ids:
-                    each["published"] = True
-                    each["pending"] = True
+            if len(owned_tokens):
+                for each in owned_tokens:
+                    if each["token_id"] in published_ids:
+                        each["published"] = True
+                        each["pending"] = False
+                    elif each["token_id"] in mined_ids:
+                        each["published"] = True
+                        each["pending"] = True
             return render_template("admin/admin_tokens.jinja2",
                                    session_token=session_token,
                                    owned_tokens=owned_tokens,
