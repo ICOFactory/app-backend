@@ -329,7 +329,7 @@ class BlockDataManager:
             if remaining > GROWTH_RATE:
                 remaining = GROWTH_RATE
 
-        target_list = self.target_new_blocks(block_number, max_targets=GROWTH_RATE)
+        target_list = self.target_new_blocks(block_number, max_targets=remaining)
 
         for each in target_list:
             command_data = {"get_block_data": each}
