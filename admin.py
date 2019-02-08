@@ -399,7 +399,7 @@ def admin_tokens(session_token):
             last_logged_in_ip = ctx.user_info["last_logged_in_ip"]
             credit_ctx = Credits(user_id, db, current_app.logger)
             credit_balance = credit_ctx.get_credit_balance()
-            if len(owned_tokens):
+            if owned_tokens:
                 for each in owned_tokens:
                     if each["token_id"] in published_ids:
                         each["published"] = True
