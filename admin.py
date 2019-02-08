@@ -363,25 +363,27 @@ def admin_tokens(session_token):
 
         erc20_mined = Event("ERC20 Token Mined", db, logger=current_app.logger)
         mined_count = erc20_mined.get_event_count(user_id)
-        mined_erc20_events = erc20_mined.get_latest_events(mined_count,user_id)
         mined_ids = []
+
+        if mined_count:
+            mined_erc20_events = erc20_mined.get_latest_events(mined_count, user_id)
+            for each in mined_erc20_events:
+                json_data = json.loads(each[0])
+                token_id = json_data["token_id"]
+                if token_id not in mined_ids:
+                    mined_ids.append(token_id)
 
         erc20_published = Event("ERC20 Token Published", db, logger=current_app.logger)
         published_count = erc20_published.get_event_count(user_id)
-        published_erc20_events = erc20_published.get_latest_events(published_count, user_id)
         published_ids = []
 
-        for each in mined_erc20_events:
-            json_data = json.loads(each[0])
-            token_id = json_data["token_id"]
-            if token_id not in mined_ids:
-                mined_ids.append(token_id)
-
-        for each in published_erc20_events:
-            json_data = json.loads(each[0])
-            contract_address = json_data["contract_id"]
-            if contract_address not in published_ids:
-                published_ids.append(contract_id)
+        if published_count:
+            published_erc20_events = erc20_published.get_latest_events(published_count, user_id)
+            for each in published_erc20_events:
+                json_data = json.loads(each[0])
+                contract_address = json_data["contract_id"]
+                if contract_address not in published_ids:
+                    published_ids.append(contract_id)
 
         if can_launch_ico or len(ctx.acl()["management"]) > 0:
             owned_tokens = []

@@ -11,20 +11,16 @@ MOVING_AVERAGE_WINDOW = 100
 class Charting:
     def __init__(self, db=None, logger=None):
         self.logger = logger
-        config_stream = open("config/charting.json", "r")
+        config_stream = open("config.json", "r")
         config_data = json.load(config_stream)
         config_stream.close()
         self.log_string("Charting module: configuration loaded.")
-        self.db = None
-        if db:
-            self._db = db.db
-            self.db = db
-        else:
-            db_host = config_data['mysql_host']
-            db_username = config_data['mysql_user']
-            db_password = config_data['mysql_password']
-            db_name = config_data['mysql_database']
-            self._db = MySQLdb.connect(db_host, db_username, db_password, db_name)
+
+        db_host = config_data["charting"]['mysql_host']
+        db_username = config_data["charting"]['mysql_user']
+        db_password = config_data["charting"]['mysql_password']
+        db_name = config_data["charting"]['mysql_database']
+        self._db = MySQLdb.connect(db_host, db_username, db_password, db_name)
 
     def log_string(self, event):
         if self.logger:
