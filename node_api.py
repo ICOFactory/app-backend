@@ -32,6 +32,7 @@ def command_output(api_key):
                     manager.put_block(block_data)
                 elif "erc20_function" in command_output:
                     if "erc20_function" == "publish":
+                        event_data["contract"] = command_output["contract_address"]
                         publish_event = events.Event("ERC20 Token Published", db, current_app.logger)
                         publish_event.log_event(node_id, event_data)
                     elif "erc20_function" == "burn":
