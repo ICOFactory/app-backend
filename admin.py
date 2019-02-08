@@ -472,7 +472,10 @@ def admin_confirm():
                         event_id = new_event.log_event(user_id, event_data)
                         event_data["event_id"] = event_id
                         credits.debit(credits.erc20_publish_price, event_data)
-                        command_id = db.post_command(json.dumps(event_data), 100)
+                        command_id = db.post_command(json.dumps({"erc20_function":"publish",
+                                                                 "token_name":sc.tokens,
+                                                                 "token_symbol":sc.token_symbol,
+                                                                 "token_count":sc.tokens}), 100)
                         if command_id:
                             return redirect(url_for("admin.admin_tokens", session_token=session_token))
                         else:
