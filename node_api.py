@@ -86,13 +86,13 @@ def dispatch_directed_command(api_key):
                                             "command_data": command_data}))
             else:
                 return Response(json.dumps({"result": "Error",
-                                            "error_msg": "Could not dispatch command {0}".format(command_id)}))
+                                            "error_message": "Could not dispatch command {0}".format(command_id)}))
         else:
             return Response(json.dumps({"result": "Error",
-                                        "error_msg": "Could not fetch next directed command"}))
+                                        "error_message": "Could not fetch next directed command"}))
     else:
         return Response(json.dumps({"result": "Error",
-                                    "error_msg": "Invalid API key"}))
+                                    "error_message": "Invalid API key"}))
 
 
 @node_api_blueprint.route("/dispatch_undirected_command/<api_key>")

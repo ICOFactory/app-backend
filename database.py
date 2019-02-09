@@ -722,10 +722,10 @@ WHERE smart_contracts.id=%s"""
             if row:
                 return row
             # now we look for node_id values higher than 9 which indicate priority
-            sql = "SELECT command_id, command FROM commands WHERE dispatch_event_id IS NULL AND node_id > {0}".format(
-                MAX_NODES)
+            sql = "SELECT command_id, command FROM commands WHERE dispatch_event_id IS NULL AND node_id > %s"
             sql += " ORDER BY node_id DESC LIMIT 1;"
-            c.execute(sql)
+            c.execute(sql, (MAX_NODES,))
+            row = c.fetchone()
             if row:
                 return row
         except MySQLdb.Error as e:
