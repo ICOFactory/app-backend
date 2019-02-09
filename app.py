@@ -129,7 +129,9 @@ def login():
     if request.form['submit_button'] == "Create Account":
         return redirect(url_for("homepage_create_user"))
     db = Database()
-    logged_in_user = db.login(request.form["email_address"],request.form["password"],request.access_route[-1])
+    logged_in_user = db.login(request.form["email_address"],
+                              request.form["password"],
+                              request.access_route[-1])
     if logged_in_user:
         return redirect(url_for("admin.admin_main", session_token=logged_in_user[1]))
     else:

@@ -753,6 +753,21 @@ WHERE smart_contracts.id=%s"""
                 self.logger.error("MySQL Error: %s" % (str(e),))
         return False
 
+    def dispatch_directed_command(self, command_id, new_event_id):
+        sql = "UPDATE commands SET dispatch_event_id=%s WHERE command_id=%s"
+        try:
+            c = self.db.cursor()
+            c.execute(sql, (new_event_id, command_id,))
+            self.db.commit()
+            if c.rowcount == 1:
+                return True
+        except MySQLdb.Error as err:
+            try:
+                self.logger.error("MySQL Error [%d]: %s" % (err.args[0], err.args[1]))
+            except IndexError:
+                self.logger.error("MySQL Error: %s" % (str(err),))
+        return False
+
     def dispatch_command(self, command_id, node_id, new_event_id):
         sql = "UPDATE commands SET dispatch_event_id=%s, node_id=%s WHERE command_id=%s"
         try:

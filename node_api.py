@@ -81,9 +81,7 @@ def dispatch_directed_command(api_key):
             command_data["command_id"] = command_id
             command_data["event_id"] = new_event_id
             command_data["directed"] = True
-            if db.dispatch_command(command_id,
-                                   node_id,
-                                   new_event_id):
+            if db.dispatch_directed_command(command_id, new_event_id):
                 return Response(json.dumps({"result": "OK",
                                             "command_data": command_data}))
             else:
