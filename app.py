@@ -121,7 +121,7 @@ def homepage_create_user():
             error = "Passwords did not match."
             return render_template("create_user.jinja2", error_msg=error)
 
-    return render_template("create_user.jinja2",error_msg="Unspecified error.")
+    return render_template("create_user.jinja2")
 
 
 @app.route('/login', methods=["POST"])
