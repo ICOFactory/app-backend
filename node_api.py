@@ -5,6 +5,7 @@ from werkzeug.exceptions import abort
 import database
 import events
 import json
+from smart_contract import SmartContract
 from charting import Charting
 from block_data import BlockDataManager, BlockData
 
@@ -35,8 +36,10 @@ def command_output(api_key):
                     if erc20_function == "publish":
                         event_data["contract_address"] = command_output["contract_address"]
                         event_data["token_id"] = command_output["token_id"]
-                        publish_event = events.Event("ERC20 Token Published", db, current_app.logger)
-                        publish_event.log_event(node_id, event_data)
+                        sc = SmartContract(smart_token_id=event_data["token_id"])
+                        if sc.smart_contract_id > -1 and sc.set_contract_address(event_data["contract_address"]):
+                            publish_event = events.Event("ERC20 Token Published", db, current_app.logger)
+                            publish_event.log_event(node_id, event_data)
                     elif erc20_function == "burn":
                         event_data["contract_address"] = command_output["contract_address"]
                         event_data["token_id"] = command_output["token_id"]

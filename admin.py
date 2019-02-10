@@ -373,21 +373,6 @@ def admin_tokens(session_token):
                 if token_id not in mined_ids:
                     mined_ids.append(token_id)
 
-        erc20_published = Event("ERC20 Token Published", db, logger=current_app.logger)
-        published_count = erc20_published.get_event_count(user_id)
-        published_ids = []
-        published_contract_addresses = []
-
-        if published_count:
-            published_erc20_events = erc20_published.get_latest_events(published_count, user_id)
-            for each in published_erc20_events:
-                json_data = json.loads(each[0])
-                token_id = json_data["token_id"]
-                contract_address = json_data["contract_address"]
-                if token_id not in published_ids:
-                    published_ids.append(token_id)
-                    published_contract_addresses.append(contract_address)
-
         if can_launch_ico or len(ctx.acl()["management"]) > 0:
             owned_tokens = []
             for key in ctx.acl()["management"].keys():
@@ -404,12 +389,12 @@ def admin_tokens(session_token):
             credit_balance = credit_ctx.get_credit_balance()
             if owned_tokens:
                 for each in owned_tokens:
-                    if each["token_id"] in published_ids:
-                        idx = published_ids.index(each["token_id"])
-                        each["eth_address"] = published_contract_addresses[idx]
-                        each["pending"] = False
-                    elif each["token_id"] in mined_ids:
-                        each["pending"] = True
+                    if each["token_id"] in mined_ids:
+                        if each["eth_address"] is None:
+                            each["pending"] = True
+                        else:
+                            each["pending"] = False
+
             return render_template("admin/admin_tokens.jinja2",
                                    session_token=session_token,
                                    owned_tokens=owned_tokens,

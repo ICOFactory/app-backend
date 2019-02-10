@@ -1,6 +1,7 @@
 import MySQLdb
 import json
 from ethereum_node import EthereumNode
+from ethereum_address_pool import EthereumAddressPool
 from flask import render_template
 import re
 
@@ -149,6 +150,30 @@ class SmartContract:
                 else:
                     print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
         return output
+
+    def set_contract_address(self, contract_address):
+        eth_address_pool = EthereumAddressPool(self.db, self.logger)
+        new_eth_address = eth_address_pool.add_new_ethereum_address(contract_address)
+        if new_eth_address is None:
+            return False
+        try:
+            c = self.db.cursor()
+            c.execute("UPDATE smart_contracts SET eth_address=% WHERE id=%s",(new_eth_address,
+                                                              self.smart_contract_id,))
+            self.db.commit()
+            return True
+        except MySQLdb.Error as e:
+            try:
+                if self.logger:
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                if self.logger:
+                    self.logger.error("MySQL Error: %s" % (str(e),))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+        return False
 
     def get_issued_token_count(self):
         try:
