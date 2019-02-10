@@ -473,7 +473,7 @@ def admin_confirm():
                         event_data["event_id"] = event_id
                         credits.debit(credits.erc20_publish_price, event_data)
                         command_id = db.post_command(json.dumps({"erc20_function":"publish",
-                                                                 "token_name":sc.tokens,
+                                                                 "token_name":sc.token_name,
                                                                  "token_symbol":sc.token_symbol,
                                                                  "token_count":sc.tokens}), 100)
                         if command_id:
