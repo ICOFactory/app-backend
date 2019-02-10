@@ -31,17 +31,18 @@ def command_output(api_key):
                     manager = BlockDataManager(db, current_app.logger)
                     manager.put_block(block_data)
                 elif "erc20_function" in command_output:
-                    if "erc20_function" == "publish":
-                        event_data["contract"] = command_output["contract_address"]
+                    erc20_function = command_output["erc20_function"]
+                    if erc20_function == "publish":
+                        event_data["contract_address"] = command_output["contract_address"]
                         publish_event = events.Event("ERC20 Token Published", db, current_app.logger)
                         publish_event.log_event(node_id, event_data)
-                    elif "erc20_function" == "burn":
+                    elif erc20_function == "burn":
                         burn_function = events.Event("ERC20 Token Burned", db, current_app.logger)
                         burn_function.log_event(node_id, event_data)
-                    elif "erc20_function" == "transfer":
+                    elif erc20_function == "transfer":
                         transfer_function = events.Event("ERC20 Token External Transfer", db, current_app.logger)
                         transfer_function.log_event(node_id, event_data)
-                    elif "erc20_function" == "total_supply":
+                    elif erc20_function == "total_supply":
                         event_data["total_supply"] = json_data["total_supply"]
                 new_event = events.Event("Ethereum Node Command Output", db, current_app.logger)
                 new_event.log_event(node_id, event_data)
