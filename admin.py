@@ -376,14 +376,17 @@ def admin_tokens(session_token):
         erc20_published = Event("ERC20 Token Published", db, logger=current_app.logger)
         published_count = erc20_published.get_event_count(user_id)
         published_ids = []
+        published_contract_addresses = []
 
         if published_count:
             published_erc20_events = erc20_published.get_latest_events(published_count, user_id)
             for each in published_erc20_events:
                 json_data = json.loads(each[0])
-                contract_address = json_data["token_id"]
-                if contract_address not in published_ids:
-                    published_ids.append(contract_id)
+                token_id = json_data["token_id"]
+                contract_address = json_data["contract_address"]
+                if token_id not in published_ids:
+                    published_ids.append(token_id)
+                    published_contract_addresses.append(contract_address)
 
         if can_launch_ico or len(ctx.acl()["management"]) > 0:
             owned_tokens = []
@@ -402,10 +405,10 @@ def admin_tokens(session_token):
             if owned_tokens:
                 for each in owned_tokens:
                     if each["token_id"] in published_ids:
-                        each["published"] = True
+                        idx = published_ids.index(each["token_id"])
+                        each["eth_address"] = published_contract_addresses[idx]
                         each["pending"] = False
                     elif each["token_id"] in mined_ids:
-                        each["published"] = True
                         each["pending"] = True
             return render_template("admin/admin_tokens.jinja2",
                                    session_token=session_token,
