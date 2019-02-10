@@ -381,7 +381,7 @@ def admin_tokens(session_token):
             published_erc20_events = erc20_published.get_latest_events(published_count, user_id)
             for each in published_erc20_events:
                 json_data = json.loads(each[0])
-                contract_address = json_data["contract_id"]
+                contract_address = json_data["token_id"]
                 if contract_address not in published_ids:
                     published_ids.append(contract_id)
 
@@ -475,7 +475,8 @@ def admin_confirm():
                         command_id = db.post_command(json.dumps({"erc20_function":"publish",
                                                                  "token_name":sc.token_name,
                                                                  "token_symbol":sc.token_symbol,
-                                                                 "token_count":sc.tokens}), 100)
+                                                                 "token_count":sc.tokens,
+                                                                 "token_id":sc.smart_contract_id}), 100)
                         if command_id:
                             return redirect(url_for("admin.admin_tokens", session_token=session_token))
                         else:

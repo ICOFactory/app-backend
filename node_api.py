@@ -34,12 +34,22 @@ def command_output(api_key):
                     erc20_function = command_output["erc20_function"]
                     if erc20_function == "publish":
                         event_data["contract_address"] = command_output["contract_address"]
+                        event_data["token_id"] = command_output["token_id"]
                         publish_event = events.Event("ERC20 Token Published", db, current_app.logger)
                         publish_event.log_event(node_id, event_data)
                     elif erc20_function == "burn":
+                        event_data["contract_address"] = command_output["contract_address"]
+                        event_data["token_id"] = command_output["token_id"]
+                        event_data["tokens"] = command_output["tokens"]
+                        event_data["gas_price"] = command_output["gas_price"]
                         burn_function = events.Event("ERC20 Token Burned", db, current_app.logger)
                         burn_function.log_event(node_id, event_data)
                     elif erc20_function == "transfer":
+                        event_data["contract_address"] = command_output["contract_address"]
+                        event_data["token_id"] = command_output["token_id"]
+                        event_data["tokens"] = command_output["tokens"]
+                        event_data["gas_price"] = command_output["gas_price"]
+                        event_data["address"] = command_output["address"]
                         transfer_function = events.Event("ERC20 Token External Transfer", db, current_app.logger)
                         transfer_function.log_event(node_id, event_data)
                     elif erc20_function == "total_supply":
