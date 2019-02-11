@@ -50,10 +50,7 @@ class EthereumAddressPool:
         config_data = json.load(config_stream)
         config_stream.close()
         if db:
-            if db.db:
-                self.db = db.db
-            else:
-                self.db = db
+            self.db = db
         else:
             self.db = MySQLdb.connect(config_data["eth_address_pool"]["mysql_host"],
                                       config_data["eth_address_pool"]["mysql_user"],
