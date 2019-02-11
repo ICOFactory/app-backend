@@ -8,6 +8,7 @@ import MySQLdb
 import json
 import re
 import os
+from database import Database
 
 ETH_ADDRESS_REGEX = re.compile("^0x[0-9a-fA-F]{40}$")
 
@@ -50,7 +51,10 @@ class EthereumAddressPool:
         config_data = json.load(config_stream)
         config_stream.close()
         if db:
-            self.db = db
+            if isinstance(db, database.Database):
+                self.db = db.db
+            else:
+                self.db = db
         else:
             self.db = MySQLdb.connect(config_data["eth_address_pool"]["mysql_host"],
                                       config_data["eth_address_pool"]["mysql_user"],
