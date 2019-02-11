@@ -51,7 +51,7 @@ class EthereumAddressPool:
         config_data = json.load(config_stream)
         config_stream.close()
         if db:
-            if isinstance(db, database.Database):
+            if isinstance(db, Database):
                 self.db = db.db
             else:
                 self.db = db
