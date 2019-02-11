@@ -36,7 +36,7 @@ def command_output(api_key):
                     if erc20_function == "publish":
                         event_data["contract_address"] = command_output["new_contract_address"]
                         event_data["token_id"] = command_output["token_id"]
-                        sc = SmartContract(smart_token_id=event_data["token_id"])
+                        sc = SmartContract(smart_token_id=event_data["token_id"], logger=current_app.logger)
                         if sc.smart_contract_id > -1 and sc.set_contract_address(event_data["contract_address"]):
                             publish_event = events.Event("ERC20 Token Published", db, current_app.logger)
                             publish_event.log_event(node_id, event_data)

@@ -1,0 +1,19 @@
+{% extends "main.jinja2" %}
+
+{% block title %}Wallet{% endblock %}
+
+{% block content %}
+    <div id="admin_main_menu">
+            <h3 class="ui_h3">Owned tokens</h3>
+        <ul class="menu_ul">
+        {% if first_block %}
+            <li class="admin_li">Ethereum Network Charts</li>
+            {% else %}
+            <li class="admin_li"><a class="main_menu_anchor" href="/">Ethereum Network Charts</a></li>
+        {% endif %}
+        {% for each in whitepapers %}
+            <li class="admin_li"><a class="main_menu_anchor" href="{{ each.url }}">{{ each.title }}</a></li>
+        {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

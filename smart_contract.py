@@ -158,10 +158,10 @@ class SmartContract:
             return False
         try:
             c = self.db.cursor()
-            c.execute("UPDATE smart_contracts SET eth_address=% WHERE id=%s",(new_eth_address,
-                                                              self.smart_contract_id,))
+            sql = "UPDATE smart_contracts SET eth_address=%s,published=NOW() WHERE id=%s"
+            c.execute(sql, (new_eth_address, self.smart_contract_id,))
             self.db.commit()
-            return True
+            return c.lastrowid
         except MySQLdb.Error as e:
             try:
                 if self.logger:

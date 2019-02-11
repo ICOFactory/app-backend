@@ -127,7 +127,7 @@ class EthereumAddressPool:
         return output
 
     def add_new_ethereum_address(self, new_address):
-        self.logger.info("Adding new address {0} to Ethereum pool.".format(new_address))
+        self.logger.info("Adding new address %s to Ethereum pool." % (new_address,))
         if not ETH_ADDRESS_REGEX.match(new_address):
             raise TypeError
         try:
