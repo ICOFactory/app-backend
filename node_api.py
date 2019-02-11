@@ -34,7 +34,7 @@ def command_output(api_key):
                 elif "erc20_function" in command_output:
                     erc20_function = command_output["erc20_function"]
                     if erc20_function == "publish":
-                        event_data["contract_address"] = command_output["contract_address"]
+                        event_data["contract_address"] = command_output["new_contract_address"]
                         event_data["token_id"] = command_output["token_id"]
                         sc = SmartContract(smart_token_id=event_data["token_id"])
                         if sc.smart_contract_id > -1 and sc.set_contract_address(event_data["contract_address"]):
