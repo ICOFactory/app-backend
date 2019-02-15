@@ -230,7 +230,6 @@ class Event:
                 c.execute(sql, (event_id, self.event_type_id, limit))
             for row in c:
                 last_events.append(row)
-            self.logger("Last events: {0}".format(len(last_events)))
             return last_events
         except MySQLdb.Error as e:
             try:
