@@ -228,6 +228,8 @@ class Event:
             else:
                 sql = "SELECT event_data,created,user_id,event_id FROM event_log WHERE event_id < %s AND event_type_id=%s ORDER BY created DESC LIMIT %s;"
                 c.execute(sql, (event_id, self.event_type_id, limit))
+            if self.logger:
+                self.logger.error("SQL: " + sql)
             for row in c:
                 last_events.append(row)
             return last_events

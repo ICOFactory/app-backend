@@ -185,7 +185,8 @@ def node_api_update(api_key):
                     new_event_log_id = new_event.log_event(node_id, json.dumps(event_data))
                     # update charting database
                     node_update_event = events.NodeUpdateEvent(db,
-                                                               from_event_id=new_event_log_id)
+                                                               from_event_id=new_event_log_id,
+                                                               logger=current_app.logger)
                     charting = Charting(db, current_app.logger)
                     charting.add_chart_data(node_update_event)
 
