@@ -230,6 +230,7 @@ class Event:
                 c.execute(sql, (event_id, self.event_type_id, limit))
             for row in c:
                 last_events.append(row)
+            self.logger("Last events: {0}".format(len(row)))
             return last_events
         except MySQLdb.Error as e:
             try:
@@ -420,7 +421,6 @@ class NodeUpdateEvent(Event):
 
     def get_events_before_event_id(self, event_id, limit, user_id=None):
         event_tuples = super().get_events_before_event_id(event_id, limit, user_id)
-        self.logger.error("event_tuples before event_id: {0}".format(len(event_tuples)))
         node_updates = self.deserialize_event_data(event_tuples)
         output = []
         # filter out update events from unsynchronized nodes
