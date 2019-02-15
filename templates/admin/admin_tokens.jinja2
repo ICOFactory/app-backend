@@ -16,7 +16,6 @@
 {% block content %}
     {% if owned_tokens %}
         <div id="owned_tokens">
-            <script src="{{ url_for('static', filename='acl_editor.js') }}"></script>
             {% for each in owned_tokens %}
                 <div class="erc20_token">
                     <input type="hidden" name="session_token" value="{{ session_token }}"/>
@@ -57,13 +56,13 @@
                             </td>
                         </tr>
                         <tr class="ui_div_highlight">
-                            <td>Generated</td>
+                            <td>Contract generated</td>
                             <td align="right">{{ each.created }} UTC</td>
                         </tr>
                         {% if each.eth_address %}
                             <tr class="dark_grey_background">
                                 <td>Published to blockchain</td>
-                                <td align="right">{{ each.published }}</td>
+                                <td align="right">{{ each.published }} UTC</td>
                             </tr>
                             <tr class="ui_div_highlight">
                                 <td>Issue tokens</td>
@@ -77,10 +76,12 @@
                                                 if( $(this).val() === "random") {
                                                     $("#hash_field").hide();
                                                     $("#hash_data").hide();
+                                                    $("#random_token_count").show();
                                                 }
                                                 else {
                                                     $("#hash_field").show();
                                                     $("#hash_data").show();
+                                                    $("#random_token_count").hide();
                                                 }
                                             });
                                             $("#hash_button").on('click',function () {
@@ -93,13 +94,16 @@
                                     <table>
                                         <tr>
                                             <td><input type="radio" name="generate" value="random" checked="checked">Random tokens</td>
-                                            <td><input type="number" name="tokens" class="dark_input" value="0" /></td>
+                                            <td><input id="random_token_count" type="number" name="tokens" class="dark_input" value="0" /></td>
                                         </tr>
                                         <tr>
-                                            <td><input type="radio" name="generate" value="hash">Tokens from hash</td><td colspan="2" align="right"><input type="submit" class="blue_small_submit_button" value="Issue"/></td>
+                                            <td><input type="radio" name="generate" value="hash">Tokens from hash</td><td colspan="2" align="right"></td>
                                         </tr>
                                         <tr>
                                             <td colspan="3"><div id="hash_field"><input id="hash_data" size="44" name="hash" class="dark_input" /><br /><textarea cols="48" rows="5" class="dark_input_field" name="hash_data">{"email_address":"admin@example.com"}</textarea><br /><input class="grey_submit_button" type="button" id="hash_button" value="Hash" /></div></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3" align="right"><input type="submit" class="blue_small_submit_button" value="Issue"/></td>
                                         </tr>
                                     </table>
                                 </form></td>
@@ -121,7 +125,7 @@
                                 <td align="right">{{ each.remaining_tokens }}</td>
                             </tr>
                             <tr class="dark_grey_background">
-                                <td>Set Max Gwei (credits per token created/burned/transferred)</td>
+                                <td>Set max Gwei (credits per token created/burned/transferred)</td>
                                 <td align="right">
                                     <form action="/admin/tokens/set_max_priority" method="post">
                                         <input type="hidden" name="session_token" value="{{ session_token }}"/>
@@ -132,21 +136,21 @@
                                 </td>
                             </tr>
                             <tr class="ui_div_highlight">
-                                <td>Withdraw remaining tokens to address</td>
+                                <td>Withdraw tokens</td>
                                 <td align="right">
                                     <form action="/admin/tokens/withdraw" method="post">
                                         <input type="hidden" name="session_token" value="{{ session_token }}"/>
                                         <input type="hidden" name="token_id" value="{{ each.token_id }}"/>
+                                        <input name="withdrawal_address" width="46" class="dark_input_field" placeholder="ETH Address 0x"/>
                                         <input name="token_count" size="5" type="number" placeholder="Token Count"
                                                class="dark_input_field"/>&nbsp;
-                                        <input name="withdrawal_address" class="dark_input_field" placeholder="ETH Address 0x"/>
                                         <input type="submit" value="Withdraw" class="blue_small_submit_button"/>
                                     </form>
                                 </td>
                             </tr>
                             <tr class="dark_grey_background">
                                 <td>
-                                    Burn remaining tokens
+                                    Burn tokens
                                 </td>
                                 <td align="right">
                                     <form action="/admin/tokens/burn" method="post">
