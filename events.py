@@ -235,6 +235,8 @@ class Event:
                                                                                          limit))
             for row in c:
                 last_events.append(row)
+            if self.logger:
+                self.logger.error("last_events count: {0}".format(len(last_events)))
             return last_events
         except MySQLdb.Error as e:
             try:
