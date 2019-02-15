@@ -7,29 +7,30 @@
 {% block content %}
     <div id="create_user_form_div">
         <h2>Create New User</h2>
+        <p id="create_user_controls">[&nbsp;<a class="main_menu_anchor" href="/">back to homepage</a>&nbsp;]</p>
         {% if error_msg %}
             <p id="create_user_error">{{ error_msg }}</p>
         {% endif %}
         <form action="/create_user" method="post">
             <table>
                 <tr>
-                    <td><label>Full Name <em>(optional)</em></label></td>
-                    <td><input class="dark_input" name="full_name" size="35" /></td>
+                    <td class="create_user_td"><label>Full Name <em>(optional)</em></label></td>
+                    <td class="create_user_td"><input class="dark_input" name="full_name" size="35" /></td>
                 </tr>
                 <tr>
-                    <td><label>E-Mail Address</label></td>
-                    <td><input class="dark_input" name="email_address" type="email" size="35" /></td>
+                    <td class="create_user_td"><label>E-Mail Address</label></td>
+                    <td class="create_user_td"><input class="dark_input" name="email_address" type="email" size="35" /></td>
                 </tr>
                 <tr>
-                    <td><label>Password</label></td>
-                    <td><input class="dark_input" name="passwd" type="password" size="35" /></td>
+                    <td class="create_user_td"><label>Password</label></td>
+                    <td class="create_user_td"><input class="dark_input" name="passwd" type="password" size="35" /></td>
                 </tr>
                 <tr>
-                    <td><label>Password (repeat)</label></td>
-                    <td><input class="dark_input" name="passwd_repeat" type="password" size="35" /></td>
+                    <td class="create_user_td"><label>Password (repeat)</label></td>
+                    <td class="create_user_td"><input class="dark_input" name="passwd_repeat" type="password" size="35" /></td>
                 </tr>
                 <tr>
-                    <td colspan="2" align="right"><input class="blue_submit_button" type="submit" value="Create User" /></td>
+                    <td colspan="2" align="right"  class="create_user_td"><input style="margin-top:10px;" class="blue_submit_button" type="submit" value="Create User" /></td>
                 </tr>
             </table>
         </form>

@@ -72,6 +72,10 @@ span#latest_block_size {
     padding: 5px;
 }
 
+.create_user_td {
+    padding: 5px;
+}
+
 div#home_latest_blocks {
     margin-top:80px;
     width:1024px;
