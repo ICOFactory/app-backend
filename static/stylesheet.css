@@ -69,6 +69,7 @@ span#latest_block_size {
 
 .tx_details_value {
     font-size: small;
+    padding: 5px;
 }
 
 div#home_latest_blocks {

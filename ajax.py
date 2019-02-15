@@ -28,10 +28,10 @@ def block_data(block_number):
     db = database.Database()
     manager = BlockDataManager(db, logger=current_app.logger)
     data = manager.get_block_from_db(block_number)
-    # convert to JSON serializable/JavaScript format
-    block_timestamp = data["block_timestamp"]
-    data["block_timestamp"] = block_timestamp.isoformat()
     if data:
+        # convert to JSON serializable/JavaScript format
+        block_timestamp = data["block_timestamp"]
+        data["block_timestamp"] = block_timestamp.isoformat()
         return Response(json.dumps(data), content_type="application/json")
     else:
         return Response(json.dumps({"result": False, "error": "Block data not found."}),
