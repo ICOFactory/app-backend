@@ -230,6 +230,9 @@ class Event:
                 c.execute(sql, (event_id, self.event_type_id, limit))
             if self.logger:
                 self.logger.error("SQL: " + sql)
+                self.logger.error("event_id: {0}\tevent_type_id: {1}\tlimit: {2}".format(event_id,
+                                                                                         self.event_type_id,
+                                                                                         limit))
             for row in c:
                 last_events.append(row)
             return last_events
