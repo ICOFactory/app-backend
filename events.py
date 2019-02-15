@@ -430,6 +430,8 @@ class NodeUpdateEvent(Event):
         if self.logger:
             self.logger.error("event_tuples count: {0}".format(len(event_tuples)))
         node_updates = self.deserialize_event_data(event_tuples)
+        if self.logger:
+            self.logger.error("node_updates count: {0}".format(len(node_updates)))
         output = []
         # filter out update events from unsynchronized nodes
         for update in node_updates:
