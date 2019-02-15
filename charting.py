@@ -121,7 +121,7 @@ class Charting:
         if not isinstance(node_update_event, NodeUpdateEvent):
             raise TypeError
         if node_update_event.synchronized:
-            self.logger.error("node_update_event.event_id: {0}".format(node_update_event.event_id))
+            self.log_string('node_update_event.event_id: {0}'.format(node_update_event.event_id))
             moving_average_window = node_update_event.get_events_before_event_id(node_update_event.event_id,
                                                                                  MOVING_AVERAGE_WINDOW)
             if moving_average_window is None:
