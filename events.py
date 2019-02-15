@@ -228,15 +228,8 @@ class Event:
             else:
                 sql = "SELECT event_data,created,user_id,event_id FROM event_log WHERE event_id < %s AND event_type_id=%s ORDER BY created DESC LIMIT %s;"
                 c.execute(sql, (event_id, self.event_type_id, limit))
-            if self.logger:
-                self.logger.error("SQL: " + sql)
-                self.logger.error("event_id: {0}\tevent_type_id: {1}\tlimit: {2}".format(event_id,
-                                                                                         self.event_type_id,
-                                                                                         limit))
             for row in c:
                 last_events.append(row)
-            if self.logger:
-                self.logger.error("last_events count: {0}".format(len(last_events)))
             return last_events
         except MySQLdb.Error as e:
             try:
@@ -427,11 +420,7 @@ class NodeUpdateEvent(Event):
 
     def get_events_before_event_id(self, event_id, limit, user_id=None):
         event_tuples = super().get_events_before_event_id(event_id, limit, user_id)
-        if self.logger:
-            self.logger.error("event_tuples count: {0}".format(len(event_tuples)))
         node_updates = self.deserialize_event_data(event_tuples)
-        if self.logger:
-            self.logger.error("node_updates count: {0}".format(len(node_updates)))
         output = []
         # filter out update events from unsynchronized nodes
         for update in node_updates:
