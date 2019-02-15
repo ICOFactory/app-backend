@@ -142,8 +142,7 @@ class Charting:
                                          node_update_event.peers, node_update_event.latest_block_timestamp))
                 if result:
                     self._db.commit()
-                    if self.db is None:
-                        self._db.close()
+                    self._db.close()
                     self.log_string("Chart module: added row to chart table.")
                     return True
             except MySQLdb.Error as err:
