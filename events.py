@@ -437,6 +437,8 @@ class NodeUpdateEvent(Event):
         for update in node_updates:
             if update.synchronized:
                 output.append(update)
+        if self.logger:
+            self.logger.error("output count: {0}".format(len(output)))
         while len(output) < limit:
             last_event = node_updates[-1]
             event_tuples = super().get_events_before_event_id(last_event.event_id, limit, user_id)
