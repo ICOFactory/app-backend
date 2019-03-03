@@ -22,7 +22,7 @@
         <ul id="admin_ul" class="ui_div_background">
 
             {% if manager %}
-                <li class="admin_li"><a class="main_menu_anchor" href="/admin/users/{{ session_token }}/0/20">Users</a></li>
+                <li class="admin_li"><a class="main_menu_anchor" href="/admin/users/{{ user_id }}/{{ session_token }}/0/20">Users</a></li>
             {% else %}
                 <li class="admin_li"><a class="main_menu_anchor" href="/admin/user-profile/{{ user_id }}/{{ session_token }}">User Profile</a></li>
             {% endif %}

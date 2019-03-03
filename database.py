@@ -885,6 +885,35 @@ WHERE smart_contracts.id=%s"""
             pass
         return None
 
+    def list_onboarded_users(self, owner_id, offset=0, limit=20):
+        new_user_event = events.Event("Users Create User", self.db, self.logger)
+        user_count = new_user_event.get_event_count(owner_id)
+        all_users = new_user_event.get_latest_events(user_count)
+        sliced_users = all_users[offset:limit]
+        output = []
+        for each in sliced_users:
+            json_data = json.loads(each[0])
+            if "new_user_id" in json_data:
+                output.append(self.get_user_info(json_data["new_user_id"]))
+        return output
+
+    def list_owned_tokens(self, user_id):
+        c = self.db.cursor()
+        try:
+            output = []
+            sql = "SELECT DISTINCT smart_contract_id FROM tokens WHERE owner_id=%s"
+            c.execute(sql, (user_id,))
+            for row in c:
+                output.append(self.get_smart_contract_info(row[0]))
+            return output
+        except MySQLdb.Error as e:
+            try:
+                self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                self.logger.error("MySQL Error: %s" % (str(e),))
+            c.close()
+            return None
+
     def list_users(self, offset=0, limit=20):
         c = self.db.cursor()
         try:

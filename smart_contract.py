@@ -353,6 +353,38 @@ class SmartContract:
                         print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
         return False
 
+    def list_all_issued_tokens(self, token_id):
+        try:
+            c = self.db.cursor()
+            sql = "SELECT serial, ethereum_address_pool.ethereum_address, owner_id, issued, created FROM tokens "
+            sql += "INNER JOIN ethereum_address_pool ON tokens.eth_address=ethereum_address_pool.id "
+            sql += "WHERE smart_contract_id=%s;"
+            c.execute(sql, (token_id,))
+            output = []
+            for row in c:
+                token = {
+                    "serial": row[0],
+                    "eth_address": row[1],
+                    "owner_id": row[2],
+                    "issued": row[3],
+                    "created": row[4],
+                    "token_id": token_id
+                }
+                output.append(token)
+            return output
+        except MySQLdb.Error as e:
+            try:
+                if self.logger:
+                    self.logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+            except IndexError:
+                if self.logger:
+                    self.logger.error("MySQL Error: %s" % (str(e),))
+                else:
+                    print("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+        return None
+
     def get_unassigned_token_count(self):
         try:
             c = self.db.cursor()

@@ -1,10 +1,29 @@
 {% extends "main.jinja2" %}
 
-{% block title %}Wallet{% endblock %}
+{% block header %}
+    <script src="{{ url_for('static', filename='code/highcharts.js') }}"></script>
+<h1 xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html">{% block title %}Wallet Tokens{% endblock %}</h1>
+    <div id="admin_header_info_bar">
+    <ul id="admin_header_ul">
+    {% if full_name %}
+                <li class="admin_header_li">{{ full_name }}</li>
+            {% else %}
+                <li class="admin_header_li">{{ email_address }}</li>
+            {% endif %}
+                <li class="admin_header_li">Last logged in: {{ last_logged_in }}</li>
+                <li class="admin_header_li">Credits: <span class="credit_balance">{{ credits }}</span></li>
+    </ul>
+    </div>
+{% endblock %}
 
 {% block content %}
     <div id="admin_main_menu">
-            <h3 class="ui_h3">Owned tokens</h3>
+            <h3 class="ui_h3">Wallet Tokens</h3>
+        <ol>
+            {% for each in wallet_tokens %}
+                <li>each.token_name</li>
+            {% endfor %}
+        </ol>
         <ul class="menu_ul">
         {% if first_block %}
             <li class="admin_li">Ethereum Network Charts</li>
@@ -14,6 +33,19 @@
         {% for each in whitepapers %}
             <li class="admin_li"><a class="main_menu_anchor" href="{{ each.url }}">{{ each.title }}</a></li>
         {% endfor %}
+            <li class="admin_li"><a class="main_menu_anchor" href="/logout/{{ session_token }}">Logout</a></li>
         </ul>
     </div>
+
+    <div id="admin_home" class="dark_grey_background">
+        {% for each in wallet_tokens %}
+            <h3 class="ui_h3">each.token_name</h3>
+            <ul>
+                {% for token in each.tokens %}
+                    <li class="token_li"></li>
+                {% endfor %}
+            </ul>
+        {% endfor %}
+    </div>
 {% endblock %}
+

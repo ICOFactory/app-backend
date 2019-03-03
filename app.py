@@ -1,8 +1,9 @@
-from flask import Flask, request, render_template, current_app, url_for, redirect
+from flask import Flask, request, render_template, current_app, url_for, redirect, abort
 from database import Database
 from charting import Charting
 from credits import Credits
 from block_data import BlockDataManager
+import smart_contract
 import datetime
 import json
 import node_api
@@ -203,3 +204,22 @@ def home_page_transaction_count():
                            metrics={"chart_data": {"transaction_count": chart_data}},
                            first_block=first_block,
                            whitepapers=whitepapers.whitepaper_urls)
+
+
+@app.route('/wallet/<user_id>/<session_token>')
+def view_wallet(user_id, session_token):
+    db = Database(logger=current_app.logger)
+    wallet_tokens = {}
+    session_user_id = db.validate_session(session_token)
+    if session_user_id == user_id:
+        owned_tokens = db.list_owned_tokens(user_id)
+
+        for each in owned_tokens:
+            sc = smart_contract.SmartContract(smart_token_id=each["token_id"])
+            tokens = sc.list_owned_tokens_for_user_id(user_id)
+            wallet_tokens[each] = tokens
+
+        return render_template("wallet.jinja2",
+                               wallet_tokens=wallet_tokens)
+
+    abort(403)

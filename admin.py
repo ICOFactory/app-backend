@@ -19,6 +19,7 @@ TOKEN_NAME_REGEX = re.compile("^[A-Za-z0-9]{4,36}$")
 TOKEN_SYMBOL_REGEX = re.compile("^[A-Z0-9]{1,5}$")
 TOKEN_COUNT_REGEX = re.compile("^[0-9]{1,16}$")
 EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$")
+ETH_ADDRESS_REGEX = re.compile("^0x[0-9a-fA-F]{40}$")
 
 admin_blueprint = Blueprint('admin', __name__, url_prefix="/admin")
 
@@ -82,7 +83,8 @@ def admin_main(session_token, transactions=False):
                                view_event_log=view_event_log,
                                issue_credits=issue_credits,
                                manager=manager,
-                               metrics=graphing_metrics)
+                               metrics=graphing_metrics,
+                               user_id=user_id)
     else:
         return render_template("admin/admin_login.jinja2", error="Invalid session.")
 
@@ -351,6 +353,40 @@ def get_owned_tokens(user_id, db, logger=None):
         owned_tokens.append(token_data)
     owned_tokens = sorted(owned_tokens, key=lambda token: token['created'], reverse=True)
     return owned_tokens
+
+
+@admin_blueprint.route('/tokens/issue', methods=['POST'])
+def admin_tokens_issue():
+    db = database.Database(logger=current_app.logger)
+    session_token = request.form['session_token']
+    token_id = int(request.form['token_id'])
+    user_id = db.validate_session(session_token)
+    if user_id:
+        sc_info = db.get_smart_contract_info(token_id)
+
+        if sc_info['owner_id'] == user_id:
+            sc = SmartContract(smart_token_id=token_id)
+            if request.form['generate'] == "random":
+                tokens = int(request.form['random_token_count'])
+                sc.issue_tokens(tokens)
+            elif request.form['generate'] == "hash":
+                hash_string = request.form['hash']
+                if ETH_ADDRESS_REGEX.match(hash_string):
+                    sc.issue_token(hash_string)
+            return redirect(url_for("admin.admin_tokens", session_token=session_token))
+    abort(403)
+
+
+@admin_blueprint.route('/tokens/<token_id>/<session_token>')
+def admin_view_all_tokens(token_id, session_token):
+    db = database.Database(logger=current_app.logger)
+    user_id = db.validate_session(session_token)
+    sc_info = db.get_smart_contract_info(token_id)
+    if sc_info["owner_id"] == user_id:
+        sc = SmartContract(smart_token_id=token_id)
+        all_tokens = sc.list_all_issued_tokens(token_id)
+        return render_template("admin/view_all_tokens.jinja2",{"all_tokens":all_tokens})
+    abort(403)
 
 
 @admin_blueprint.route('/tokens/<session_token>')
@@ -783,6 +819,7 @@ def view_onboarded_users(user_id, session_token, offset=0, limit=20):
     if session_token:
         offset = int(offset)
         limit = int(limit)
+        user_id = int(user_id)
         if offset < 0 or limit < 0:
             raise ValueError
 
@@ -790,9 +827,27 @@ def view_onboarded_users(user_id, session_token, offset=0, limit=20):
         db.logger = current_app.logger
         session_user_id = db.validate_session(session_token)
         if session_user_id == user_id:
-            cu_event = Event("Users Create User", db, current_app.logger)
-            cu_event_count = cu_event.get_event_count(user_id)
-            all_cu_events = cu_event.get_latest_events(cu_event_count, user_id)
+            displayed_users = db.list_onboarded_users(session_user_id,
+                                                      offset,
+                                                      limit)
+            user_count = len(displayed_users)
+            augmented_user_data = []
+            for each_user in displayed_users:
+                new_obj = dict(each_user)
+                new_obj["email"] = new_obj["email_address"]
+                ledger = TransactionLedger(each_user['user_id'], db, current_app.logger)
+                user_credits = Credits(each_user['user_id'], db, current_app.logger)
+                new_obj['transactions'] = ledger.get_transaction_count()
+                new_obj['credits_balance'] = user_credits.get_credit_balance()
+                new_obj['owned_tokens'] = ledger.get_owned_token_count()
+                augmented_user_data.append(new_obj)
+            return render_template("admin/admin_users.jinja2",
+                                   session_token=session_token,
+                                   users=augmented_user_data,
+                                   view_wallet=True,
+                                   user_count=user_count,
+                                   limit=limit,
+                                   offset=offset)
         else:
             abort(403)
 
